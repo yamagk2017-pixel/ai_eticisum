@@ -59,7 +59,7 @@ export function GroupDetail({ slug }: Props) {
         .schema("imd")
         .from("groups")
         .select("id,name_ja,slug")
-        .eq("slug", slug)
+        .ilike("slug", slug.trim())
         .maybeSingle();
 
       if (error) {
