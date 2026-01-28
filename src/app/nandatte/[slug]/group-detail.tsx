@@ -34,6 +34,7 @@ type Props = {
 };
 
 export function GroupDetail({ slug }: Props) {
+  const safeSlug = (slug ?? "").trim();
   const [group, setGroup] = useState<GroupRow | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string>("");
@@ -55,11 +56,17 @@ export function GroupDetail({ slug }: Props) {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
+      if (!safeSlug) {
+        setStatus("error");
+        setMessage("slugが指定されていません。");
+        return;
+      }
+
       const { data, error } = await supabase
         .schema("imd")
         .from("groups")
         .select("id,name_ja,slug")
-        .ilike("slug", slug.trim())
+        .ilike("slug", safeSlug)
         .maybeSingle();
 
       if (error) {
@@ -76,7 +83,7 @@ export function GroupDetail({ slug }: Props) {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, [slug]);
+  }, [safeSlug]);
 
   useEffect(() => {
     if (!group?.id) {
