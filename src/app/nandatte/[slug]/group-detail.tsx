@@ -53,6 +53,7 @@ export function GroupDetail({ slug }: Props) {
   const [metricCounts, setMetricCounts] = useState<MetricCountRow[]>([]);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [rank, setRank] = useState<number | null>(null);
+  const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [newFreeword, setNewFreeword] = useState<string>("");
@@ -62,6 +63,7 @@ export function GroupDetail({ slug }: Props) {
   const [voteMessage, setVoteMessage] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -103,16 +105,19 @@ export function GroupDetail({ slug }: Props) {
     const fetchUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUserEmail(data.user?.email ?? null);
+      setUserId(data.user?.id ?? null);
       setAuthReady(true);
     };
 
     fetchUser().catch(() => {
       setUserEmail(null);
+      setUserId(null);
       setAuthReady(true);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
+      setUserId(session?.user?.id ?? null);
     });
 
     return () => {
@@ -120,84 +125,81 @@ export function GroupDetail({ slug }: Props) {
     };
   }, []);
 
+  const fetchMetricsAndCounts = async (groupId: string) => {
+    const supabase = createClient();
+    const [metricsResponse, freeMetricResponse, metricCountsResponse, totalVotesResponse] =
+      await Promise.all([
+        supabase
+          .schema("nandatte")
+          .from("metrics")
+          .select("id,label,type")
+          .eq("type", "fixed")
+          .order("label", { ascending: true }),
+        supabase
+          .schema("nandatte")
+          .from("metrics")
+          .select("id")
+          .eq("type", "free")
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .schema("nandatte")
+          .rpc("get_group_metric_counts", { p_group_id: groupId }),
+        supabase
+          .schema("nandatte")
+          .rpc("get_group_vote_total", { p_group_id: groupId }),
+      ]);
+
+    if (metricsResponse.error) {
+      setVoteStatus("error");
+      setVoteMessage(metricsResponse.error.message);
+      return;
+    }
+
+    setFixedMetrics(metricsResponse.data ?? []);
+    setFreeMetricId(freeMetricResponse.data?.id ?? null);
+
+    if (metricCountsResponse.error) {
+      setVoteStatus("error");
+      setVoteMessage(metricCountsResponse.error.message);
+      return;
+    }
+
+    const counts = (metricCountsResponse.data ?? []).map((row: any) => ({
+      label: row.label as string,
+      count: Number(row.count ?? 0),
+      kind: row.kind as string,
+      metric_id: row.metric_id as string | null,
+      freeword_id: row.freeword_id as string | null,
+    }));
+
+    setMetricCounts(counts);
+    setTotalVotes(
+      totalVotesResponse.error ? 0 : Number(totalVotesResponse.data ?? 0)
+    );
+    setMetricsReady(true);
+
+    const { data: rankRow, error: rankError } = await supabase
+      .schema("ihc")
+      .from("daily_rankings")
+      .select("rank")
+      .eq("group_id", groupId)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!rankError) {
+      setRank(rankRow?.rank ?? null);
+    }
+  };
+
   useEffect(() => {
     if (!group?.id) {
       return;
     }
 
-    const run = async () => {
-      const supabase = createClient();
-
-      const [metricsResponse, freeMetricResponse, metricCountsResponse, totalVotesResponse] =
-        await Promise.all([
-          supabase
-            .schema("nandatte")
-            .from("metrics")
-            .select("id,label,type")
-            .eq("type", "fixed")
-            .order("label", { ascending: true }),
-          supabase
-            .schema("nandatte")
-            .from("metrics")
-            .select("id")
-            .eq("type", "free")
-            .limit(1)
-            .maybeSingle(),
-          supabase
-            .schema("nandatte")
-            .rpc("get_group_metric_counts", { p_group_id: group.id }),
-          supabase
-            .schema("nandatte")
-            .rpc("get_group_vote_total", { p_group_id: group.id }),
-        ]);
-
-      if (metricsResponse.error) {
-        setVoteStatus("error");
-        setVoteMessage(metricsResponse.error.message);
-        return;
-      }
-
-      setFixedMetrics(metricsResponse.data ?? []);
-      setFreeMetricId(freeMetricResponse.data?.id ?? null);
-
-      if (metricCountsResponse.error) {
-        setVoteStatus("error");
-        setVoteMessage(metricCountsResponse.error.message);
-        return;
-      }
-
-      const counts = (metricCountsResponse.data ?? []).map((row: any) => ({
-        label: row.label as string,
-        count: Number(row.count ?? 0),
-        kind: row.kind as string,
-        metric_id: row.metric_id as string | null,
-        freeword_id: row.freeword_id as string | null,
-      }));
-
-      setMetricCounts(counts);
-
-      if (totalVotesResponse.error) {
-        setVoteStatus("error");
-        setVoteMessage(totalVotesResponse.error.message);
-      } else {
-        setTotalVotes(Number(totalVotesResponse.data ?? 0));
-      }
-
-      const { data: rankRow, error: rankError } = await supabase
-        .schema("ihc")
-        .from("daily_rankings")
-        .select("rank,snapshot_date")
-        .eq("group_id", group.id)
-        .order("snapshot_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (!rankError) {
-        setRank(rankRow?.rank ?? null);
-      }
-    };
-
-    run().catch((err: unknown) => {
+    setMetricsReady(false);
+    fetchMetricsAndCounts(group.id).catch((err: unknown) => {
       setVoteStatus("error");
       setVoteMessage(err instanceof Error ? err.message : "Unknown error");
     });
@@ -225,6 +227,82 @@ export function GroupDetail({ slug }: Props) {
   }, [sortedCounts]);
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
+
+  useEffect(() => {
+    if (!group?.id || !userId || !metricsReady) {
+      return;
+    }
+
+    const run = async () => {
+      const supabase = createClient();
+      const { data: voteRow } = await supabase
+        .schema("nandatte")
+        .from("votes")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("group_id", group.id)
+        .maybeSingle();
+
+      if (!voteRow?.id) {
+        setSelectedItems([]);
+        return;
+      }
+
+      const { data: items } = await supabase
+        .schema("nandatte")
+        .from("vote_items")
+        .select("metric_id,freeword_id")
+        .eq("vote_id", voteRow.id);
+
+      if (!items) {
+        return;
+      }
+
+      const freewordLabelMap = new Map(
+        freewordCounts.map((row) => [row.id, row.text])
+      );
+
+      const selected: SelectedItem[] = [];
+
+      for (const item of items as any[]) {
+        if (item.freeword_id) {
+          let label = freewordLabelMap.get(item.freeword_id) ?? null;
+          if (!label) {
+            const { data: freewordRow } = await supabase
+              .schema("nandatte")
+              .from("metric_freewords")
+              .select("text")
+              .eq("id", item.freeword_id)
+              .maybeSingle();
+            label = freewordRow?.text ?? "フリーワード";
+          }
+          selected.push({
+            kind: "freeword",
+            id: item.freeword_id,
+            label,
+          });
+          continue;
+        }
+
+        if (item.metric_id) {
+          const metric = fixedMetrics.find((row) => row.id === item.metric_id);
+          if (metric) {
+            selected.push({
+              kind: "fixed",
+              id: metric.id,
+              label: metric.label,
+            });
+          }
+        }
+      }
+
+      setSelectedItems(selected);
+    };
+
+    run().catch(() => {
+      setSelectedItems([]);
+    });
+  }, [group?.id, userId, metricsReady, fixedMetrics, freewordCounts]);
 
   const toggleSelection = (item: SelectedItem) => {
     setVoteMessage("");
@@ -400,6 +478,9 @@ export function GroupDetail({ slug }: Props) {
 
     setVoteStatus("success");
     setVoteMessage("投票を保存しました。");
+    setSelectedItems(pendingItems);
+    setNewFreeword("");
+    fetchMetricsAndCounts(group.id).catch(() => null);
   };
 
   const handleSignIn = async () => {
