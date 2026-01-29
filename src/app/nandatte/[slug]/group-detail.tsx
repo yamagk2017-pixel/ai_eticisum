@@ -274,12 +274,13 @@ export function GroupDetail({ slug }: Props) {
               .select("text")
               .eq("id", item.freeword_id)
               .maybeSingle();
-            label = freewordRow?.text ?? "フリーワード";
+            label = freewordRow?.text ?? null;
           }
+          const finalLabel = label ?? "フリーワード";
           selected.push({
             kind: "freeword",
             id: item.freeword_id,
-            label,
+            label: finalLabel,
           });
           continue;
         }
