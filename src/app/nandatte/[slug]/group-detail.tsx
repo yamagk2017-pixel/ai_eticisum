@@ -53,7 +53,6 @@ export function GroupDetail({ slug }: Props) {
   const [metricCounts, setMetricCounts] = useState<MetricCountRow[]>([]);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [rank, setRank] = useState<number | null>(null);
-  const [rankSnapshot, setRankSnapshot] = useState<string | null>(null);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [newFreeword, setNewFreeword] = useState<string>("");
@@ -195,7 +194,6 @@ export function GroupDetail({ slug }: Props) {
 
       if (!rankError) {
         setRank(rankRow?.rank ?? null);
-        setRankSnapshot(rankRow?.snapshot_date ?? null);
       }
     };
 
@@ -449,7 +447,6 @@ export function GroupDetail({ slug }: Props) {
           <div className="text-sm text-zinc-300">
             <p>総合順位: {rank ?? "-"}</p>
             <p>総得票数: {totalVotes ?? 0}</p>
-            <p className="text-xs text-zinc-500">rank snapshot: {rankSnapshot ?? "-"}</p>
           </div>
         </div>
         <p className="mt-2 text-xs text-zinc-500">slug: {group.slug}</p>
