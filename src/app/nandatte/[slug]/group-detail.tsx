@@ -183,26 +183,17 @@ export function GroupDetail({ slug }: Props) {
         setTotalVotes(Number(totalVotesResponse.data ?? 0));
       }
 
-      const { data: snapshotRow, error: snapshotError } = await supabase
+      const { data: rankRow, error: rankError } = await supabase
         .schema("ihc")
         .from("daily_rankings")
-        .select("snapshot_date")
+        .select("rank,snapshot_date")
+        .eq("group_id", group.id)
         .order("snapshot_date", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (!snapshotError && snapshotRow?.snapshot_date) {
-        const { data: rankRow, error: rankError } = await supabase
-          .schema("ihc")
-          .from("daily_rankings")
-          .select("rank")
-          .eq("group_id", group.id)
-          .eq("snapshot_date", snapshotRow.snapshot_date)
-          .maybeSingle();
-
-        if (!rankError) {
-          setRank(rankRow?.rank ?? null);
-        }
+      if (!rankError) {
+        setRank(rankRow?.rank ?? null);
       }
     };
 
