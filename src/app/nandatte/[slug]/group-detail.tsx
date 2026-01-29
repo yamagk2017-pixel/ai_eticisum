@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type GroupRow = {
@@ -34,7 +35,15 @@ type Props = {
 };
 
 export function GroupDetail({ slug }: Props) {
-  const safeSlug = (slug ?? "").trim();
+  const params = useParams<{ slug?: string }>();
+  const rawSlug =
+    slug ??
+    (typeof params.slug === "string"
+      ? params.slug
+      : Array.isArray(params.slug)
+      ? params.slug[0]
+      : "");
+  const safeSlug = rawSlug.trim();
   const [group, setGroup] = useState<GroupRow | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string>("");
@@ -56,6 +65,7 @@ export function GroupDetail({ slug }: Props) {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
+
       if (!safeSlug) {
         setStatus("error");
         setMessage("slugが指定されていません。");
