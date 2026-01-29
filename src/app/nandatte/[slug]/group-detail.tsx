@@ -53,6 +53,7 @@ export function GroupDetail({ slug }: Props) {
   const [metricCounts, setMetricCounts] = useState<MetricCountRow[]>([]);
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [rank, setRank] = useState<number | null>(null);
+  const [voteRank, setVoteRank] = useState<number | null>(null);
   const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -178,6 +179,14 @@ export function GroupDetail({ slug }: Props) {
       totalVotesResponse.error ? 0 : Number(totalVotesResponse.data ?? 0)
     );
     setMetricsReady(true);
+
+    const { data: voteRankRow, error: voteRankError } = await supabase
+      .schema("nandatte")
+      .rpc("get_group_vote_rank", { p_group_id: groupId });
+
+    if (!voteRankError) {
+      setVoteRank(Number(voteRankRow ?? null));
+    }
 
     const { data: rankRow, error: rankError } = await supabase
       .schema("ihc")
@@ -528,6 +537,7 @@ export function GroupDetail({ slug }: Props) {
           </h1>
           <div className="text-sm text-zinc-300">
             <p>総合順位: {rank ?? "-"}</p>
+            <p>投票数順位: {voteRank ?? "-"}</p>
             <p>総得票数: {totalVotes ?? 0}</p>
           </div>
         </div>
