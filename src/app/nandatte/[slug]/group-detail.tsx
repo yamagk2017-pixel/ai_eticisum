@@ -187,7 +187,7 @@ export function GroupDetail({ slug }: Props) {
         .schema("ihc")
         .from("daily_rankings")
         .select("snapshot_date")
-        .order("snapshot_date", { ascending: true })
+        .order("snapshot_date", { ascending: false })
         .limit(1)
         .maybeSingle();
 
