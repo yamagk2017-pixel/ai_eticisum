@@ -60,6 +60,8 @@ export function GroupDetail({ slug }: Props) {
     "idle"
   );
   const [voteMessage, setVoteMessage] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const run = async () => {
@@ -94,6 +96,29 @@ export function GroupDetail({ slug }: Props) {
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
   }, [safeSlug]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUserEmail(data.user?.email ?? null);
+      setAuthReady(true);
+    };
+
+    fetchUser().catch(() => {
+      setUserEmail(null);
+      setAuthReady(true);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (!group?.id) {
@@ -386,6 +411,26 @@ export function GroupDetail({ slug }: Props) {
     setVoteMessage("投票を保存しました。");
   };
 
+  const handleSignIn = async () => {
+    setVoteMessage("");
+    const supabase = createClient();
+    const redirectTo = window.location.href;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+
+    if (error) {
+      setVoteStatus("error");
+      setVoteMessage(error.message);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  };
+
   if (status === "loading") {
     return <p className="text-sm text-zinc-400">読み込み中...</p>;
   }
@@ -463,6 +508,34 @@ export function GroupDetail({ slug }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">投票する</h2>
           <span className="text-xs text-zinc-400">最大5件まで選択</span>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
+          {!authReady && <p>ログイン状態を確認中...</p>}
+          {authReady && userEmail && (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-zinc-200">ログイン中: {userEmail}</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+              >
+                ログアウト
+              </button>
+            </div>
+          )}
+          {authReady && !userEmail && (
+            <div className="flex flex-wrap items-center gap-3">
+              <span>投票にはログインが必要です。</span>
+              <button
+                type="button"
+                onClick={handleSignIn}
+                className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
+              >
+                Googleでログイン
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
