@@ -1,4 +1,5 @@
 import { GroupsList } from "./groups-list";
+import { Rankings } from "./rankings";
 import { SupabaseCheck } from "./supabase-check";
 
 export default function NandattePage() {
@@ -26,6 +27,8 @@ export default function NandattePage() {
           </div>
           <SupabaseCheck />
         </section>
+
+        <Rankings />
 
         <GroupsList />
       </main>
