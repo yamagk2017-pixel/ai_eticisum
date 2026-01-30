@@ -19,6 +19,7 @@ export function GroupsList() {
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string>("");
   const [search, setSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [sort, setSort] = useState<SortKey>("name_asc");
   const [page, setPage] = useState<number>(1);
   const [total, setTotal] = useState<number>(0);
@@ -34,6 +35,17 @@ export function GroupsList() {
   }, [page, pageCount]);
 
   useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+
+    return () => {
+      clearTimeout(handle);
+    };
+  }, [search]);
+
+  useEffect(() => {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
@@ -45,8 +57,8 @@ export function GroupsList() {
         .from("groups")
         .select("id,name_ja,slug", { count: "exact" });
 
-      if (search.trim()) {
-        query = query.ilike("name_ja", `%${search.trim()}%`);
+      if (debouncedSearch.trim()) {
+        query = query.ilike("name_ja", `%${debouncedSearch.trim()}%`);
       }
 
       query = query.order("name_ja", { ascending: sort === "name_asc" }).range(from, to);
@@ -68,7 +80,7 @@ export function GroupsList() {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, [page, search, sort]);
+  }, [page, debouncedSearch, sort]);
 
   if (status === "loading") {
     return (
@@ -100,7 +112,6 @@ export function GroupsList() {
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
-              setPage(1);
             }}
             className="w-48 rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2 text-xs text-zinc-200 focus:border-amber-400 focus:outline-none"
             placeholder="グループ名で検索"
