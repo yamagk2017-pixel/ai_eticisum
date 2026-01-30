@@ -1,6 +1,5 @@
 import { GroupsList } from "./groups-list";
 import { Rankings } from "./rankings";
-import { SupabaseCheck } from "./supabase-check";
 
 export default function NandattePage() {
   return (
@@ -17,16 +16,6 @@ export default function NandattePage() {
             投票データから魅力のトップ5を見える化し、アイドルグループの文脈を記録していくランキング。
           </p>
         </header>
-
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-            <h2 className="text-xl font-semibold">MVP準備中</h2>
-            <p className="mt-3 text-sm text-zinc-300">
-              Supabase接続の確認と、グループ一覧・投票UIの準備を進めています。
-            </p>
-          </div>
-          <SupabaseCheck />
-        </section>
 
         <Rankings />
 
