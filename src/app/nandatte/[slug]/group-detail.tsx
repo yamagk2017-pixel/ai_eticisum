@@ -297,17 +297,32 @@ export function GroupDetail({ slug }: Props) {
     return null;
   }, [spotifyUrl, spotifyExternalId]);
 
-  const youtubeEmbedUrl = useMemo(() => {
-    if (youtubeExternalId) {
-      return `https://www.youtube.com/embed?listType=channel&list=${youtubeExternalId}`;
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">(
+    "idle"
+  );
+
+  useEffect(() => {
+    if (!youtubeUrl && !youtubeExternalId) {
+      setYoutubeVideoId(null);
+      return;
     }
-    if (youtubeUrl) {
-      const match = youtubeUrl.match(/\/channel\/([A-Za-z0-9_-]+)/);
-      if (match) {
-        return `https://www.youtube.com/embed?listType=channel&list=${match[1]}`;
-      }
-    }
-    return null;
+
+    const run = async () => {
+      setYoutubeStatus("loading");
+      const params = new URLSearchParams();
+      if (youtubeUrl) params.set("url", youtubeUrl);
+      if (youtubeExternalId) params.set("external_id", youtubeExternalId);
+      const res = await fetch(`/api/youtube?${params.toString()}`);
+      const data = (await res.json()) as { videoId?: string };
+      setYoutubeVideoId(data.videoId ?? null);
+      setYoutubeStatus("idle");
+    };
+
+    run().catch(() => {
+      setYoutubeVideoId(null);
+      setYoutubeStatus("error");
+    });
   }, [youtubeUrl, youtubeExternalId]);
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
@@ -680,10 +695,13 @@ export function GroupDetail({ slug }: Props) {
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
           <h2 className="text-xl font-semibold">YouTube プレビュー</h2>
-          {youtubeEmbedUrl ? (
+          {youtubeStatus === "loading" && (
+            <p className="mt-4 text-sm text-zinc-400">動画を読み込み中...</p>
+          )}
+          {youtubeStatus !== "loading" && youtubeVideoId ? (
             <iframe
               className="mt-4 w-full rounded-xl border border-zinc-800"
-              src={youtubeEmbedUrl}
+              src={`https://www.youtube.com/embed/${youtubeVideoId}`}
               height="152"
               loading="lazy"
               title="YouTube preview"
@@ -691,7 +709,11 @@ export function GroupDetail({ slug }: Props) {
               allowFullScreen
             />
           ) : (
-            <p className="mt-4 text-sm text-zinc-400">YouTubeチャンネルが未登録です。</p>
+            youtubeStatus !== "loading" && (
+              <p className="mt-4 text-sm text-zinc-400">
+                YouTubeの最新動画が取得できませんでした。
+              </p>
+            )
           )}
           {youtubeUrl && (
             <a
