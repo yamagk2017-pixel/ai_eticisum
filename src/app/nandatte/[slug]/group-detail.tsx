@@ -30,6 +30,16 @@ type SelectedItem = {
   label: string;
 };
 
+type ExternalIdRow = {
+  id: string;
+  group_id: string;
+  service: string;
+  external_id: string | null;
+  url: string | null;
+  meta: unknown;
+  created_at: string | null;
+};
+
 type Props = {
   slug: string;
 };
@@ -54,6 +64,7 @@ export function GroupDetail({ slug }: Props) {
   const [totalVotes, setTotalVotes] = useState<number | null>(null);
   const [rank, setRank] = useState<number | null>(null);
   const [voteRank, setVoteRank] = useState<number | null>(null);
+  const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
   const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -99,6 +110,29 @@ export function GroupDetail({ slug }: Props) {
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
   }, [safeSlug]);
+
+  useEffect(() => {
+    if (!group?.id) {
+      return;
+    }
+
+    const run = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .schema("imd")
+        .from("external_ids")
+        .select("id,group_id,service,external_id,url,meta,created_at")
+        .eq("group_id", group.id);
+
+      if (!error) {
+        setExternalIds(data ?? []);
+      }
+    };
+
+    run().catch(() => {
+      setExternalIds([]);
+    });
+  }, [group?.id]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -234,6 +268,47 @@ export function GroupDetail({ slug }: Props) {
         count: row.count,
       }));
   }, [sortedCounts]);
+
+  const serviceMap = useMemo(() => {
+    const map = new Map<string, ExternalIdRow>();
+    for (const row of externalIds) {
+      if (!map.has(row.service)) {
+        map.set(row.service, row);
+      }
+    }
+    return map;
+  }, [externalIds]);
+
+  const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
+  const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
+  const youtubeUrl = serviceMap.get("youtube_channel")?.url ?? null;
+  const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
+
+  const spotifyEmbedUrl = useMemo(() => {
+    if (spotifyUrl) {
+      const match = spotifyUrl.match(/spotify\.com\/(track|album|artist|playlist)\/([A-Za-z0-9]+)/);
+      if (match) {
+        return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
+      }
+    }
+    if (spotifyExternalId) {
+      return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
+    }
+    return null;
+  }, [spotifyUrl, spotifyExternalId]);
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (youtubeExternalId) {
+      return `https://www.youtube.com/embed?listType=channel&list=${youtubeExternalId}`;
+    }
+    if (youtubeUrl) {
+      const match = youtubeUrl.match(/\/channel\/([A-Za-z0-9_-]+)/);
+      if (match) {
+        return `https://www.youtube.com/embed?listType=channel&list=${match[1]}`;
+      }
+    }
+    return null;
+  }, [youtubeUrl, youtubeExternalId]);
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
 
@@ -543,6 +618,93 @@ export function GroupDetail({ slug }: Props) {
         </div>
         <p className="mt-2 text-xs text-zinc-500">slug: {group.slug}</p>
       </header>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-xl font-semibold">公式リンク</h2>
+          <span className="text-xs text-zinc-400">imd.external_ids</span>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2 text-sm">
+          {[
+            { label: "X", key: "x" },
+            { label: "Instagram", key: "instagram" },
+            { label: "TikTok", key: "tiktok" },
+            { label: "公式サイト", key: "website" },
+            { label: "スケジュール", key: "schedule" },
+          ].map((item) => {
+            const url = serviceMap.get(item.key)?.url ?? null;
+            if (!url) return null;
+            return (
+              <a
+                key={item.key}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
+              >
+                {item.label}
+              </a>
+            );
+          })}
+        </div>
+        {!serviceMap.size && (
+          <p className="mt-4 text-sm text-zinc-400">外部リンクがまだ登録されていません。</p>
+        )}
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+          <h2 className="text-xl font-semibold">Spotify プレビュー</h2>
+          {spotifyEmbedUrl ? (
+            <iframe
+              className="mt-4 w-full rounded-xl border border-zinc-800"
+              src={spotifyEmbedUrl}
+              height="152"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+              title="Spotify preview"
+            />
+          ) : (
+            <p className="mt-4 text-sm text-zinc-400">Spotifyリンクが未登録です。</p>
+          )}
+          {spotifyUrl && (
+            <a
+              href={spotifyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex text-xs text-zinc-400 hover:text-white"
+            >
+              Spotifyで開く →
+            </a>
+          )}
+        </div>
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+          <h2 className="text-xl font-semibold">YouTube プレビュー</h2>
+          {youtubeEmbedUrl ? (
+            <iframe
+              className="mt-4 w-full rounded-xl border border-zinc-800"
+              src={youtubeEmbedUrl}
+              height="152"
+              loading="lazy"
+              title="YouTube preview"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <p className="mt-4 text-sm text-zinc-400">YouTubeチャンネルが未登録です。</p>
+          )}
+          {youtubeUrl && (
+            <a
+              href={youtubeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex text-xs text-zinc-400 hover:text-white"
+            >
+              YouTubeで開く →
+            </a>
+          )}
+        </div>
+      </section>
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
         <div className="flex items-baseline justify-between">
