@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 type GroupRow = {
@@ -23,6 +23,7 @@ export function GroupsList() {
   const [sort, setSort] = useState<SortKey>("name_asc");
   const [page, setPage] = useState<number>(1);
   const [total, setTotal] = useState<number>(0);
+  const searchRef = useRef<HTMLInputElement | null>(null);
 
   const pageCount = useMemo(() => {
     return Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -33,6 +34,10 @@ export function GroupsList() {
       setPage(pageCount);
     }
   }, [page, pageCount]);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -82,6 +87,12 @@ export function GroupsList() {
     });
   }, [page, debouncedSearch, sort]);
 
+  useEffect(() => {
+    if (status === "idle") {
+      searchRef.current?.focus();
+    }
+  }, [status]);
+
   if (status === "loading") {
     return (
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-sm text-zinc-300">
@@ -109,6 +120,7 @@ export function GroupsList() {
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-300">
           <input
+            ref={searchRef}
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
