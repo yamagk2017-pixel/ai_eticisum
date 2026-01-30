@@ -326,6 +326,9 @@ export function GroupDetail({ slug }: Props) {
   }, [youtubeUrl, youtubeExternalId]);
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
+  const isLoggedIn = !!userEmail;
+  const visibleCounts = isLoggedIn ? sortedCounts : sortedCounts.slice(0, 5);
+  const hiddenCount = Math.max(0, sortedCounts.length - visibleCounts.length);
 
   useEffect(() => {
     if (!group?.id || !userId || !metricsReady) {
@@ -739,7 +742,7 @@ export function GroupDetail({ slug }: Props) {
           {sortedCounts.length === 0 && (
             <p className="text-sm text-zinc-400">まだ投票がありません。</p>
           )}
-          {sortedCounts.map((item, index) => {
+          {visibleCounts.map((item, index) => {
             const width = maxCount ? Math.round((item.count / maxCount) * 100) : 0;
             const isTopFive = index < 5;
             return (
@@ -768,6 +771,11 @@ export function GroupDetail({ slug }: Props) {
               </div>
             );
           })}
+          {!isLoggedIn && hiddenCount > 0 && (
+            <div className="rounded-xl border border-dashed border-zinc-700 px-4 py-3 text-sm text-zinc-400">
+              その他 {hiddenCount} 件
+            </div>
+          )}
         </div>
       </section>
 
