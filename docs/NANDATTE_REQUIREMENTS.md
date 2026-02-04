@@ -127,3 +127,7 @@
   - リアルタイム／バッチ／日次・週次の見せ分け
 - 投票の編集可否：
   - 1回投票を「後から変更できる」仕様にするか（不正や荒れやすさとトレードオフ）
+
+## Backlog / Future ideas
+- しおり機能（NANDATTE以外のページを保存）
+- user_bookmarks テーブル設計（user_id, page_type, page_id, title, url, created_at）
