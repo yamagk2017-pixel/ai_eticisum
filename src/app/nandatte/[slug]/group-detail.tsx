@@ -40,6 +40,22 @@ type ExternalIdRow = {
   created_at: string | null;
 };
 
+type GroupProfileRow = {
+  id: string;
+  group_id: string;
+  locale: string;
+  body: string | null;
+};
+
+type GroupAttributesRow = {
+  id: string;
+  group_id: string;
+  locale: string;
+  members: string | null;
+  location: string | null;
+  agency: string | null;
+};
+
 type Props = {
   slug: string;
 };
@@ -65,6 +81,10 @@ export function GroupDetail({ slug }: Props) {
   const [rank, setRank] = useState<number | null>(null);
   const [voteRank, setVoteRank] = useState<number | null>(null);
   const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
+  const [profileBody, setProfileBody] = useState<string | null>(null);
+  const [groupAttributes, setGroupAttributes] = useState<GroupAttributesRow | null>(
+    null
+  );
   const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -127,10 +147,32 @@ export function GroupDetail({ slug }: Props) {
       if (!error) {
         setExternalIds(data ?? []);
       }
+
+      const { data: profileRow } = await supabase
+        .schema("imd")
+        .from("group_profiles")
+        .select("id,group_id,locale,body")
+        .eq("group_id", group.id)
+        .eq("locale", "ja")
+        .maybeSingle();
+
+      setProfileBody((profileRow as GroupProfileRow | null)?.body ?? null);
+
+      const { data: attributesRow } = await supabase
+        .schema("imd")
+        .from("group_attributes")
+        .select("id,group_id,locale,members,location,agency")
+        .eq("group_id", group.id)
+        .eq("locale", "ja")
+        .maybeSingle();
+
+      setGroupAttributes((attributesRow as GroupAttributesRow | null) ?? null);
     };
 
     run().catch(() => {
       setExternalIds([]);
+      setProfileBody(null);
+      setGroupAttributes(null);
     });
   }, [group?.id]);
 
@@ -636,6 +678,42 @@ export function GroupDetail({ slug }: Props) {
         </div>
         <p className="mt-2 text-xs text-zinc-500">slug: {group.slug}</p>
       </header>
+
+      {(profileBody || groupAttributes) && (
+        <section className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+            <h2 className="text-xl font-semibold">プロフィール</h2>
+            {profileBody ? (
+              <p className="mt-4 text-sm leading-7 text-zinc-200 whitespace-pre-wrap">
+                {profileBody}
+              </p>
+            ) : (
+              <p className="mt-4 text-sm text-zinc-400">プロフィールが未登録です。</p>
+            )}
+          </div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+            <h2 className="text-xl font-semibold">基本情報</h2>
+            {groupAttributes ? (
+              <dl className="mt-4 space-y-3 text-sm text-zinc-200">
+                <div className="flex flex-col gap-1">
+                  <dt className="text-xs text-zinc-400">メンバー</dt>
+                  <dd>{groupAttributes.members ?? "-"}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-xs text-zinc-400">活動拠点</dt>
+                  <dd>{groupAttributes.location ?? "-"}</dd>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <dt className="text-xs text-zinc-400">事務所</dt>
+                  <dd>{groupAttributes.agency ?? "-"}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="mt-4 text-sm text-zinc-400">基本情報が未登録です。</p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
         <div className="flex items-baseline justify-between">
