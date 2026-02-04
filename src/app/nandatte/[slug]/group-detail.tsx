@@ -47,13 +47,12 @@ type GroupProfileRow = {
   body: string | null;
 };
 
-type GroupAttributesRow = {
+type GroupAttributeKVRow = {
   id: string;
   group_id: string;
+  key: string;
   locale: string;
-  members: string | null;
-  location: string | null;
-  agency: string | null;
+  value: string | null;
 };
 
 type Props = {
@@ -82,9 +81,11 @@ export function GroupDetail({ slug }: Props) {
   const [voteRank, setVoteRank] = useState<number | null>(null);
   const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
   const [profileBody, setProfileBody] = useState<string | null>(null);
-  const [groupAttributes, setGroupAttributes] = useState<GroupAttributesRow | null>(
-    null
-  );
+  const [groupAttributes, setGroupAttributes] = useState<{
+    members: string | null;
+    location: string | null;
+    agency: string | null;
+  } | null>(null);
   const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -158,15 +159,27 @@ export function GroupDetail({ slug }: Props) {
 
       setProfileBody((profileRow as GroupProfileRow | null)?.body ?? null);
 
-      const { data: attributesRow } = await supabase
+      const { data: attributesRows } = await supabase
         .schema("imd")
         .from("group_attributes")
-        .select("id,group_id,locale,members,location,agency")
+        .select("id,group_id,key,locale,value")
         .eq("group_id", group.id)
         .eq("locale", "ja")
-        .maybeSingle();
+        .in("key", ["members", "location", "agency"]);
 
-      setGroupAttributes((attributesRow as GroupAttributesRow | null) ?? null);
+      if (attributesRows && attributesRows.length > 0) {
+        const map = new Map<string, string | null>();
+        for (const row of attributesRows as GroupAttributeKVRow[]) {
+          map.set(row.key, row.value ?? null);
+        }
+        setGroupAttributes({
+          members: map.get("members") ?? null,
+          location: map.get("location") ?? null,
+          agency: map.get("agency") ?? null,
+        });
+      } else {
+        setGroupAttributes(null);
+      }
     };
 
     run().catch(() => {
