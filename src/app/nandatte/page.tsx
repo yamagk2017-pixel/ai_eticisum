@@ -9,9 +9,17 @@ export default function NandattePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
             NANDATTE
           </p>
-          <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
-            みんなに思われてるよ、を可視化する
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
+              みんなに思われてるよ、を可視化する
+            </h1>
+            <a
+              href="/nandatte/me"
+              className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+            >
+              マイ投票一覧 →
+            </a>
+          </div>
           <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
             投票データから魅力のトップ5を見える化し、アイドルグループの文脈を記録していくランキング。
           </p>
