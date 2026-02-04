@@ -131,3 +131,4 @@
 ## Backlog / Future ideas
 - しおり機能（NANDATTE以外のページを保存）
 - user_bookmarks テーブル設計（user_id, page_type, page_id, title, url, created_at）
+- トレンドウォッチ（管理者がトレンドワード登録 → 関連コンテンツをDBから集約してリンク表示）
