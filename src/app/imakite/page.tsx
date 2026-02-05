@@ -1,0 +1,42 @@
+"use client";
+
+import Link from "next/link";
+import { ImakiteRankingList } from "./ranking-list";
+
+export default function ImakitePage() {
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
+        <header className="flex flex-col gap-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
+            IMAKITE
+          </p>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
+              いま来てるアイドルを可視化する
+            </h1>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/imakite/archive"
+                className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              >
+                過去のランキングを見る →
+              </Link>
+              <Link
+                href="/imakite/admin"
+                className="rounded-full border border-amber-500/50 px-4 py-2 text-xs text-amber-200 hover:border-amber-400"
+              >
+                管理ページ →
+              </Link>
+            </div>
+          </div>
+          <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
+            IMAKITE RANKING の日次スコアから、最新トップ20を表示します。
+          </p>
+        </header>
+
+        <ImakiteRankingList showArchiveLink={false} />
+      </main>
+    </div>
+  );
+}
