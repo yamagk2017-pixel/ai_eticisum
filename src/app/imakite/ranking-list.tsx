@@ -23,6 +23,11 @@ type RankingListProps = {
   showArchiveLink?: boolean;
 };
 
+type GroupSlugRow = {
+  id: string;
+  slug: string | null;
+};
+
 function formatJapaneseDate(dateString: string) {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
@@ -60,6 +65,7 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
   const [activeDate, setActiveDate] = useState<string | null>(date ?? null);
+  const [slugMap, setSlugMap] = useState<Map<string, string | null>>(new Map());
 
   useEffect(() => {
     const run = async () => {
@@ -105,7 +111,22 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
         return;
       }
 
-      setRows((data ?? []) as DailyTopRow[]);
+      const rowsData = (data ?? []) as DailyTopRow[];
+      setRows(rowsData);
+      const groupIds = Array.from(new Set(rowsData.map((row) => row.group_id)));
+      if (groupIds.length > 0) {
+        const { data: groupsData } = await supabase
+          .schema("imd")
+          .from("groups")
+          .select("id,slug")
+          .in("id", groupIds);
+        const map = new Map<string, string | null>(
+          ((groupsData ?? []) as GroupSlugRow[]).map((group) => [group.id, group.slug])
+        );
+        setSlugMap(map);
+      } else {
+        setSlugMap(new Map());
+      }
       setActiveDate(targetDate);
       setStatus("idle");
     };
@@ -181,7 +202,13 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
                 <div>
                   <p className="text-sm font-semibold text-amber-300">{row.rank}位</p>
                   <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">
-                    {row.artist_name}
+                    {slugMap.get(row.group_id) ? (
+                      <Link href={`/nandatte/${slugMap.get(row.group_id)}`} className="hover:text-amber-100">
+                        {row.artist_name}
+                      </Link>
+                    ) : (
+                      row.artist_name
+                    )}
                   </h3>
                   {row.latest_track_name && (
                     <p className="mt-1 text-sm text-zinc-200">♪ {row.latest_track_name}</p>
