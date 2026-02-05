@@ -197,7 +197,7 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/90" />
             </div>
 
-            <div className="relative flex h-full flex-col justify-end gap-4 p-5">
+            <div className="relative flex h-full flex-col justify-start gap-4 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-amber-300">{row.rank}位</p>
