@@ -228,7 +228,7 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
                     title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
                     src={row.latest_track_embed_link}
                     width="100%"
-                    height={row.rank === 1 ? 152 : 128}
+                    height={row.rank === 1 ? 152 : 104}
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     loading="lazy"
                   />
