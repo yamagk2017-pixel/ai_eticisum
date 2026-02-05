@@ -223,7 +223,7 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
               </div>
 
               {row.latest_track_embed_link ? (
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                <div className="mt-auto overflow-hidden rounded-2xl border border-white/10 bg-black/30">
                   <iframe
                     title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
                     src={row.latest_track_embed_link}
@@ -234,7 +234,7 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
+                <div className="mt-auto rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
                   Spotify埋め込みがありません。
                 </div>
               )}
