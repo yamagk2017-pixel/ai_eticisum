@@ -22,12 +22,6 @@ export default function ImakitePage() {
               >
                 過去のランキングを見る →
               </Link>
-              <Link
-                href="/imakite/admin"
-                className="rounded-full border border-amber-500/50 px-4 py-2 text-xs text-amber-200 hover:border-amber-400"
-              >
-                管理ページ →
-              </Link>
             </div>
           </div>
           <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
