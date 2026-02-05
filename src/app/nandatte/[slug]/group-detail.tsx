@@ -382,6 +382,8 @@ export function GroupDetail({ slug }: Props) {
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
   const isLoggedIn = !!userEmail;
+  const rankDisplay =
+    rank === null ? "-" : !isLoggedIn && rank > 100 ? "非公開" : rank;
   const visibleCounts = isLoggedIn ? sortedCounts : sortedCounts.slice(0, 5);
   const hiddenCount = Math.max(0, sortedCounts.length - visibleCounts.length);
 
@@ -684,7 +686,7 @@ export function GroupDetail({ slug }: Props) {
             {group.name_ja ?? group.slug}
           </h1>
           <div className="text-sm text-zinc-300">
-            <p>総合順位: {rank ?? "-"}</p>
+            <p>総合順位: {rankDisplay}</p>
             <p>投票数順位: {voteRank ?? "-"}</p>
             <p>総得票数: {totalVotes ?? 0}</p>
           </div>
