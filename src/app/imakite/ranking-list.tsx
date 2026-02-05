@@ -197,13 +197,16 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/90" />
             </div>
 
-            <div className="relative flex h-full flex-col justify-between gap-4 p-5">
+            <div className="relative flex h-full flex-col gap-4 p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-amber-300">{row.rank}位</p>
                   <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">
                     {slugMap.get(row.group_id) ? (
-                      <Link href={`/nandatte/${slugMap.get(row.group_id)}`} className="hover:text-amber-100">
+                      <Link
+                        href={`/nandatte/${slugMap.get(row.group_id)}`}
+                        className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
+                      >
                         {row.artist_name}
                       </Link>
                     ) : (
@@ -220,7 +223,11 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
               </div>
 
               {row.latest_track_embed_link ? (
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                <div
+                  className={`overflow-hidden rounded-2xl border border-white/10 bg-black/30 ${
+                    row.rank > 1 ? "mt-auto" : ""
+                  }`}
+                >
                   <iframe
                     title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
                     src={row.latest_track_embed_link}
@@ -231,7 +238,11 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
+                <div
+                  className={`rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300 ${
+                    row.rank > 1 ? "mt-auto" : ""
+                  }`}
+                >
                   Spotify埋め込みがありません。
                 </div>
               )}
