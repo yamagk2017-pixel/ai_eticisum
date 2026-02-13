@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SafeTweetEmbed } from "../../safe-tweet-embed";
 
 type Status = "idle" | "loading" | "error";
 
@@ -25,6 +26,24 @@ type GroupInfo = {
   id: string;
   name_ja: string | null;
   slug: string | null;
+};
+
+type ExternalIdRow = {
+  service: string;
+  external_id: string | null;
+  url: string | null;
+};
+
+type PublicGroupRow = {
+  id: string;
+  spotify_id: string | null;
+};
+
+type EventRow = {
+  event_name: string | null;
+  event_date: string | null;
+  venue_name: string | null;
+  event_url: string | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -54,6 +73,19 @@ function extractTweetId(tweetUrl: string): string | null {
   return match?.[1] ?? null;
 }
 
+function buildSpotifyEmbedUrl(spotifyUrl: string | null, spotifyExternalId: string | null): string | null {
+  if (spotifyUrl) {
+    const match = spotifyUrl.match(/spotify\.com\/(track|album|artist|playlist)\/([A-Za-z0-9]+)/);
+    if (match) {
+      return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
+    }
+  }
+  if (spotifyExternalId) {
+    return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
+  }
+  return null;
+}
+
 export default function BuzzttaraTweetDetailPage() {
   const params = useParams<{ id: string }>();
   const tweetIdParam = params?.id;
@@ -62,6 +94,10 @@ export default function BuzzttaraTweetDetailPage() {
   const [message, setMessage] = useState<string>("");
   const [tweet, setTweet] = useState<TweetDetail | null>(null);
   const [group, setGroup] = useState<GroupInfo | null>(null);
+  const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
+  const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">("idle");
 
   useEffect(() => {
     if (!tweetIdParam) return;
@@ -114,18 +150,73 @@ export default function BuzzttaraTweetDetailPage() {
       };
       setTweet(nextTweet);
 
+      let imdGroupId: string | null = null;
       if (nextTweet.groupId) {
-        const { data: groupRow } = await supabase
+        const { data: byId } = await supabase
           .schema("imd")
           .from("groups")
           .select("id,name_ja,slug")
           .eq("id", nextTweet.groupId)
           .maybeSingle();
-        if (groupRow) {
-          setGroup(groupRow as GroupInfo);
+        if (byId) {
+          imdGroupId = byId.id;
+          setGroup(byId as GroupInfo);
+        } else {
+          const { data: publicGroup } = await supabase
+            .from("groups")
+            .select("id,spotify_id")
+            .eq("id", nextTweet.groupId)
+            .maybeSingle();
+          const spotifyId = (publicGroup as PublicGroupRow | null)?.spotify_id ?? null;
+          if (spotifyId) {
+            const { data: spotifyRows } = await supabase
+              .schema("imd")
+              .from("external_ids")
+              .select("group_id")
+              .eq("service", "spotify")
+              .eq("external_id", spotifyId)
+              .limit(1);
+            const resolvedId = spotifyRows?.[0]?.group_id ?? null;
+            if (resolvedId) {
+              imdGroupId = resolvedId;
+              const { data: resolvedGroup } = await supabase
+                .schema("imd")
+                .from("groups")
+                .select("id,name_ja,slug")
+                .eq("id", resolvedId)
+                .maybeSingle();
+              setGroup((resolvedGroup as GroupInfo | null) ?? null);
+            }
+          } else {
+            setGroup(null);
+          }
         }
       } else {
         setGroup(null);
+      }
+
+      if (imdGroupId) {
+        const { data: extRows } = await supabase
+          .schema("imd")
+          .from("external_ids")
+          .select("service,external_id,url")
+          .eq("group_id", imdGroupId);
+        setExternalIds((extRows ?? []) as ExternalIdRow[]);
+      } else {
+        setExternalIds([]);
+      }
+
+      if (nextTweet.groupId) {
+        const { data: eventRow } = await supabase
+          .from("events")
+          .select("event_name,event_date,venue_name,event_url")
+          .eq("group_id", nextTweet.groupId)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        setLatestEvent((eventRow as EventRow | null) ?? null);
+      } else {
+        setLatestEvent(null);
       }
 
       setStatus("idle");
@@ -137,12 +228,45 @@ export default function BuzzttaraTweetDetailPage() {
     });
   }, [tweetIdParam]);
 
-  const embedUrl = (() => {
-    if (!tweet?.tweetUrl) return null;
-    const id = extractTweetId(tweet.tweetUrl);
-    if (!id) return null;
-    return `https://platform.twitter.com/embed/Tweet.html?id=${id}&theme=dark`;
+  const serviceMap = (() => {
+    const map = new Map<string, ExternalIdRow>();
+    for (const row of externalIds) {
+      if (!map.has(row.service)) {
+        map.set(row.service, row);
+      }
+    }
+    return map;
   })();
+
+  const websiteUrl = serviceMap.get("website")?.url ?? null;
+  const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
+  const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
+  const spotifyEmbedUrl = buildSpotifyEmbedUrl(spotifyUrl, spotifyExternalId);
+  const youtubeUrl = serviceMap.get("youtube_channel")?.url ?? null;
+  const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
+
+  useEffect(() => {
+    const run = async () => {
+      if (!youtubeUrl && !youtubeExternalId) {
+        setYoutubeVideoId(null);
+        setYoutubeStatus("idle");
+        return;
+      }
+      setYoutubeStatus("loading");
+      const params = new URLSearchParams();
+      if (youtubeUrl) params.set("url", youtubeUrl);
+      if (youtubeExternalId) params.set("external_id", youtubeExternalId);
+      const res = await fetch(`/api/youtube?${params.toString()}`);
+      const data = (await res.json()) as { videoId?: string };
+      setYoutubeVideoId(data.videoId ?? null);
+      setYoutubeStatus("idle");
+    };
+
+    run().catch(() => {
+      setYoutubeVideoId(null);
+      setYoutubeStatus("error");
+    });
+  }, [youtubeExternalId, youtubeUrl]);
 
   if (status === "error") {
     return (
@@ -179,7 +303,8 @@ export default function BuzzttaraTweetDetailPage() {
         {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
 
         {tweet && (
-          <>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
               <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
               <h1 className="mt-1 text-3xl font-semibold">{tweet.idolName}</h1>
@@ -203,16 +328,9 @@ export default function BuzzttaraTweetDetailPage() {
 
             <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
               <h2 className="text-lg font-semibold">投稿</h2>
-              {embedUrl ? (
-                <iframe
-                  src={embedUrl}
-                  title="Tweet Embed"
-                  className="mt-4 h-[560px] w-full rounded-xl border border-zinc-700"
-                  loading="lazy"
-                />
-              ) : (
-                <p className="mt-4 text-sm text-zinc-400">埋め込み表示に対応していないURLです。</p>
-              )}
+              <div className="mt-4">
+                <SafeTweetEmbed tweetId={extractTweetId(tweet.tweetUrl)} tweetUrl={tweet.tweetUrl} />
+              </div>
               <a
                 href={tweet.tweetUrl}
                 target="_blank"
@@ -240,7 +358,88 @@ export default function BuzzttaraTweetDetailPage() {
                 <p className="mt-4 text-sm text-zinc-400">タグはまだ設定されていません。</p>
               )}
             </section>
-          </>
+            </div>
+
+            <aside className="space-y-6">
+              <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <h2 className="text-lg font-semibold">公式サイト</h2>
+                {websiteUrl ? (
+                  <a
+                    href={websiteUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex break-all text-sm text-cyan-200 hover:text-cyan-100"
+                  >
+                    {websiteUrl}
+                  </a>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <h2 className="text-lg font-semibold">Spotify</h2>
+                {spotifyEmbedUrl ? (
+                  <iframe
+                    className="mt-3 w-full rounded-xl border border-zinc-700"
+                    src={spotifyEmbedUrl}
+                    height="352"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    title="Spotify preview"
+                  />
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-400">Spotify情報が未登録です。</p>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <h2 className="text-lg font-semibold">おすすめ動画</h2>
+                {youtubeStatus === "loading" && (
+                  <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
+                )}
+                {youtubeStatus !== "loading" && youtubeVideoId ? (
+                  <iframe
+                    className="mt-3 w-full rounded-xl border border-zinc-700"
+                    src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+                    height="220"
+                    loading="lazy"
+                    title="YouTube preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  youtubeStatus !== "loading" && (
+                    <p className="mt-3 text-sm text-zinc-400">おすすめ動画を取得できませんでした。</p>
+                  )
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+                <h2 className="text-lg font-semibold">直近のイベント情報</h2>
+                {latestEvent ? (
+                  <div className="mt-3 space-y-2 text-sm text-zinc-200">
+                    <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
+                    <a
+                      href={
+                        latestEvent.event_url?.startsWith("http")
+                          ? latestEvent.event_url
+                          : `https://ticketdive.com/event/${latestEvent.event_url ?? ""}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex text-cyan-200 hover:text-cyan-100"
+                    >
+                      {latestEvent.event_name ?? "イベント詳細"}
+                    </a>
+                    <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
+                )}
+              </section>
+            </aside>
+          </div>
         )}
       </main>
     </div>

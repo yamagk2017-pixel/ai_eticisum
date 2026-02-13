@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SafeTweetEmbed } from "./safe-tweet-embed";
 
 type Status = "idle" | "loading" | "error";
 
@@ -207,6 +208,10 @@ export function BuzzList() {
               <span className="rounded-full border border-zinc-700 px-2 py-1">
                 閲覧 {formatCount(tweet.view_count)}
               </span>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60">
+              <SafeTweetEmbed tweetId={tweetId} tweetUrl={tweet.tweet_url} compact />
             </div>
 
             {tweet.tweet_tags.length > 0 && (
