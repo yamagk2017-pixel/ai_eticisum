@@ -126,7 +126,8 @@ async function resolveLatestDate(
       .maybeSingle();
 
     if (!latestRes.error) {
-      const value = latestRes.data?.[column];
+      const latestRow = (latestRes.data ?? null) as RowRecord | null;
+      const value = latestRow?.[column];
       if (typeof value === "string" && value.length > 0) {
         return { date: value, column, error: null };
       }
