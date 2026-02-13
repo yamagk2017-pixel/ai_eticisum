@@ -131,10 +131,9 @@ export function BuzzList() {
           .select("id,name_ja,slug")
           .in("id", groupIds);
 
-        const map = new Map<string, GroupMapRow>();
-        for (const group of (groupRows ?? []) as GroupMapRow[]) {
-          map.set(group.id, group);
-        }
+        const map = new Map<string, GroupMapRow>(
+          ((groupRows ?? []) as GroupMapRow[]).map((row) => [row.id, row])
+        );
         setGroupsMap(map);
       } else {
         setGroupsMap(new Map());

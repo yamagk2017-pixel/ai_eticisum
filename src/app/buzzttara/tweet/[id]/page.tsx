@@ -34,11 +34,6 @@ type ExternalIdRow = {
   url: string | null;
 };
 
-type PublicGroupRow = {
-  id: string;
-  spotify_id: string | null;
-};
-
 type EventRow = {
   event_name: string | null;
   event_date: string | null;
@@ -162,34 +157,7 @@ export default function BuzzttaraTweetDetailPage() {
           imdGroupId = byId.id;
           setGroup(byId as GroupInfo);
         } else {
-          const { data: publicGroup } = await supabase
-            .from("groups")
-            .select("id,spotify_id")
-            .eq("id", nextTweet.groupId)
-            .maybeSingle();
-          const spotifyId = (publicGroup as PublicGroupRow | null)?.spotify_id ?? null;
-          if (spotifyId) {
-            const { data: spotifyRows } = await supabase
-              .schema("imd")
-              .from("external_ids")
-              .select("group_id")
-              .eq("service", "spotify")
-              .eq("external_id", spotifyId)
-              .limit(1);
-            const resolvedId = spotifyRows?.[0]?.group_id ?? null;
-            if (resolvedId) {
-              imdGroupId = resolvedId;
-              const { data: resolvedGroup } = await supabase
-                .schema("imd")
-                .from("groups")
-                .select("id,name_ja,slug")
-                .eq("id", resolvedId)
-                .maybeSingle();
-              setGroup((resolvedGroup as GroupInfo | null) ?? null);
-            }
-          } else {
-            setGroup(null);
-          }
+          setGroup(null);
         }
       } else {
         setGroup(null);
@@ -206,11 +174,11 @@ export default function BuzzttaraTweetDetailPage() {
         setExternalIds([]);
       }
 
-      if (nextTweet.groupId) {
+      if (imdGroupId) {
         const { data: eventRow } = await supabase
           .from("events")
           .select("event_name,event_date,venue_name,event_url")
-          .eq("group_id", nextTweet.groupId)
+          .eq("group_id", imdGroupId)
           .order("updated_at", { ascending: false })
           .limit(1)
           .maybeSingle();
