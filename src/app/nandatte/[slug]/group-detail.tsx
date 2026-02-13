@@ -8,6 +8,7 @@ type GroupRow = {
   id: string;
   name_ja: string | null;
   slug: string | null;
+  artist_image_url: string | null;
 };
 
 type MetricRow = {
@@ -112,7 +113,7 @@ export function GroupDetail({ slug }: Props) {
       const { data, error } = await supabase
         .schema("imd")
         .from("groups")
-        .select("id,name_ja,slug")
+        .select("id,name_ja,slug,artist_image_url")
         .ilike("slug", safeSlug)
         .maybeSingle();
 
@@ -681,7 +682,15 @@ export function GroupDetail({ slug }: Props) {
     <div className="flex flex-col gap-8">
       <header className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
         <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Group</p>
-        <div className="mt-3 flex flex-wrap items-end gap-6">
+        <div className="mt-3 flex flex-wrap items-start gap-6">
+          {group.artist_image_url ? (
+            <img
+              src={group.artist_image_url}
+              alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
+              className="h-24 w-24 rounded-xl object-cover border border-zinc-700"
+              loading="lazy"
+            />
+          ) : null}
           <h1 className="text-3xl font-semibold">
             {group.name_ja ?? group.slug}
           </h1>
