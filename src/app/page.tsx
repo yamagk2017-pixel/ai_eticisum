@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -16,7 +18,7 @@ export default function Home() {
         </header>
 
         <section className="grid gap-6 md:grid-cols-2">
-          <a
+          <Link
             className="group rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 transition hover:border-zinc-500"
             href="/nandatte"
           >
@@ -30,13 +32,20 @@ export default function Home() {
             <p className="mt-4 text-xs text-zinc-500">
               近日: IHC・バズッタラ連動予定
             </p>
-          </a>
-          <div className="rounded-2xl border border-dashed border-zinc-800 p-6">
-            <h2 className="text-xl font-semibold text-zinc-500">Coming Soon</h2>
-            <p className="mt-3 text-sm text-zinc-500">
-              IHC / バズッタラ / ALT-IDOL Japan の入口を順次追加します。
+          </Link>
+          <Link
+            className="group rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 transition hover:border-zinc-500"
+            href="/buzzttara"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">バズッタラ</h2>
+              <span className="text-xs text-zinc-400">/buzzttara</span>
+            </div>
+            <p className="mt-3 text-sm text-zinc-300">
+              アイドル界隈で話題化した投稿を収集し、バズの流れを時系列で確認できる一覧。
             </p>
-          </div>
+            <p className="mt-4 text-xs text-zinc-500">v0既存アプリの移植版</p>
+          </Link>
         </section>
       </main>
     </div>
