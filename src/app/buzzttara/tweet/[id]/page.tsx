@@ -32,6 +32,7 @@ type ExternalIdRow = {
   service: string;
   external_id: string | null;
   url: string | null;
+  created_at?: string | null;
 };
 
 type EventRow = {
@@ -81,6 +82,24 @@ function buildSpotifyEmbedUrl(spotifyUrl: string | null, spotifyExternalId: stri
   return null;
 }
 
+function normalizeUrl(url: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (
+    trimmed.startsWith("youtube.com/") ||
+    trimmed.startsWith("www.youtube.com/") ||
+    trimmed.startsWith("youtu.be/")
+  ) {
+    return `https://${trimmed}`;
+  }
+  if (trimmed.startsWith("@")) {
+    return `https://www.youtube.com/${trimmed}`;
+  }
+  return trimmed;
+}
+
 export default function BuzzttaraTweetDetailPage() {
   const params = useParams<{ id: string }>();
   const tweetIdParam = params?.id;
@@ -93,6 +112,7 @@ export default function BuzzttaraTweetDetailPage() {
   const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [youtubeError, setYoutubeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tweetIdParam) return;
@@ -167,8 +187,9 @@ export default function BuzzttaraTweetDetailPage() {
         const { data: extRows } = await supabase
           .schema("imd")
           .from("external_ids")
-          .select("service,external_id,url")
-          .eq("group_id", imdGroupId);
+          .select("service,external_id,url,created_at")
+          .eq("group_id", imdGroupId)
+          .order("created_at", { ascending: false });
         setExternalIds((extRows ?? []) as ExternalIdRow[]);
       } else {
         setExternalIds([]);
@@ -201,6 +222,13 @@ export default function BuzzttaraTweetDetailPage() {
     for (const row of externalIds) {
       if (!map.has(row.service)) {
         map.set(row.service, row);
+        continue;
+      }
+      const current = map.get(row.service);
+      const nextScore = (row.url ? 1 : 0) + (row.external_id ? 1 : 0);
+      const currentScore = ((current?.url ? 1 : 0) + (current?.external_id ? 1 : 0)) || 0;
+      if (nextScore > currentScore) {
+        map.set(row.service, row);
       }
     }
     return map;
@@ -210,29 +238,50 @@ export default function BuzzttaraTweetDetailPage() {
   const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
   const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
   const spotifyEmbedUrl = buildSpotifyEmbedUrl(spotifyUrl, spotifyExternalId);
-  const youtubeUrl = serviceMap.get("youtube_channel")?.url ?? null;
-  const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
+  const youtubeRow = serviceMap.get("youtube_channel") ?? null;
+  const youtubeUrl = normalizeUrl(youtubeRow?.url ?? null);
+  const youtubeExternalId = (() => {
+    if (youtubeRow?.external_id) return youtubeRow.external_id;
+    const raw = (youtubeRow?.url ?? "").trim();
+    if (raw.startsWith("UC")) return raw;
+    return null;
+  })();
 
   useEffect(() => {
     const run = async () => {
       if (!youtubeUrl && !youtubeExternalId) {
         setYoutubeVideoId(null);
         setYoutubeStatus("idle");
+        setYoutubeError(null);
         return;
       }
       setYoutubeStatus("loading");
+      setYoutubeError(null);
       const params = new URLSearchParams();
       if (youtubeUrl) params.set("url", youtubeUrl);
       if (youtubeExternalId) params.set("external_id", youtubeExternalId);
       const res = await fetch(`/api/youtube?${params.toString()}`);
-      const data = (await res.json()) as { videoId?: string };
-      setYoutubeVideoId(data.videoId ?? null);
+      const data = (await res.json()) as { videoId?: string; error?: string };
+      if (!res.ok) {
+        setYoutubeVideoId(null);
+        setYoutubeStatus("error");
+        setYoutubeError(data.error ?? `API error: ${res.status}`);
+        return;
+      }
+      if (!data.videoId) {
+        setYoutubeVideoId(null);
+        setYoutubeStatus("error");
+        setYoutubeError(data.error ?? "動画IDを取得できませんでした。");
+        return;
+      }
+      setYoutubeVideoId(data.videoId);
       setYoutubeStatus("idle");
     };
 
     run().catch(() => {
       setYoutubeVideoId(null);
       setYoutubeStatus("error");
+      setYoutubeError("YouTube APIの呼び出しに失敗しました。");
     });
   }, [youtubeExternalId, youtubeUrl]);
 
@@ -378,7 +427,9 @@ export default function BuzzttaraTweetDetailPage() {
                   />
                 ) : (
                   youtubeStatus !== "loading" && (
-                    <p className="mt-3 text-sm text-zinc-400">おすすめ動画を取得できませんでした。</p>
+                    <p className="mt-3 text-sm text-zinc-400">
+                      おすすめ動画を取得できませんでした。{youtubeError ? `(${youtubeError})` : ""}
+                    </p>
                   )
                 )}
               </section>
