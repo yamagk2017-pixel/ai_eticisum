@@ -16,17 +16,66 @@ export type DailyTopRow = {
 };
 
 type Status = "idle" | "loading" | "error";
+type RankingSource = "daily" | "weekly";
 
 type RankingListProps = {
   date?: string;
   title?: string;
   showArchiveLink?: boolean;
+  source?: RankingSource;
 };
 
 type GroupSlugRow = {
   id: string;
   slug: string | null;
 };
+
+type RowRecord = Record<string, unknown>;
+
+function getRankingConfig(source: RankingSource) {
+  if (source === "weekly") {
+    return {
+      table: "weekly_rankings",
+      dateColumns: ["week_end_date", "week_start_date", "snapshot_date", "week_date"],
+      archiveHref: "/imakite/weekly/archive",
+      label: "WEEKLY",
+      defaultTitle: "今週のランキング",
+    };
+  }
+  return {
+    table: "daily_top20",
+    dateColumns: ["snapshot_date"],
+    archiveHref: "/imakite/archive",
+    label: "DAILY",
+    defaultTitle: "今日のランキング",
+  };
+}
+
+function pickString(row: RowRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function pickNumber(row: RowRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === "string") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+  return null;
+}
 
 function formatJapaneseDate(dateString: string) {
   if (!dateString) return "";
@@ -60,49 +109,88 @@ function cardHeight(rank: number) {
   return "min-h-[180px]";
 }
 
-export function ImakiteRankingList({ date, title, showArchiveLink }: RankingListProps) {
+async function resolveLatestDate(
+  source: RankingSource,
+  table: string,
+  dateColumns: string[]
+): Promise<{ date: string | null; column: string | null; error: string | null }> {
+  const supabase = createClient();
+
+  for (const column of dateColumns) {
+    const latestRes = await supabase
+      .schema("ihc")
+      .from(table)
+      .select(column)
+      .order(column, { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!latestRes.error) {
+      const value = latestRes.data?.[column];
+      if (typeof value === "string" && value.length > 0) {
+        return { date: value, column, error: null };
+      }
+    }
+  }
+
+  return {
+    date: null,
+    column: null,
+    error:
+      source === "weekly"
+        ? "週次ランキングの最新日を取得できませんでした。テーブル名または日付列を確認してください。"
+        : "最新日の取得に失敗しました。",
+  };
+}
+
+export function ImakiteRankingList({
+  date,
+  title,
+  showArchiveLink,
+  source = "daily",
+}: RankingListProps) {
   const [rows, setRows] = useState<DailyTopRow[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
   const [activeDate, setActiveDate] = useState<string | null>(date ?? null);
   const [slugMap, setSlugMap] = useState<Map<string, string | null>>(new Map());
+  const [playlistEmbedLink, setPlaylistEmbedLink] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
+      const config = getRankingConfig(source);
 
       let targetDate = date ?? null;
-      if (!targetDate) {
-        const latestRes = await supabase
-          .schema("ihc")
-          .from("daily_top20")
-          .select("snapshot_date")
-          .order("snapshot_date", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+      let targetColumn: string | null = null;
 
-        if (latestRes.error) {
+      if (!targetDate) {
+        const latest = await resolveLatestDate(source, config.table, config.dateColumns);
+        if (latest.error || !latest.date || !latest.column) {
           setStatus("error");
-          setMessage(latestRes.error.message);
+          setMessage(latest.error ?? "最新日の取得に失敗しました。");
           return;
         }
-        targetDate = latestRes.data?.snapshot_date ?? null;
+        targetDate = latest.date;
+        targetColumn = latest.column;
       }
 
-      if (!targetDate) {
+      if (targetDate && !targetColumn) {
+        targetColumn = config.dateColumns[0] ?? "snapshot_date";
+      }
+
+      if (!targetDate || !targetColumn) {
         setStatus("error");
-        setMessage("最新日の取得に失敗しました。");
+        setMessage("対象日の取得に失敗しました。");
         return;
       }
 
       const { data, error } = await supabase
         .schema("ihc")
-        .from("daily_top20")
-        .select(
-          "snapshot_date,group_id,rank,artist_name,score,latest_track_name,latest_track_embed_link,artist_image_url"
-        )
-        .eq("snapshot_date", targetDate)
+        .from(config.table)
+        .select("*")
+        .eq(targetColumn, targetDate)
         .order("rank", { ascending: true });
 
       if (error) {
@@ -111,15 +199,44 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
         return;
       }
 
-      const rowsData = (data ?? []) as DailyTopRow[];
+      const rowsData = ((data ?? []) as RowRecord[])
+        .map((row) => {
+          const snapshotDate = pickString(row, config.dateColumns) ?? targetDate;
+          const groupId = pickString(row, ["group_id"]) ?? "";
+          const rank = pickNumber(row, ["rank"]) ?? 0;
+          const artistName = pickString(row, ["artist_name", "group_name"]) ?? "-";
+          const score = pickNumber(row, ["score", "weekly_score"]) ?? 0;
+
+          return {
+            snapshot_date: snapshotDate,
+            group_id: groupId,
+            rank,
+            artist_name: artistName,
+            score,
+            latest_track_name: pickString(row, ["latest_track_name", "track_name"]),
+            latest_track_embed_link: pickString(row, [
+              "latest_track_embed_link",
+              "track_embed_link",
+            ]),
+            artist_image_url: pickString(row, ["artist_image_url", "image_url"]),
+          };
+        })
+        .filter((row) => row.rank > 0)
+        .sort((a, b) => a.rank - b.rank);
+
       setRows(rowsData);
-      const groupIds = Array.from(new Set(rowsData.map((row) => row.group_id)));
+
+      const groupIds = Array.from(
+        new Set(rowsData.map((row) => row.group_id).filter((groupId) => groupId.length > 0))
+      );
+
       if (groupIds.length > 0) {
         const { data: groupsData } = await supabase
           .schema("imd")
           .from("groups")
           .select("id,slug")
           .in("id", groupIds);
+
         const map = new Map<string, string | null>(
           ((groupsData ?? []) as GroupSlugRow[]).map((group) => [group.id, group.slug])
         );
@@ -127,6 +244,22 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
       } else {
         setSlugMap(new Map());
       }
+
+      if (source === "weekly") {
+        const firstRow = ((data ?? [])[0] ?? null) as RowRecord | null;
+        setPlaylistEmbedLink(
+          firstRow
+            ? pickString(firstRow, [
+                "playlist_embed_link",
+                "spotify_playlist_embed_link",
+                "weekly_playlist_embed_link",
+              ])
+            : null
+        );
+      } else {
+        setPlaylistEmbedLink(null);
+      }
+
       setActiveDate(targetDate);
       setStatus("idle");
     };
@@ -135,8 +268,9 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, [date]);
+  }, [date, source]);
 
+  const config = useMemo(() => getRankingConfig(source), [source]);
   const dateLabel = useMemo(() => (activeDate ? formatJapaneseDate(activeDate) : ""), [activeDate]);
 
   if (status === "error") {
@@ -152,22 +286,35 @@ export function ImakiteRankingList({ date, title, showArchiveLink }: RankingList
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
-            IMAKITE RANKING
+            IMAKITE RANKING {config.label}
           </p>
           <h2 className="text-2xl font-semibold text-white sm:text-3xl">
-            {title ?? "今日のランキング"}
+            {title ?? config.defaultTitle}
           </h2>
           {dateLabel && <p className="mt-2 text-sm text-zinc-300">{dateLabel}</p>}
         </div>
         {showArchiveLink && (
           <Link
-            href="/imakite/archive"
+            href={config.archiveHref}
             className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
           >
             過去のランキングを見る →
           </Link>
         )}
       </div>
+
+      {playlistEmbedLink && (
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+          <iframe
+            title="Weekly Playlist"
+            src={playlistEmbedLink}
+            width="100%"
+            height={152}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          />
+        </div>
+      )}
 
       {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
 

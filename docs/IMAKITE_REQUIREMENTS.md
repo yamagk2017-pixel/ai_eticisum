@@ -131,3 +131,23 @@ https://open.spotify.com/embed/track/2CDZa6XiId5brsaFznd45N
 - 週間／月間ランキングの派生。
 - 日付比較UI（2日分の比較ビュー）。
 - SNSシェア用OGカード生成（当日Top3表示など）。
+
+---
+
+## 10. Weekly（追加要件）
+### 10.1 目的
+- 月曜夜集計の週間ランキングを、日次と同格の主要導線として表示する。
+- 週間ランキングのSpotifyプレイリストをページ上部に表示する。
+
+### 10.2 画面/URL
+- 最新週: `/imakite/weekly`
+- 週次アーカイブ: `/imakite/weekly/archive`
+- 週次詳細: `/imakite/weekly/ranking/YYYY-MM-DD`
+
+### 10.3 導線
+- `/imakite` と `/imakite/weekly` に `Daily / Weekly` タブを表示。
+- 週次ページには「過去の週間ランキングを見る」リンクを表示。
+
+### 10.4 表示内容
+- 基本表示は日次と同じ（Top20カード、順位、アーティスト、スコア、曲名、Spotify埋め込み）。
+- 週間ページはランキングリストの上に週間プレイリスト埋め込みを表示（データがある場合）。
