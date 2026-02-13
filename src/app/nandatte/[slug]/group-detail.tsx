@@ -792,10 +792,9 @@ export function GroupDetail({ slug }: Props) {
           <h2 className="text-xl font-semibold">Spotify プレビュー</h2>
           {spotifyEmbedUrl ? (
             <iframe
-              className="mt-4 block w-full rounded-xl border border-zinc-800"
-              src={`${spotifyEmbedUrl}?utm_source=generator`}
+              className="mt-4 block w-full"
+              src={spotifyEmbedUrl}
               height="352"
-              style={{ height: "352px" }}
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               loading="lazy"
               title="Spotify preview"
