@@ -28,7 +28,7 @@ export default function ImakiteWeeklyArchivePage() {
       setStatus("loading");
       const supabase = createClient();
       const tables = ["weekly_rankings"];
-      const dateColumns = ["week_end_date", "snapshot_date", "week_start_date", "week_date"];
+      const dateColumns = ["week_end_date"];
 
       for (const table of tables) {
         for (const column of dateColumns) {

@@ -36,7 +36,7 @@ function getRankingConfig(source: RankingSource) {
   if (source === "weekly") {
     return {
       tables: ["weekly_rankings"],
-      dateColumns: ["week_end_date", "week_start_date", "snapshot_date", "week_date"],
+      dateColumns: ["week_end_date"],
       archiveHref: "/imakite/weekly/archive",
       label: "WEEKLY",
       defaultTitle: "今週のランキング",
@@ -115,6 +115,8 @@ async function resolveLatestDate(
   dateColumns: string[]
 ): Promise<{ date: string | null; column: string | null; table: string | null; error: string | null }> {
   const supabase = createClient();
+  let hadSuccessfulQuery = false;
+  let lastError: string | null = null;
 
   for (const table of tables) {
     for (const column of dateColumns) {
@@ -126,12 +128,16 @@ async function resolveLatestDate(
         .limit(1)
         .maybeSingle();
 
-      if (!latestRes.error) {
-        const latestRow = (latestRes.data ?? null) as RowRecord | null;
-        const value = latestRow?.[column];
-        if (typeof value === "string" && value.length > 0) {
-          return { date: value, column, table, error: null };
-        }
+      if (latestRes.error) {
+        lastError = latestRes.error.message;
+        continue;
+      }
+
+      hadSuccessfulQuery = true;
+      const latestRow = (latestRes.data ?? null) as RowRecord | null;
+      const value = latestRow?.[column];
+      if (typeof value === "string" && value.length > 0) {
+        return { date: value, column, table, error: null };
       }
     }
   }
@@ -142,8 +148,12 @@ async function resolveLatestDate(
     table: null,
     error:
       source === "weekly"
-        ? "週次ランキングの最新日を取得できませんでした。テーブル名または日付列を確認してください。"
-        : "最新日の取得に失敗しました。",
+        ? lastError
+          ? `週次ランキングの最新日取得に失敗しました: ${lastError}`
+          : hadSuccessfulQuery
+            ? "週次ランキングデータが見つかりません。ihc.weekly_rankings の week_end_date データ、またはRLSのSELECTポリシーを確認してください。"
+            : "週次ランキングの最新日を取得できませんでした。weekly_rankings / week_end_date を確認してください。"
+        : lastError ?? "最新日の取得に失敗しました。",
   };
 }
 
