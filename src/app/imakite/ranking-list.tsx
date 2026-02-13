@@ -286,16 +286,43 @@ export function ImakiteRankingList({
       }
 
       if (source === "weekly") {
-        const firstRow = ((data ?? [])[0] ?? null) as RowRecord | null;
-        setPlaylistEmbedLink(
-          firstRow
-            ? pickString(firstRow, [
-                "playlist_embed_link",
-                "spotify_playlist_embed_link",
-                "weekly_playlist_embed_link",
-              ])
-            : null
-        );
+        const { data: playlistRow, error: playlistError } = await supabase
+          .schema("ihc")
+          .from("weekly_playlists")
+          .select("spotify_embed_url,spotify_playlist_url")
+          .eq("week_end_date", targetDate)
+          .maybeSingle();
+
+        if (!playlistError) {
+          const embedUrl =
+            pickString((playlistRow ?? null) as RowRecord, ["spotify_embed_url"]) ??
+            pickString((playlistRow ?? null) as RowRecord, ["spotify_playlist_url"]);
+          if (embedUrl) {
+            setPlaylistEmbedLink(embedUrl);
+          } else {
+            const firstRow = ((data ?? [])[0] ?? null) as RowRecord | null;
+            setPlaylistEmbedLink(
+              firstRow
+                ? pickString(firstRow, [
+                    "playlist_embed_link",
+                    "spotify_playlist_embed_link",
+                    "weekly_playlist_embed_link",
+                  ])
+                : null
+            );
+          }
+        } else {
+          const firstRow = ((data ?? [])[0] ?? null) as RowRecord | null;
+          setPlaylistEmbedLink(
+            firstRow
+              ? pickString(firstRow, [
+                  "playlist_embed_link",
+                  "spotify_playlist_embed_link",
+                  "weekly_playlist_embed_link",
+                ])
+              : null
+          );
+        }
       } else {
         setPlaylistEmbedLink(null);
       }
