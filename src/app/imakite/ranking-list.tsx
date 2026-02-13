@@ -35,7 +35,7 @@ type RowRecord = Record<string, unknown>;
 function getRankingConfig(source: RankingSource) {
   if (source === "weekly") {
     return {
-      table: "weekly_rankings",
+      tables: ["weekly_rankings"],
       dateColumns: ["week_end_date", "week_start_date", "snapshot_date", "week_date"],
       archiveHref: "/imakite/weekly/archive",
       label: "WEEKLY",
@@ -43,7 +43,7 @@ function getRankingConfig(source: RankingSource) {
     };
   }
   return {
-    table: "daily_top20",
+    tables: ["daily_top20"],
     dateColumns: ["snapshot_date"],
     archiveHref: "/imakite/archive",
     label: "DAILY",
@@ -111,25 +111,27 @@ function cardHeight(rank: number) {
 
 async function resolveLatestDate(
   source: RankingSource,
-  table: string,
+  tables: string[],
   dateColumns: string[]
-): Promise<{ date: string | null; column: string | null; error: string | null }> {
+): Promise<{ date: string | null; column: string | null; table: string | null; error: string | null }> {
   const supabase = createClient();
 
-  for (const column of dateColumns) {
-    const latestRes = await supabase
-      .schema("ihc")
-      .from(table)
-      .select(column)
-      .order(column, { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  for (const table of tables) {
+    for (const column of dateColumns) {
+      const latestRes = await supabase
+        .schema("ihc")
+        .from(table)
+        .select(column)
+        .order(column, { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (!latestRes.error) {
-      const latestRow = (latestRes.data ?? null) as RowRecord | null;
-      const value = latestRow?.[column];
-      if (typeof value === "string" && value.length > 0) {
-        return { date: value, column, error: null };
+      if (!latestRes.error) {
+        const latestRow = (latestRes.data ?? null) as RowRecord | null;
+        const value = latestRow?.[column];
+        if (typeof value === "string" && value.length > 0) {
+          return { date: value, column, table, error: null };
+        }
       }
     }
   }
@@ -137,6 +139,7 @@ async function resolveLatestDate(
   return {
     date: null,
     column: null,
+    table: null,
     error:
       source === "weekly"
         ? "週次ランキングの最新日を取得できませんでした。テーブル名または日付列を確認してください。"
@@ -165,48 +168,86 @@ export function ImakiteRankingList({
 
       let targetDate = date ?? null;
       let targetColumn: string | null = null;
+      let targetTable: string | null = null;
 
       if (!targetDate) {
-        const latest = await resolveLatestDate(source, config.table, config.dateColumns);
-        if (latest.error || !latest.date || !latest.column) {
+        const latest = await resolveLatestDate(source, config.tables, config.dateColumns);
+        if (latest.error || !latest.date || !latest.column || !latest.table) {
           setStatus("error");
           setMessage(latest.error ?? "最新日の取得に失敗しました。");
           return;
         }
         targetDate = latest.date;
         targetColumn = latest.column;
+        targetTable = latest.table;
       }
 
       if (targetDate && !targetColumn) {
         targetColumn = config.dateColumns[0] ?? "snapshot_date";
       }
 
-      if (!targetDate || !targetColumn) {
+      if (targetDate && !targetTable) {
+        targetTable = config.tables[0] ?? null;
+      }
+
+      if (!targetDate || !targetColumn || !targetTable) {
         setStatus("error");
         setMessage("対象日の取得に失敗しました。");
         return;
       }
 
-      const { data, error } = await supabase
-        .schema("ihc")
-        .from(config.table)
-        .select("*")
-        .eq(targetColumn, targetDate)
-        .order("rank", { ascending: true });
+      const orderedTables = [targetTable, ...config.tables.filter((table) => table !== targetTable)];
+      const orderedColumns = [
+        targetColumn,
+        ...config.dateColumns.filter((column) => column !== targetColumn),
+      ];
 
-      if (error) {
+      let data: RowRecord[] = [];
+      let queryError: string | null = null;
+      let querySucceeded = false;
+
+      for (const table of orderedTables) {
+        for (const column of orderedColumns) {
+          const result = await supabase
+            .schema("ihc")
+            .from(table)
+            .select("*")
+            .eq(column, targetDate)
+            .order("rank", { ascending: true });
+
+          if (result.error) {
+            queryError = result.error.message;
+            continue;
+          }
+
+          data = (result.data ?? []) as RowRecord[];
+          targetTable = table;
+          targetColumn = column;
+          querySucceeded = true;
+
+          if (data.length > 0) {
+            break;
+          }
+        }
+
+        if (querySucceeded && data.length > 0) {
+          break;
+        }
+      }
+
+      if (!querySucceeded && queryError) {
         setStatus("error");
-        setMessage(error.message);
+        setMessage(queryError);
         return;
       }
 
-      const rowsData = ((data ?? []) as RowRecord[])
+      const rowsData = data
         .map((row) => {
           const snapshotDate = pickString(row, config.dateColumns) ?? targetDate;
           const groupId = pickString(row, ["group_id"]) ?? "";
           const rank = pickNumber(row, ["rank"]) ?? 0;
           const artistName = pickString(row, ["artist_name", "group_name"]) ?? "-";
-          const score = pickNumber(row, ["score", "weekly_score"]) ?? 0;
+          const score = pickNumber(row, ["total_score", "score", "weekly_score"]) ?? 0;
 
           return {
             snapshot_date: snapshotDate,

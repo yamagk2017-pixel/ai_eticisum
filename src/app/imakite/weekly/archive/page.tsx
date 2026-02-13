@@ -27,26 +27,29 @@ export default function ImakiteWeeklyArchivePage() {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
+      const tables = ["weekly_rankings"];
       const dateColumns = ["week_end_date", "snapshot_date", "week_start_date", "week_date"];
 
-      for (const column of dateColumns) {
-        const { data, error } = await supabase
-          .schema("ihc")
-          .from("weekly_rankings")
-          .select(column)
-          .order(column, { ascending: false });
+      for (const table of tables) {
+        for (const column of dateColumns) {
+          const { data, error } = await supabase
+            .schema("ihc")
+            .from(table)
+            .select(column)
+            .order(column, { ascending: false });
 
-        if (error) {
-          continue;
+          if (error) {
+            continue;
+          }
+
+          const rows = (data ?? []) as ArchiveRow[];
+          const uniqueDates = Array.from(
+            new Set(rows.map((row) => extractDate(row)).filter((date): date is string => !!date))
+          );
+          setDates(uniqueDates);
+          setStatus("idle");
+          return;
         }
-
-        const rows = (data ?? []) as ArchiveRow[];
-        const uniqueDates = Array.from(
-          new Set(rows.map((row) => extractDate(row)).filter((date): date is string => !!date))
-        );
-        setDates(uniqueDates);
-        setStatus("idle");
-        return;
       }
 
       setStatus("error");
