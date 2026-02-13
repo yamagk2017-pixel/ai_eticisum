@@ -28,6 +28,7 @@ type RankingListProps = {
 type GroupSlugRow = {
   id: string;
   slug: string | null;
+  artist_image_url: string | null;
 };
 
 type RowRecord = Record<string, unknown>;
@@ -223,7 +224,8 @@ export function ImakiteRankingList({
             .from(table)
             .select("*")
             .eq(column, targetDate)
-            .order("rank", { ascending: true });
+            .order("rank", { ascending: true })
+            .limit(20);
 
           if (result.error) {
             queryError = result.error.message;
@@ -274,9 +276,8 @@ export function ImakiteRankingList({
           };
         })
         .filter((row) => row.rank > 0)
-        .sort((a, b) => a.rank - b.rank);
-
-      setRows(rowsData);
+        .sort((a, b) => a.rank - b.rank)
+        .slice(0, 20);
 
       const groupIds = Array.from(
         new Set(rowsData.map((row) => row.group_id).filter((groupId) => groupId.length > 0))
@@ -286,15 +287,22 @@ export function ImakiteRankingList({
         const { data: groupsData } = await supabase
           .schema("imd")
           .from("groups")
-          .select("id,slug")
+          .select("id,slug,artist_image_url")
           .in("id", groupIds);
 
-        const map = new Map<string, string | null>(
-          ((groupsData ?? []) as GroupSlugRow[]).map((group) => [group.id, group.slug])
+        const map = new Map<string, GroupSlugRow>(
+          ((groupsData ?? []) as GroupSlugRow[]).map((group) => [group.id, group])
         );
-        setSlugMap(map);
+        setSlugMap(new Map(Array.from(map.entries()).map(([id, group]) => [id, group.slug])));
+        setRows(
+          rowsData.map((row) => ({
+            ...row,
+            artist_image_url: map.get(row.group_id)?.artist_image_url ?? null,
+          }))
+        );
       } else {
         setSlugMap(new Map());
+        setRows(rowsData);
       }
 
       if (source === "weekly") {
@@ -421,22 +429,6 @@ export function ImakiteRankingList({
                 </div>
               </div>
 
-              {row.latest_track_embed_link ? (
-                <div className="mt-auto overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                  <iframe
-                    title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
-                    src={row.latest_track_embed_link}
-                    width="100%"
-                    height={row.rank === 1 ? 152 : 80}
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div className="mt-auto rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
-                  Spotify埋め込みがありません。
-                </div>
-              )}
             </div>
           </article>
         ))}
