@@ -14,12 +14,34 @@ type ArchiveRow = {
   week_date?: string;
 };
 
+type PlaylistRow = {
+  week_end_date: string;
+  spotify_embed_url: string | null;
+  spotify_playlist_url: string | null;
+};
+
 function extractDate(row: ArchiveRow) {
   return row.week_end_date ?? row.snapshot_date ?? row.week_start_date ?? row.week_date ?? null;
 }
 
+function toEmbedUrl(row: PlaylistRow): string | null {
+  if (row.spotify_embed_url) {
+    return row.spotify_embed_url;
+  }
+  if (!row.spotify_playlist_url) {
+    return null;
+  }
+
+  const match = row.spotify_playlist_url.match(/spotify\.com\/playlist\/([A-Za-z0-9]+)/);
+  if (!match) {
+    return null;
+  }
+  return `https://open.spotify.com/embed/playlist/${match[1]}`;
+}
+
 export default function ImakiteWeeklyArchivePage() {
   const [dates, setDates] = useState<string[]>([]);
+  const [playlistMap, setPlaylistMap] = useState<Map<string, PlaylistRow>>(new Map());
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
 
@@ -27,33 +49,39 @@ export default function ImakiteWeeklyArchivePage() {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
-      const tables = ["weekly_rankings"];
-      const dateColumns = ["week_end_date"];
 
-      for (const table of tables) {
-        for (const column of dateColumns) {
-          const { data, error } = await supabase
-            .schema("ihc")
-            .from(table)
-            .select(column)
-            .order(column, { ascending: false });
+      const [rankingsRes, playlistsRes] = await Promise.all([
+        supabase
+          .schema("ihc")
+          .from("weekly_rankings")
+          .select("week_end_date")
+          .order("week_end_date", { ascending: false }),
+        supabase
+          .schema("ihc")
+          .from("weekly_playlists")
+          .select("week_end_date,spotify_embed_url,spotify_playlist_url"),
+      ]);
 
-          if (error) {
-            continue;
-          }
-
-          const rows = (data ?? []) as ArchiveRow[];
-          const uniqueDates = Array.from(
-            new Set(rows.map((row) => extractDate(row)).filter((date): date is string => !!date))
-          );
-          setDates(uniqueDates);
-          setStatus("idle");
-          return;
-        }
+      if (rankingsRes.error) {
+        setStatus("error");
+        setMessage(rankingsRes.error.message);
+        return;
       }
 
-      setStatus("error");
-      setMessage("週次アーカイブの日付列を取得できませんでした。");
+      const rows = (rankingsRes.data ?? []) as ArchiveRow[];
+      const uniqueDates = Array.from(
+        new Set(rows.map((row) => extractDate(row)).filter((date): date is string => !!date))
+      );
+      setDates(uniqueDates);
+
+      if (!playlistsRes.error) {
+        const playlists = (playlistsRes.data ?? []) as PlaylistRow[];
+        setPlaylistMap(new Map(playlists.map((row) => [row.week_end_date, row])));
+      } else {
+        setPlaylistMap(new Map());
+      }
+
+      setStatus("idle");
     };
 
     run().catch((err: unknown) => {
@@ -111,16 +139,48 @@ export default function ImakiteWeeklyArchivePage() {
           <p className="text-sm text-zinc-400">アーカイブがありません。</p>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          {dateList.map((date) => (
-            <Link
-              key={date}
-              href={`/imakite/weekly/ranking/${date}`}
-              className="rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-4 text-sm text-zinc-200 hover:border-amber-400/60 hover:text-white"
-            >
-              {formatArchiveDateLabel(date)}
-            </Link>
-          ))}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {dateList.map((date) => {
+            const playlist = playlistMap.get(date);
+            const embedUrl = playlist ? toEmbedUrl(playlist) : null;
+
+            return (
+              <article
+                key={date}
+                className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm text-zinc-200"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    href={`/imakite/weekly/ranking/${date}`}
+                    className="font-semibold hover:text-white"
+                  >
+                    {formatArchiveDateLabel(date)}
+                  </Link>
+                  <Link
+                    href={`/imakite/weekly/ranking/${date}`}
+                    className="text-xs text-amber-300 hover:text-amber-200"
+                  >
+                    ランキングを見る →
+                  </Link>
+                </div>
+
+                {embedUrl ? (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                    <iframe
+                      title={`Weekly Playlist ${date}`}
+                      src={embedUrl}
+                      width="100%"
+                      height={152}
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-zinc-400">プレイリスト未登録</p>
+                )}
+              </article>
+            );
+          })}
         </div>
       </main>
     </div>
