@@ -72,19 +72,6 @@ function normalizeTweet(rawRow: unknown): TweetRow | null {
   };
 }
 
-function formatDate(dateText: string | null): string {
-  if (!dateText) return "-";
-  const timestamp = Date.parse(dateText);
-  if (Number.isNaN(timestamp)) return dateText;
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(timestamp));
-}
-
 function formatCount(value: number | null): string {
   if (value === null) return "-";
   return new Intl.NumberFormat("ja-JP").format(value);
@@ -176,45 +163,46 @@ export function BuzzList() {
         <p className="text-sm text-zinc-400">表示できる投稿がありません。</p>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
         {tweets.map((tweet) => {
           const group = tweet.group_id ? groupsMap.get(tweet.group_id) : undefined;
           const tweetId = extractTweetId(tweet.tweet_url);
           return (
           <article
             key={tweet.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600"
+            className="mb-4 break-inside-avoid rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600"
           >
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline gap-3">
               <div>
-                <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
-                <h3 className="text-xl font-semibold text-white">{tweet.idol_name}</h3>
-                {tweetId && <p className="mt-1 text-xs text-zinc-500">Tweet ID: {tweetId}</p>}
+                {group?.slug ? (
+                  <Link
+                    href={`/nandatte/${group.slug}`}
+                    className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                  >
+                    {group.name_ja ?? "グループ未設定"}
+                  </Link>
+                ) : (
+                  <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
+                )}
+                <div className="mt-1 flex items-baseline gap-2">
+                  <Link
+                    href={`/buzzttara/tweet/${tweet.id}`}
+                    className="text-xl font-semibold text-white underline decoration-zinc-300/80 underline-offset-4 hover:text-cyan-200"
+                  >
+                    {tweet.idol_name}
+                  </Link>
+                  <span className="text-sm text-zinc-300">さんのバズったポスト</span>
+                </div>
               </div>
-              <p className="text-xs text-zinc-400">{formatDate(tweet.created_at)}</p>
             </div>
 
-            {tweet.admin_comment && (
-              <p className="mt-3 rounded-xl border border-zinc-700 bg-zinc-800/40 px-3 py-2 text-xs text-zinc-200">
-                {tweet.admin_comment}
-              </p>
-            )}
-
-            <div className="mt-4 flex flex-wrap gap-3 text-xs text-zinc-300">
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+              <span className="rounded-full border border-zinc-700 px-2 py-1">
+                view {formatCount(tweet.view_count)}
+              </span>
               <span className="rounded-full border border-zinc-700 px-2 py-1">
                 いいね {formatCount(tweet.likeCount)}
               </span>
-              <span className="rounded-full border border-zinc-700 px-2 py-1">
-                閲覧 {formatCount(tweet.view_count)}
-              </span>
-            </div>
-
-            <div className="mt-4 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/60">
-              <SafeTweetEmbed tweetId={tweetId} tweetUrl={tweet.tweet_url} compact />
-            </div>
-
-            {tweet.tweet_tags.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2 text-xs">
                 {tweet.tweet_tags
                   .filter((item) => item.tags?.name !== "SEXY" && item.tags?.name !== "Wow")
                   .map((item) => (
@@ -225,33 +213,12 @@ export function BuzzList() {
                       {(item.tags?.icon ?? "") + " " + (item.tags?.name ?? "tag")} ({formatCount(item.like_count)})
                     </span>
                   ))}
-              </div>
-            )}
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <a
-                href={tweet.tweet_url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex rounded-full border border-cyan-400/50 px-3 py-1 text-xs text-cyan-200 hover:border-cyan-300"
-              >
-                Xで見る →
-              </a>
-              <Link
-                href={`/buzzttara/tweet/${tweet.id}`}
-                className="inline-flex rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
-              >
-                詳細 →
-              </Link>
-              {group?.slug && (
-                <Link
-                  href={`/nandatte/${group.slug}`}
-                  className="inline-flex rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
-                >
-                  グループ詳細 →
-                </Link>
-              )}
             </div>
+
+            <div className="overflow-hidden">
+              <SafeTweetEmbed tweetId={tweetId} tweetUrl={tweet.tweet_url} compact />
+            </div>
+
           </article>
           );
         })}

@@ -54,8 +54,6 @@ function formatDate(dateText: string | null): string {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
   }).format(new Date(timestamp));
 }
 
@@ -307,62 +305,39 @@ export default function BuzzttaraTweetDetailPage() {
           >
             一覧へ戻る
           </Link>
-          {group?.slug && (
-            <Link
-              href={`/nandatte/${group.slug}`}
-              className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
-            >
-              グループ詳細へ
-            </Link>
-          )}
         </div>
 
         {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
 
         {tweet && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
-              <h1 className="mt-1 text-3xl font-semibold">{tweet.idolName}</h1>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-zinc-300">
+            <div className="space-y-6 lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+            <section>
+              {group?.slug ? (
+                <Link
+                  href={`/nandatte/${group.slug}`}
+                  className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                >
+                  {group.name_ja ?? "グループ未設定"}
+                </Link>
+              ) : (
+                <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
+              )}
+              <div className="mt-1 flex items-baseline gap-2">
+                <h1 className="text-3xl font-semibold">{tweet.idolName}</h1>
+                <p className="text-sm text-zinc-300">さんのバズったポスト</p>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+                <span>{formatDate(tweet.createdAt)}</span>
                 <span className="rounded-full border border-zinc-700 px-2 py-1">
-                  投稿日 {formatDate(tweet.createdAt)}
-                </span>
-                <span className="rounded-full border border-zinc-700 px-2 py-1">
-                  閲覧 {formatCount(tweet.viewCount)}
+                  view {formatCount(tweet.viewCount)}
                 </span>
                 <span className="rounded-full border border-zinc-700 px-2 py-1">
                   いいね {formatCount(tweet.likeCount)}
                 </span>
-              </div>
-              {tweet.adminComment && (
-                <p className="mt-4 whitespace-pre-wrap rounded-xl border border-zinc-700 bg-zinc-800/40 p-3 text-sm text-zinc-200">
-                  {tweet.adminComment}
-                </p>
-              )}
-            </section>
-
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-lg font-semibold">投稿</h2>
-              <div className="mt-4">
-                <SafeTweetEmbed tweetId={extractTweetId(tweet.tweetUrl)} tweetUrl={tweet.tweetUrl} />
-              </div>
-              <a
-                href={tweet.tweetUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex rounded-full border border-cyan-400/50 px-3 py-1 text-xs text-cyan-200 hover:border-cyan-300"
-              >
-                Xで開く →
-              </a>
-            </section>
-
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-lg font-semibold">タグ</h2>
-              {tweet.tags.length > 0 ? (
-                <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                  {tweet.tags.map((tag) => (
+                {tweet.tags
+                  .filter((tag) => tag.name !== "SEXY" && tag.name !== "Wow")
+                  .map((tag) => (
                     <span
                       key={tag.id}
                       className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
@@ -370,11 +345,22 @@ export default function BuzzttaraTweetDetailPage() {
                       {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
                     </span>
                   ))}
-                </div>
-              ) : (
-                <p className="mt-4 text-sm text-zinc-400">タグはまだ設定されていません。</p>
-              )}
+              </div>
             </section>
+
+            <section className="pt-0">
+              <div className="mt-1">
+                <SafeTweetEmbed tweetId={extractTweetId(tweet.tweetUrl)} tweetUrl={tweet.tweetUrl} />
+              </div>
+            </section>
+
+            {tweet.adminComment && (
+              <section className="pt-4">
+                <h2 className="text-lg font-semibold">管理者からのコメント</h2>
+                <p className="mt-3 whitespace-pre-wrap text-sm text-zinc-200">{tweet.adminComment}</p>
+              </section>
+            )}
+
             </div>
 
             <aside className="space-y-6">
@@ -398,7 +384,7 @@ export default function BuzzttaraTweetDetailPage() {
                 <h2 className="text-lg font-semibold">Spotify</h2>
                 {spotifyEmbedUrl ? (
                   <iframe
-                    className="mt-3 w-full rounded-xl border border-zinc-700"
+                    className="mt-3 block w-full"
                     src={spotifyEmbedUrl}
                     height="352"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
