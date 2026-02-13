@@ -792,7 +792,7 @@ export function GroupDetail({ slug }: Props) {
           <h2 className="text-xl font-semibold">Spotify プレビュー</h2>
           {spotifyEmbedUrl ? (
             <iframe
-              className="mt-4 w-full rounded-xl border border-zinc-800"
+              className="mt-4 block w-full rounded-xl border border-zinc-800"
               src={spotifyEmbedUrl}
               height="152"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
