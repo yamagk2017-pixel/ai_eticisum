@@ -341,15 +341,30 @@ export function GroupDetail({ slug }: Props) {
   const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
 
   const spotifyEmbedUrl = useMemo(() => {
-    if (spotifyUrl) {
-      const match = spotifyUrl.match(/spotify\.com\/(track|album|artist|playlist)\/([A-Za-z0-9]+)/);
-      if (match) {
-        return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
+    // Prefer artist embed only. Ignore track/album/playlist embeds.
+    if (spotifyExternalId) {
+      const uriMatch = spotifyExternalId.match(/^spotify:artist:([A-Za-z0-9]+)$/);
+      if (uriMatch) {
+        return `https://open.spotify.com/embed/artist/${uriMatch[1]}`;
+      }
+      const urlMatch = spotifyExternalId.match(
+        /open\.spotify\.com\/artist\/([A-Za-z0-9]+)/
+      );
+      if (urlMatch) {
+        return `https://open.spotify.com/embed/artist/${urlMatch[1]}`;
+      }
+      if (/^[A-Za-z0-9]+$/.test(spotifyExternalId)) {
+        return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
       }
     }
-    if (spotifyExternalId) {
-      return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
+
+    if (spotifyUrl) {
+      const artistMatch = spotifyUrl.match(/spotify\.com\/artist\/([A-Za-z0-9]+)/);
+      if (artistMatch) {
+        return `https://open.spotify.com/embed/artist/${artistMatch[1]}`;
+      }
     }
+
     return null;
   }, [spotifyUrl, spotifyExternalId]);
 
@@ -785,7 +800,9 @@ export function GroupDetail({ slug }: Props) {
               title="Spotify preview"
             />
           ) : (
-            <p className="mt-4 text-sm text-zinc-400">Spotifyリンクが未登録です。</p>
+            <p className="mt-4 text-sm text-zinc-400">
+              Spotifyアーティスト情報が未登録です。
+            </p>
           )}
           {spotifyUrl && (
             <a
