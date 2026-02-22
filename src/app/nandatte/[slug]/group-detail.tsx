@@ -848,7 +848,7 @@ export function GroupDetail({ slug }: Props) {
       </header>
 
       <section>
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_264px]">
+        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="min-w-0 space-y-10">
             <section>
               <div className="flex flex-col gap-2">
