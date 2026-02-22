@@ -18,6 +18,13 @@ type ImakiteSummaryItem = {
   playerEmbedUrl: string | null;
 };
 
+type ImakiteSummary = {
+  latestDate: string | null;
+  items: ImakiteSummaryItem[];
+  weeklyPlaylistDate: string | null;
+  weeklyPlaylistEmbedUrl: string | null;
+};
+
 type NandatteSummaryItem = {
   groupId: string;
   name: string;
@@ -94,7 +101,12 @@ function extractTweetId(tweetUrl: string): string | null {
 
 async function getHomeSummaries() {
   const fallback = {
-    imakite: { latestDate: null, items: [] as ImakiteSummaryItem[] },
+    imakite: {
+      latestDate: null,
+      items: [] as ImakiteSummaryItem[],
+      weeklyPlaylistDate: null,
+      weeklyPlaylistEmbedUrl: null,
+    } satisfies ImakiteSummary,
     nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
     buzz: { items: [] as BuzzSummaryItem[] },
   };
@@ -158,40 +170,54 @@ async function getHomeSummaries() {
         const groupIds = Array.from(
           new Set(baseItems.map((row) => row.groupId).filter((id) => id.length > 0))
         );
-        if (groupIds.length === 0) {
-          return { latestDate, items: baseItems };
-        }
+        let items = baseItems;
 
-        const groupsRes = await supabase
-          .schema("imd")
-          .from("groups")
-          .select("id,slug,artist_image_url")
-          .in("id", groupIds);
+        if (groupIds.length > 0) {
+          const groupsRes = await supabase
+            .schema("imd")
+            .from("groups")
+            .select("id,slug,artist_image_url")
+            .in("id", groupIds);
 
-        const groupMap = new Map<string, { slug: string | null; artist_image_url: string | null }>();
-        if (!groupsRes.error) {
-          for (const row of (groupsRes.data ?? []) as Array<{
-            id: string;
-            slug: string | null;
-            artist_image_url: string | null;
-          }>) {
-            groupMap.set(row.id, {
-              slug: row.slug ?? null,
-              artist_image_url: row.artist_image_url ?? null,
-            });
+          const groupMap = new Map<string, { slug: string | null; artist_image_url: string | null }>();
+          if (!groupsRes.error) {
+            for (const row of (groupsRes.data ?? []) as Array<{
+              id: string;
+              slug: string | null;
+              artist_image_url: string | null;
+            }>) {
+              groupMap.set(row.id, {
+                slug: row.slug ?? null,
+                artist_image_url: row.artist_image_url ?? null,
+              });
+            }
           }
+
+          items = baseItems.map((item) => {
+            const group = groupMap.get(item.groupId);
+            return {
+              ...item,
+              slug: group?.slug ?? item.slug,
+              artistImageUrl: group?.artist_image_url ?? item.artistImageUrl,
+            };
+          });
         }
 
-        const items = baseItems.map((item) => {
-          const group = groupMap.get(item.groupId);
-          return {
-            ...item,
-            slug: group?.slug ?? item.slug,
-            artistImageUrl: group?.artist_image_url ?? item.artistImageUrl,
-          };
-        });
+        const weeklyRes = await supabase
+          .schema("ihc")
+          .from("weekly_playlists")
+          .select("week_end_date,spotify_embed_url,spotify_playlist_url")
+          .order("week_end_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-        return { latestDate, items };
+        const weeklyRow = asRecord(weeklyRes.data ?? null);
+        const weeklyPlaylistEmbedUrl = weeklyRes.error
+          ? null
+          : pickString(weeklyRow, ["spotify_embed_url", "spotify_playlist_url"]);
+        const weeklyPlaylistDate = weeklyRes.error ? null : pickString(weeklyRow, ["week_end_date"]);
+
+        return { latestDate, items, weeklyPlaylistDate, weeklyPlaylistEmbedUrl };
       } catch (error) {
         errors.push(error instanceof Error ? error.message : "IMAKITE summary error");
         return fallback.imakite;
@@ -362,9 +388,9 @@ export default async function Home() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
-                  IMAKITE Summary
+                  IMAKITE RANKING
                 </p>
-                <h2 className="mt-2 text-lg font-semibold">最新ランキング</h2>
+                <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
               </div>
               <Link
                 href="/imakite"
@@ -441,6 +467,7 @@ export default async function Home() {
                     </li>
                   ))}
                 </ol>
+
               </>
             ) : (
               <div className="mt-4 rounded-md text-xs text-[var(--ui-text-muted)]">
@@ -449,11 +476,45 @@ export default async function Home() {
             )}
           </div>
 
+          {summaries.imakite.weeklyPlaylistEmbedUrl && (
+            <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
+                    IMAKITE RANKING
+                  </p>
+                  <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
+                </div>
+                <Link
+                  href="/imakite/weekly"
+                  className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+                >
+                  詳細へ
+                </Link>
+              </div>
+              {summaries.imakite.weeklyPlaylistDate && (
+                <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">
+                  {summaries.imakite.weeklyPlaylistDate} 時点
+                </p>
+              )}
+              <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
+                <iframe
+                  title="IMAKITE Weekly Ranking Playlist"
+                  src={summaries.imakite.weeklyPlaylistEmbedUrl}
+                  width="100%"
+                  height={352}
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
-                    NANDATTE Summary
+                    NANDATTE
                   </p>
                   <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
                 </div>
@@ -505,7 +566,7 @@ export default async function Home() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
-                    NANDATTE Summary
+                    NANDATTE
                   </p>
                   <h2 className="mt-2 text-lg font-semibold">更新順</h2>
                 </div>
@@ -559,7 +620,7 @@ export default async function Home() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-500">
-                  BUZZTTARA Summary
+                  BUZZTTARA
                 </p>
                 <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
               </div>
