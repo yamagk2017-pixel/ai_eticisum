@@ -379,328 +379,306 @@ export default async function Home() {
   const summaries = await getHomeSummaries();
   const imakiteTop1 = summaries.imakite.items.find((item) => item.rank === 1) ?? summaries.imakite.items[0] ?? null;
   const imakiteRunnersUp = summaries.imakite.items.filter((item) => (imakiteTop1 ? item.rank !== imakiteTop1.rank : true));
+  const toSortValue = (value: string | null) => {
+    if (!value) return 0;
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+  };
+  const nandatteVoteLatest = summaries.nandatte.voteTop.reduce<string | null>((latest, item) => {
+    if (!item.lastVoteAt) return latest;
+    if (!latest) return item.lastVoteAt;
+    return toSortValue(item.lastVoteAt) > toSortValue(latest) ? item.lastVoteAt : latest;
+  }, null);
+
+  const imakiteDailyCard = (
+    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">IMAKITE RANKING</p>
+          <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
+        </div>
+        <Link
+          href="/imakite"
+          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+        >
+          詳細へ
+        </Link>
+      </div>
+      {summaries.imakite.latestDate && (
+        <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.latestDate} 時点</p>
+      )}
+      {imakiteTop1 ? (
+        <>
+          <article className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
+            <div className="absolute inset-0">
+              {imakiteTop1.artistImageUrl ? (
+                <img
+                  src={imakiteTop1.artistImageUrl}
+                  alt={imakiteTop1.name}
+                  className="h-full w-full object-cover opacity-70"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/90" />
+            </div>
+            <div className="relative flex flex-col gap-4 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-amber-300">1位</p>
+                  <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">
+                    {imakiteTop1.slug ? (
+                      <Link
+                        href={`/nandatte/${imakiteTop1.slug}`}
+                        className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
+                      >
+                        {imakiteTop1.name}
+                      </Link>
+                    ) : (
+                      imakiteTop1.name
+                    )}
+                  </h3>
+                  {imakiteTop1.latestTrackName && (
+                    <p className="mt-1 text-sm text-zinc-200">♪ {imakiteTop1.latestTrackName}</p>
+                  )}
+                </div>
+                <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-amber-200">
+                  {formatPoint(imakiteTop1.point)} pts
+                </div>
+              </div>
+            </div>
+          </article>
+          <ol className="mt-4 space-y-2 text-sm">
+            {imakiteRunnersUp.map((item) => (
+              <li key={`imakite-${item.rank}-${item.name}`} className="flex items-center justify-between gap-3 rounded-md">
+                <span className="truncate">
+                  <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{item.rank}</span>
+                  {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
+                </span>
+                <span className="shrink-0 text-xs font-medium text-[var(--ui-text-muted)]">
+                  {formatPoint(item.point)} pt
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <div className="mt-4 rounded-md text-xs text-[var(--ui-text-muted)]">データを取得できませんでした。</div>
+      )}
+    </div>
+  );
+
+  const imakiteWeeklyCard =
+    summaries.imakite.weeklyPlaylistEmbedUrl ? (
+      <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">IMAKITE RANKING</p>
+            <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
+          </div>
+          <Link
+            href="/imakite/weekly"
+            className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+          >
+            詳細へ
+          </Link>
+        </div>
+        {summaries.imakite.weeklyPlaylistDate && (
+          <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.weeklyPlaylistDate} 時点</p>
+        )}
+        <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
+          <iframe
+            title="IMAKITE Weekly Ranking Playlist"
+            src={summaries.imakite.weeklyPlaylistEmbedUrl}
+            width="100%"
+            height={352}
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    ) : null;
+
+  const nandatteVoteCard = (
+    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">NANDATTE</p>
+          <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
+        </div>
+        <Link
+          href="/nandatte"
+          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+        >
+          詳細へ
+        </Link>
+      </div>
+      <ol className="mt-4 space-y-2 text-sm">
+        {summaries.nandatte.voteTop.length > 0 ? (
+          summaries.nandatte.voteTop.map((item, index) => (
+            <li key={`nandatte-vote-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
+                  )}
+                </div>
+                <span className="truncate">
+                  <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
+                  {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
+                </span>
+              </div>
+              <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">{item.voteCount}票</span>
+            </li>
+          ))
+        ) : (
+          <li className="rounded-md text-xs text-[var(--ui-text-muted)]">データなし</li>
+        )}
+      </ol>
+    </div>
+  );
+
+  const nandatteRecentCard = (
+    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">NANDATTE</p>
+          <h2 className="mt-2 text-lg font-semibold">更新順</h2>
+        </div>
+        <Link
+          href="/nandatte"
+          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+        >
+          詳細へ
+        </Link>
+      </div>
+      <ol className="mt-4 space-y-2 text-sm">
+        {summaries.nandatte.recentTop.length > 0 ? (
+          summaries.nandatte.recentTop.map((item, index) => (
+            <li key={`nandatte-recent-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                  ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
+                  )}
+                </div>
+                <span className="truncate">
+                  <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
+                  {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
+                </span>
+              </div>
+              <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">{formatShortDate(item.lastVoteAt)}</span>
+            </li>
+          ))
+        ) : (
+          <li className="rounded-md text-xs text-[var(--ui-text-muted)]">データなし</li>
+        )}
+      </ol>
+    </div>
+  );
+
+  const buzzCard = (
+    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-500">BUZZTTARA</p>
+          <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
+        </div>
+        <Link
+          href="/buzzttara"
+          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
+        >
+          詳細へ
+        </Link>
+      </div>
+      <div className="mt-4 text-sm">
+        {summaries.buzz.items.length > 0 ? (
+          summaries.buzz.items.map((item) => (
+            <article key={`buzz-${item.id}`} className="break-inside-avoid rounded-lg">
+              <div className="flex items-baseline gap-3">
+                <div>
+                  {item.groupSlug ? (
+                    <Link
+                      href={`/nandatte/${item.groupSlug}`}
+                      className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                    >
+                      {item.groupName ?? "グループ未設定"}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-zinc-400">{item.groupName ?? "グループ未設定"}</p>
+                  )}
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <Link
+                      href={`/buzzttara/tweet/${item.id}`}
+                      className="text-xl font-semibold text-white underline decoration-zinc-300/80 underline-offset-4 hover:text-cyan-200"
+                    >
+                      {item.idolName}
+                    </Link>
+                    <span className="text-sm text-zinc-300">さんのバズったポスト</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+                <span className="rounded-full border border-zinc-700 px-2 py-1">view {formatCount(item.viewCount)}</span>
+                <span className="rounded-full border border-zinc-700 px-2 py-1">いいね {formatCount(item.likeCount)}</span>
+                {item.tags
+                  .filter((tag) => tag.name !== "SEXY" && tag.name !== "Wow")
+                  .map((tag) => (
+                    <span
+                      key={tag.id}
+                      className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
+                    >
+                      {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
+                    </span>
+                  ))}
+              </div>
+              <div className="mt-3 overflow-hidden">
+                <SafeTweetEmbed tweetId={extractTweetId(item.tweetUrl)} tweetUrl={item.tweetUrl} compact />
+              </div>
+              <p className="mt-2 text-right text-xs text-zinc-500">{formatShortDate(item.createdAt)}</p>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-md text-xs text-[var(--ui-text-muted)]">データを取得できませんでした。</div>
+        )}
+      </div>
+    </div>
+  );
+
+  const summaryCards = [
+    { key: "imakite-daily", sortValue: toSortValue(summaries.imakite.latestDate), node: imakiteDailyCard },
+    {
+      key: "imakite-weekly",
+      sortValue: toSortValue(summaries.imakite.weeklyPlaylistDate),
+      node: imakiteWeeklyCard,
+    },
+    { key: "nandatte-vote", sortValue: toSortValue(nandatteVoteLatest), node: nandatteVoteCard },
+    {
+      key: "nandatte-recent",
+      sortValue: toSortValue(summaries.nandatte.recentTop[0]?.lastVoteAt ?? null),
+      node: nandatteRecentCard,
+    },
+    {
+      key: "buzzttara",
+      sortValue: toSortValue(summaries.buzz.items[0]?.createdAt ?? null),
+      node: buzzCard,
+    },
+  ]
+    .filter((card): card is { key: string; sortValue: number; node: JSX.Element } => card.node !== null)
+    .sort((a, b) => b.sortValue - a.sortValue);
 
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
         <section className="columns-1 gap-6 lg:columns-3">
-          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
-                  IMAKITE RANKING
-                </p>
-                <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
-              </div>
-              <Link
-                href="/imakite"
-                className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-              >
-                詳細へ
-              </Link>
-            </div>
-            {summaries.imakite.latestDate && (
-              <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.latestDate} 時点</p>
-            )}
-            {imakiteTop1 ? (
-              <>
-                <article className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
-                  <div className="absolute inset-0">
-                    {imakiteTop1.artistImageUrl ? (
-                      <img
-                        src={imakiteTop1.artistImageUrl}
-                        alt={imakiteTop1.name}
-                        className="h-full w-full object-cover opacity-70"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/90" />
-                  </div>
-
-                  <div className="relative flex flex-col gap-4 p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold text-amber-300">1位</p>
-                        <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">
-                          {imakiteTop1.slug ? (
-                            <Link
-                              href={`/nandatte/${imakiteTop1.slug}`}
-                              className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
-                            >
-                              {imakiteTop1.name}
-                            </Link>
-                          ) : (
-                            imakiteTop1.name
-                          )}
-                        </h3>
-                        {imakiteTop1.latestTrackName && (
-                          <p className="mt-1 text-sm text-zinc-200">♪ {imakiteTop1.latestTrackName}</p>
-                        )}
-                      </div>
-                      <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-amber-200">
-                        {formatPoint(imakiteTop1.point)} pts
-                      </div>
-                    </div>
-
-                  </div>
-                </article>
-
-                <ol className="mt-4 space-y-2 text-sm">
-                  {imakiteRunnersUp.map((item) => (
-                    <li
-                      key={`imakite-${item.rank}-${item.name}`}
-                      className="flex items-center justify-between gap-3 rounded-md"
-                    >
-                      <span className="truncate">
-                        <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{item.rank}</span>
-                        {item.slug ? (
-                          <Link href={`/nandatte/${item.slug}`}>{item.name}</Link>
-                        ) : (
-                          item.name
-                        )}
-                      </span>
-                      <span className="shrink-0 text-xs font-medium text-[var(--ui-text-muted)]">
-                        {formatPoint(item.point)} pt
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-
-              </>
-            ) : (
-              <div className="mt-4 rounded-md text-xs text-[var(--ui-text-muted)]">
-                データを取得できませんでした。
-              </div>
-            )}
-          </div>
-
-          {summaries.imakite.weeklyPlaylistEmbedUrl && (
-            <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
-                    IMAKITE RANKING
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
-                </div>
-                <Link
-                  href="/imakite/weekly"
-                  className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-                >
-                  詳細へ
-                </Link>
-              </div>
-              {summaries.imakite.weeklyPlaylistDate && (
-                <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">
-                  {summaries.imakite.weeklyPlaylistDate} 時点
-                </p>
-              )}
-              <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
-                <iframe
-                  title="IMAKITE Weekly Ranking Playlist"
-                  src={summaries.imakite.weeklyPlaylistEmbedUrl}
-                  width="100%"
-                  height={352}
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
-                    NANDATTE
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
-                </div>
-                <Link
-                  href="/nandatte"
-                  className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-                >
-                  詳細へ
-                </Link>
-              </div>
-              <ol className="mt-4 space-y-2 text-sm">
-                {summaries.nandatte.voteTop.length > 0 ? (
-                  summaries.nandatte.voteTop.map((item, index) => (
-                    <li
-                      key={`nandatte-vote-${item.groupId}-${index}`}
-                      className="flex items-center justify-between gap-3 rounded-md"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
-                          {item.imageUrl ? (
-                            <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
-                          )}
-                        </div>
-                        <span className="truncate">
-                          <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
-                          {item.slug ? (
-                            <Link href={`/nandatte/${item.slug}`} className="hover:underline">
-                              {item.name}
-                            </Link>
-                          ) : (
-                            item.name
-                          )}
-                        </span>
-                      </div>
-                      <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">{item.voteCount}票</span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="rounded-md text-xs text-[var(--ui-text-muted)]">
-                    データなし
-                  </li>
-                )}
-              </ol>
-            </div>
-
-            <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
-                    NANDATTE
-                  </p>
-                  <h2 className="mt-2 text-lg font-semibold">更新順</h2>
-                </div>
-                <Link
-                  href="/nandatte"
-                  className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-                >
-                  詳細へ
-                </Link>
-              </div>
-              <ol className="mt-4 space-y-2 text-sm">
-                {summaries.nandatte.recentTop.length > 0 ? (
-                  summaries.nandatte.recentTop.map((item, index) => (
-                    <li
-                      key={`nandatte-recent-${item.groupId}-${index}`}
-                      className="flex items-center justify-between gap-3 rounded-md"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
-                          {item.imageUrl ? (
-                            <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
-                          )}
-                        </div>
-                        <span className="truncate">
-                          <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
-                          {item.slug ? (
-                            <Link href={`/nandatte/${item.slug}`} className="hover:underline">
-                              {item.name}
-                            </Link>
-                          ) : (
-                            item.name
-                          )}
-                        </span>
-                      </div>
-                      <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">
-                        {formatShortDate(item.lastVoteAt)}
-                      </span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="rounded-md text-xs text-[var(--ui-text-muted)]">
-                    データなし
-                  </li>
-                )}
-              </ol>
-            </div>
-
-          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-500">
-                  BUZZTTARA
-                </p>
-                <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
-              </div>
-              <Link
-                href="/buzzttara"
-                className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-              >
-                詳細へ
-              </Link>
-            </div>
-            <div className="mt-4 text-sm">
-              {summaries.buzz.items.length > 0 ? (
-                summaries.buzz.items.map((item) => (
-                  <article
-                    key={`buzz-${item.id}`}
-                    className="break-inside-avoid rounded-lg"
-                  >
-                    <div className="flex items-baseline gap-3">
-                      <div>
-                        {item.groupSlug ? (
-                          <Link
-                            href={`/nandatte/${item.groupSlug}`}
-                            className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
-                          >
-                            {item.groupName ?? "グループ未設定"}
-                          </Link>
-                        ) : (
-                          <p className="text-sm text-zinc-400">{item.groupName ?? "グループ未設定"}</p>
-                        )}
-                        <div className="mt-1 flex items-baseline gap-2">
-                          <Link
-                            href={`/buzzttara/tweet/${item.id}`}
-                            className="text-xl font-semibold text-white underline decoration-zinc-300/80 underline-offset-4 hover:text-cyan-200"
-                          >
-                            {item.idolName}
-                          </Link>
-                          <span className="text-sm text-zinc-300">さんのバズったポスト</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
-                      <span className="rounded-full border border-zinc-700 px-2 py-1">
-                        view {formatCount(item.viewCount)}
-                      </span>
-                      <span className="rounded-full border border-zinc-700 px-2 py-1">
-                        いいね {formatCount(item.likeCount)}
-                      </span>
-                      {item.tags
-                        .filter((tag) => tag.name !== "SEXY" && tag.name !== "Wow")
-                        .map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
-                          >
-                            {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
-                          </span>
-                        ))}
-                    </div>
-
-                    <div className="mt-3 overflow-hidden">
-                      <SafeTweetEmbed
-                        tweetId={extractTweetId(item.tweetUrl)}
-                        tweetUrl={item.tweetUrl}
-                        compact
-                      />
-                    </div>
-
-                    <p className="mt-2 text-right text-xs text-zinc-500">
-                      {formatShortDate(item.createdAt)}
-                    </p>
-                  </article>
-                ))
-              ) : (
-                <div className="rounded-md text-xs text-[var(--ui-text-muted)]">
-                  データを取得できませんでした。
-                </div>
-              )}
-            </div>
-          </div>
+          {summaryCards.map((card) => (
+            <div key={card.key}>{card.node}</div>
+          ))}
         </section>
 
         {!summaries.ok && summaries.error && (
