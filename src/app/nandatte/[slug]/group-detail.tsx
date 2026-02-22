@@ -325,6 +325,34 @@ export function GroupDetail({ slug }: Props) {
       }));
   }, [sortedCounts]);
 
+  const fixedMetricCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of sortedCounts) {
+      if (row.kind === "fixed" && row.metric_id) {
+        map.set(row.metric_id, row.count);
+      }
+    }
+    return map;
+  }, [sortedCounts]);
+
+  const selectableMetricChips = useMemo(() => {
+    const fixedChips = fixedMetrics.slice(0, 5).map((metric) => ({
+      kind: "fixed" as const,
+      id: metric.id,
+      label: metric.label,
+      count: fixedMetricCountMap.get(metric.id) ?? 0,
+    }));
+
+    const freewordChips = freewordCounts.map((freeword) => ({
+      kind: "freeword" as const,
+      id: freeword.id,
+      label: freeword.text,
+      count: freeword.count,
+    }));
+
+    return [...fixedChips, ...freewordChips];
+  }, [fixedMetrics, fixedMetricCountMap, freewordCounts]);
+
   const serviceMap = useMemo(() => {
     const map = new Map<string, ExternalIdRow>();
     for (const row of externalIds) {
@@ -372,6 +400,7 @@ export function GroupDetail({ slug }: Props) {
   const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">(
     "idle"
   );
+  const [isProfileExpanded, setIsProfileExpanded] = useState(false);
 
   useEffect(() => {
     if (!youtubeUrl && !youtubeExternalId) {
@@ -396,12 +425,22 @@ export function GroupDetail({ slug }: Props) {
     });
   }, [youtubeUrl, youtubeExternalId]);
 
+  useEffect(() => {
+    setIsProfileExpanded(false);
+  }, [group?.id]);
+
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
   const isLoggedIn = !!userEmail;
   const rankDisplay =
     rank === null ? "-" : !isLoggedIn && rank > 100 ? "非公開" : rank;
   const visibleCounts = isLoggedIn ? sortedCounts : sortedCounts.slice(0, 5);
   const hiddenCount = Math.max(0, sortedCounts.length - visibleCounts.length);
+  const profileText = profileBody?.trim() ?? "";
+  const profileNeedsExpand = profileText.length > 200;
+  const displayedProfileText =
+    profileNeedsExpand && !isProfileExpanded
+      ? `${profileText.slice(0, 200)}...`
+      : profileBody;
 
   useEffect(() => {
     if (!group?.id || !userId || !metricsReady) {
@@ -708,7 +747,7 @@ export function GroupDetail({ slug }: Props) {
       <header>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_176px] lg:gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-4">
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>総投票数 {totalVotes ?? 0}</span>
               <span>投票ランキング {voteRank ?? "-"}</span>
               <span>イマキテ総合順位 {rankDisplay}</span>
@@ -718,7 +757,7 @@ export function GroupDetail({ slug }: Props) {
               {displayName}
             </h1>
 
-            <div className="space-y-1 text-xs text-zinc-300 sm:text-sm">
+            <div className="space-y-1 text-xs text-zinc-400 sm:text-sm">
               <p>メンバー: {groupAttributes?.members ?? "-"}</p>
               <p>
                 活動拠点: {groupAttributes?.location ?? "-"} ／ 事務所:{" "}
@@ -726,10 +765,10 @@ export function GroupDetail({ slug }: Props) {
               </p>
             </div>
 
-            <div className="rounded-xl bg-zinc-900/30 p-3">
+            <div className="pt-4">
               {profileBody ? (
-                <p className="text-sm leading-7 text-zinc-200 whitespace-pre-wrap break-words">
-                  {profileBody}
+                <p className="font-mincho-jp text-base leading-7 text-zinc-200 whitespace-pre-wrap break-words">
+                  {displayedProfileText}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -738,6 +777,15 @@ export function GroupDetail({ slug }: Props) {
                   <div className="h-2 w-full rounded bg-zinc-800" />
                   <div className="h-2 w-4/5 rounded bg-zinc-800" />
                 </div>
+              )}
+              {profileBody && profileNeedsExpand && !isProfileExpanded && (
+                <button
+                  type="button"
+                  onClick={() => setIsProfileExpanded(true)}
+                  className="mt-3 inline-flex items-center rounded-full border border-zinc-600 bg-zinc-700 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:border-zinc-500 hover:bg-zinc-600"
+                >
+                  + すべて見る
+                </button>
               )}
             </div>
           </div>
@@ -777,14 +825,15 @@ export function GroupDetail({ slug }: Props) {
             </div>
           </aside>
         </div>
+        <div className="mt-4 h-px w-full bg-zinc-800/80" />
       </header>
 
       <section>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-6">
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
-              <div className="flex items-baseline justify-between gap-4">
-                <h2 className="text-xl font-semibold">
+            <section>
+              <div className="flex flex-col gap-2">
+                <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                   {displayName}ってこんなグループ「ナンダッテ」
                 </h2>
                 <span className="text-xs text-zinc-400">
@@ -808,10 +857,10 @@ export function GroupDetail({ slug }: Props) {
                         </span>
                         <span className="text-zinc-300">{item.count}</span>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-zinc-800">
+                      <div className="mt-2 h-4 w-full bg-zinc-800">
                         <div
-                          className={`h-2 rounded-full ${
-                            isTopFive ? "bg-amber-400" : "bg-zinc-600"
+                          className={`h-4 ${
+                            isTopFive ? "bg-zinc-400" : "bg-zinc-600"
                           }`}
                           style={{ width: `${width}%` }}
                         />
@@ -827,162 +876,139 @@ export function GroupDetail({ slug }: Props) {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+            <section>
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">
+                <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                   {displayName}のナンダッテを投票する
                 </h2>
-                <span className="text-xs text-zinc-400">最大5件まで選択</span>
-              </div>
-
-              <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
-                {!authReady && <p>ログイン状態を確認中...</p>}
-                {authReady && userEmail && (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-zinc-200">ログイン中: {userEmail}</span>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
-                    >
-                      ログアウト
-                    </button>
-                  </div>
-                )}
-                {authReady && !userEmail && (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span>投票にはログインが必要です。</span>
-                    <button
-                      type="button"
-                      onClick={handleSignIn}
-                      className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
-                    >
-                      Googleでログイン
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 grid gap-6 lg:grid-cols-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-200">
-                    固定の魅力候補
-                  </h3>
-                  <div className="mt-3 grid gap-2">
-                    {fixedMetrics.map((metric) => {
-                      const selected = selectedItems.some(
-                        (item) => item.kind === "fixed" && item.id === metric.id
-                      );
-                      return (
-                        <button
-                          key={metric.id}
-                          type="button"
-                          className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                            selected
-                              ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                              : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
-                          }`}
-                          onClick={() =>
-                            toggleSelection({
-                              kind: "fixed",
-                              id: metric.id,
-                              label: metric.label,
-                            })
-                          }
-                        >
-                          {metric.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-300">
+                  {!authReady && <p>ログイン状態を確認中...</p>}
+                  {authReady && userEmail && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="text-zinc-200">ログイン中: {userEmail}</span>
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                      >
+                        ログアウト
+                      </button>
+                    </div>
+                  )}
+                  {authReady && !userEmail && (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span>投票にはログインが必要です。</span>
+                      <button
+                        type="button"
+                        onClick={handleSignIn}
+                        className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
+                      >
+                        Googleでログイン
+                      </button>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <div>
+              <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-zinc-200">
-                    このグループで使われているフリーワード
+                    {displayName}の👍ワード
                   </h3>
-                  <div className="mt-3 grid gap-2">
-                    {freewordCounts.length === 0 && (
-                      <p className="text-xs text-zinc-500">
-                        まだフリーワードがありません。
-                      </p>
+                  <div className="mt-2 flex items-center gap-1 text-xs text-zinc-500">
+                    <span className="font-medium text-sky-300">F</span>
+                    <span>はフリーワード</span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {selectableMetricChips.length === 0 && (
+                      <p className="text-xs text-zinc-500">候補がまだありません。</p>
                     )}
-                    {freewordCounts.map((freeword) => {
+                    {selectableMetricChips.map((chip) => {
                       const selected = selectedItems.some(
-                        (item) =>
-                          item.kind === "freeword" && item.id === freeword.id
+                        (item) => item.kind === chip.kind && item.id === chip.id
                       );
+                      const isFreeword = chip.kind === "freeword";
+
                       return (
                         <button
-                          key={freeword.id}
+                          key={`${chip.kind}-${chip.id}`}
                           type="button"
-                          className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition ${
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-left text-sm transition ${
                             selected
-                              ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                              : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
+                              ? isFreeword
+                                ? "border-sky-400 bg-sky-400/10 text-sky-100"
+                                : "border-amber-400 bg-amber-400/10 text-amber-100"
+                              : isFreeword
+                              ? "border-sky-900/60 bg-zinc-950 text-zinc-200 hover:border-sky-700"
+                              : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:border-zinc-500"
                           }`}
                           onClick={() =>
                             toggleSelection({
-                              kind: "freeword",
-                              id: freeword.id,
-                              label: freeword.text,
+                              kind: chip.kind,
+                              id: chip.id,
+                              label: chip.label,
                             })
                           }
                         >
-                          <span>{freeword.text}</span>
-                          <span className="text-xs text-zinc-500">
-                            {freeword.count}
-                          </span>
+                          {isFreeword && (
+                            <span className="font-medium text-sky-300">F</span>
+                          )}
+                          <span>{chip.label}</span>
+                          <span className="text-xs text-zinc-500">{chip.count}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6">
-                <label
-                  className="text-sm font-semibold text-zinc-200"
-                  htmlFor="freeword"
-                >
-                  新規フリーワード（10文字以内）
-                </label>
-                <input
-                  id="freeword"
-                  value={newFreeword}
-                  onChange={(event) => setNewFreeword(event.target.value)}
-                  maxLength={10}
-                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
-                  placeholder="例: 世界観が良い"
-                />
-                <p className="mt-2 text-xs text-zinc-500">
-                  新規フリーワードは投票時に1件としてカウントされます。
-                </p>
-              </div>
-
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <button
-                  type="button"
-                  onClick={handleVoteSubmit}
-                  className="rounded-full bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300"
-                  disabled={voteStatus === "saving"}
-                >
-                  {voteStatus === "saving" ? "保存中..." : "投票する"}
-                </button>
-                <span className="text-xs text-zinc-400">
-                  選択数: {selectedCount} / 5
-                </span>
-                {voteMessage && (
-                  <span
-                    className={`text-xs ${
-                      voteStatus === "success"
-                        ? "text-emerald-300"
-                        : "text-red-200"
-                    }`}
+                <div>
+                  <label
+                    className="text-sm font-semibold text-zinc-200"
+                    htmlFor="freeword"
                   >
-                    {voteMessage}
+                    👍フリーワード（10文字以内）
+                  </label>
+                  <input
+                    id="freeword"
+                    value={newFreeword}
+                    onChange={(event) => setNewFreeword(event.target.value)}
+                    maxLength={10}
+                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
+                    placeholder="例: 世界観が良い"
+                  />
+                  <p className="mt-2 text-xs text-zinc-500">
+                    新規フリーワードは投票時に1件としてカウントされます。
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="flex flex-wrap items-center gap-4">
+                  <span className="text-xs text-zinc-400">
+                    選択数: {selectedCount} / 5
                   </span>
-                )}
+                  {voteMessage && (
+                    <span
+                      className={`text-xs ${
+                        voteStatus === "success"
+                          ? "text-emerald-300"
+                          : "text-red-200"
+                      }`}
+                    >
+                      {voteMessage}
+                    </span>
+                  )}
+                </div>
+                <div className="flex justify-start lg:justify-end">
+                  <button
+                    type="button"
+                    onClick={handleVoteSubmit}
+                    className="rounded-full bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300"
+                    disabled={voteStatus === "saving"}
+                  >
+                    {voteStatus === "saving" ? "保存中..." : "投票する"}
+                  </button>
+                </div>
               </div>
             </section>
           </div>
