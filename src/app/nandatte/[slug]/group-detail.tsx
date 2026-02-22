@@ -743,7 +743,7 @@ export function GroupDetail({ slug }: Props) {
   ] as const;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-10">
       <header>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_176px] lg:gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-4">
@@ -829,8 +829,8 @@ export function GroupDetail({ slug }: Props) {
       </header>
 
       <section>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
-          <div className="min-w-0 space-y-6">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_264px]">
+          <div className="min-w-0 space-y-10">
             <section>
               <div className="flex flex-col gap-2">
                 <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
@@ -876,12 +876,12 @@ export function GroupDetail({ slug }: Props) {
               </div>
             </section>
 
-            <section>
+            <section className="rounded-lg border border-zinc-700 p-4">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                   {displayName}のナンダッテを投票する
                 </h2>
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-300">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-300">
                   {!authReady && <p>ログイン状態を確認中...</p>}
                   {authReady && userEmail && (
                     <div className="flex flex-wrap items-center gap-3">
@@ -897,7 +897,7 @@ export function GroupDetail({ slug }: Props) {
                   )}
                   {authReady && !userEmail && (
                     <div className="flex flex-wrap items-center gap-3">
-                      <span>投票にはログインが必要です。</span>
+                      <span>投票にはログインが必要</span>
                       <button
                         type="button"
                         onClick={handleSignIn}
@@ -973,7 +973,7 @@ export function GroupDetail({ slug }: Props) {
                     value={newFreeword}
                     onChange={(event) => setNewFreeword(event.target.value)}
                     maxLength={10}
-                    className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
+                    className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
                     placeholder="例: 世界観が良い"
                   />
                   <p className="mt-2 text-xs text-zinc-500">
@@ -1013,12 +1013,12 @@ export function GroupDetail({ slug }: Props) {
             </section>
           </div>
 
-          <aside className="space-y-3">
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+          <aside className="space-y-5">
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
               <h2 className="text-sm font-semibold text-zinc-100">Spotify</h2>
               {spotifyEmbedUrl ? (
                 <iframe
-                  className="mt-3 block w-full rounded-xl border border-zinc-800"
+                  className="mt-3 block w-full rounded-md border border-zinc-800"
                   src={spotifyEmbedUrl}
                   height="160"
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -1042,14 +1042,14 @@ export function GroupDetail({ slug }: Props) {
               )}
             </section>
 
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
               <h2 className="text-sm font-semibold text-zinc-100">YouTube</h2>
               {youtubeStatus === "loading" && (
                 <p className="mt-3 text-xs text-zinc-400">動画を読み込み中...</p>
               )}
               {youtubeStatus !== "loading" && youtubeVideoId ? (
                 <iframe
-                  className="mt-3 w-full rounded-xl border border-zinc-800"
+                  className="mt-3 w-full rounded-md border border-zinc-800"
                   src={`https://www.youtube.com/embed/${youtubeVideoId}`}
                   height="136"
                   loading="lazy"
