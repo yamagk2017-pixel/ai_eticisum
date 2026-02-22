@@ -356,7 +356,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
-      <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:py-14">
+      <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
@@ -364,7 +364,7 @@ export default async function Home() {
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
                   IMAKITE Summary
                 </p>
-                <h2 className="mt-2 text-lg font-semibold">最新ランキング TOP3</h2>
+                <h2 className="mt-2 text-lg font-semibold">最新ランキング</h2>
               </div>
               <Link
                 href="/imakite"
@@ -425,11 +425,15 @@ export default async function Home() {
                   {imakiteRunnersUp.map((item) => (
                     <li
                       key={`imakite-${item.rank}-${item.name}`}
-                      className="flex items-center justify-between gap-3 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-md"
                     >
                       <span className="truncate">
                         <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{item.rank}</span>
-                        {item.name}
+                        {item.slug ? (
+                          <Link href={`/nandatte/${item.slug}`}>{item.name}</Link>
+                        ) : (
+                          item.name
+                        )}
                       </span>
                       <span className="shrink-0 text-xs font-medium text-[var(--ui-text-muted)]">
                         {formatPoint(item.point)} pt
@@ -439,7 +443,7 @@ export default async function Home() {
                 </ol>
               </>
             ) : (
-              <div className="mt-4 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-3 text-xs text-[var(--ui-text-muted)]">
+              <div className="mt-4 rounded-md text-xs text-[var(--ui-text-muted)]">
                 データを取得できませんでした。
               </div>
             )}
@@ -452,7 +456,7 @@ export default async function Home() {
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
                     NANDATTE Summary
                   </p>
-                  <h2 className="mt-2 text-lg font-semibold">投票ランキング TOP3</h2>
+                  <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
                 </div>
                 <Link
                   href="/nandatte"
@@ -466,10 +470,10 @@ export default async function Home() {
                   summaries.nandatte.voteTop.map((item, index) => (
                     <li
                       key={`nandatte-vote-${item.groupId}-${index}`}
-                      className="flex items-center justify-between gap-3 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-md"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)]">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                           {item.imageUrl ? (
                             <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
                           ) : (
@@ -491,7 +495,7 @@ export default async function Home() {
                     </li>
                   ))
                 ) : (
-                  <li className="rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-3 text-xs text-[var(--ui-text-muted)]">
+                  <li className="rounded-md text-xs text-[var(--ui-text-muted)]">
                     データなし
                   </li>
                 )}
@@ -504,7 +508,7 @@ export default async function Home() {
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
                     NANDATTE Summary
                   </p>
-                  <h2 className="mt-2 text-lg font-semibold">更新順 TOP3</h2>
+                  <h2 className="mt-2 text-lg font-semibold">更新順</h2>
                 </div>
                 <Link
                   href="/nandatte"
@@ -518,10 +522,10 @@ export default async function Home() {
                   summaries.nandatte.recentTop.map((item, index) => (
                     <li
                       key={`nandatte-recent-${item.groupId}-${index}`}
-                      className="flex items-center justify-between gap-3 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-2"
+                      className="flex items-center justify-between gap-3 rounded-md"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)]">
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                           {item.imageUrl ? (
                             <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
                           ) : (
@@ -545,7 +549,7 @@ export default async function Home() {
                     </li>
                   ))
                 ) : (
-                  <li className="rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-3 text-xs text-[var(--ui-text-muted)]">
+                  <li className="rounded-md text-xs text-[var(--ui-text-muted)]">
                     データなし
                   </li>
                 )}
@@ -573,7 +577,7 @@ export default async function Home() {
                 summaries.buzz.items.map((item) => (
                   <article
                     key={`buzz-${item.id}`}
-                    className="break-inside-avoid rounded-lg border border-zinc-800 bg-zinc-900/60 p-5"
+                    className="break-inside-avoid rounded-lg"
                   >
                     <div className="flex items-baseline gap-3">
                       <div>
@@ -632,7 +636,7 @@ export default async function Home() {
                   </article>
                 ))
               ) : (
-                <div className="rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-3 text-xs text-[var(--ui-text-muted)]">
+                <div className="rounded-md text-xs text-[var(--ui-text-muted)]">
                   データを取得できませんでした。
                 </div>
               )}
