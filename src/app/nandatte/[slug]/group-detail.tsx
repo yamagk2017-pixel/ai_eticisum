@@ -706,7 +706,7 @@ export function GroupDetail({ slug }: Props) {
   return (
     <div className="flex flex-col gap-6">
       <header className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_176px] lg:gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
               <span>総投票数 {totalVotes ?? 0}</span>
@@ -742,19 +742,19 @@ export function GroupDetail({ slug }: Props) {
             </div>
           </div>
 
-          <aside className="flex flex-col items-end gap-3">
+          <aside className="flex min-w-0 flex-col items-end gap-2 lg:gap-3">
             {group.artist_image_url ? (
               <img
                 src={group.artist_image_url}
                 alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
-                className="h-[185px] w-[185px] rounded-2xl border border-zinc-700 object-cover"
+                className="h-[110px] w-[110px] rounded-xl border border-zinc-700 object-cover sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px] lg:rounded-2xl"
                 loading="lazy"
               />
             ) : (
-              <div className="h-[185px] w-[185px] rounded-2xl border border-zinc-700 bg-zinc-800/60" />
+              <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px] lg:rounded-2xl" />
             )}
 
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex max-w-[176px] flex-wrap justify-end gap-1.5 lg:max-w-[264px] lg:gap-2">
               {headerLinkItems.map((item) => {
                 const url = serviceMap.get(item.key)?.url ?? null;
                 if (!url) {
@@ -768,7 +768,7 @@ export function GroupDetail({ slug }: Props) {
                     rel="noreferrer"
                     title={item.label}
                     aria-label={item.label}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/40 text-[10px] font-semibold text-zinc-200 hover:border-zinc-500"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/40 text-[8px] font-semibold text-zinc-200 hover:border-zinc-500 lg:h-10 lg:w-10 lg:text-[10px]"
                   >
                     {item.short}
                   </a>
