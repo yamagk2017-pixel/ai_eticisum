@@ -75,3 +75,36 @@ body {
 .font-mincho-jp {
   font-family: var(--font-shippori-mincho), serif;
 }
+
+.buzzttara-tweet-theme .react-tweet-theme {
+  --tweet-bg-color: rgba(24, 24, 27, 0.4) !important;
+  --tweet-bg-color-hover: rgba(24, 24, 27, 0.4) !important;
+  --tweet-border: 1px solid rgb(39, 39, 42) !important;
+  background-color: rgba(24, 24, 27, 0.4) !important;
+}
+
+.buzzttara-tweet-theme .react-tweet-theme:hover {
+  background-color: rgba(24, 24, 27, 0.4) !important;
+}
+
+.top-buzz-tweet-theme .react-tweet-theme {
+  --tweet-bg-color: rgba(255, 255, 255, 0.96) !important;
+  --tweet-bg-color-hover: rgba(255, 255, 255, 0.98) !important;
+  --tweet-border: 1px solid rgba(255, 255, 255, 0.98) !important;
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.98) !important;
+  outline: 1px solid rgba(255, 255, 255, 0.9) !important;
+  outline-offset: -1px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.72) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.top-buzz-tweet-theme .react-tweet-theme:hover {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+.top-buzz-tweet-theme.rounded-xl {
+  border-color: rgba(255, 255, 255, 0.55) !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}

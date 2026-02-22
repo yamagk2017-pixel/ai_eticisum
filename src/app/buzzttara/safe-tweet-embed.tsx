@@ -12,9 +12,10 @@ type SafeTweetEmbedProps = {
   tweetId: string | null;
   tweetUrl: string;
   compact?: boolean;
+  className?: string;
 };
 
-export function SafeTweetEmbed({ tweetId, tweetUrl, compact = false }: SafeTweetEmbedProps) {
+export function SafeTweetEmbed({ tweetId, tweetUrl, compact = false, className = "" }: SafeTweetEmbedProps) {
   const [mode, setMode] = useState<Mode>("loading");
   const [TweetComponent, setTweetComponent] = useState<ComponentType<TweetComponentProps> | null>(null);
 
@@ -58,11 +59,15 @@ export function SafeTweetEmbed({ tweetId, tweetUrl, compact = false }: SafeTweet
   }, [tweetId]);
 
   if (mode === "ready" && TweetComponent && tweetId) {
-    return <TweetComponent id={tweetId} />;
+    return (
+      <div className={`buzzttara-tweet-theme ${className}`.trim()}>
+        <TweetComponent id={tweetId} />
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-xl border border-zinc-700 bg-zinc-900/70 p-4 text-center">
+    <div className={`${className} rounded-xl border border-zinc-700 bg-zinc-900/70 p-4 text-center`.trim()}>
       <p className={`text-zinc-300 ${compact ? "text-xs" : "text-sm"}`}>
         {mode === "loading" ? "ツイートを読み込み中..." : "埋め込みを表示できないため、Xでご確認ください。"}
       </p>

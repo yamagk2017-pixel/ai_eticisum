@@ -639,7 +639,12 @@ export default async function Home() {
                   ))}
               </div>
               <div className="mt-3 overflow-hidden">
-                <SafeTweetEmbed tweetId={extractTweetId(item.tweetUrl)} tweetUrl={item.tweetUrl} compact />
+                <SafeTweetEmbed
+                  tweetId={extractTweetId(item.tweetUrl)}
+                  tweetUrl={item.tweetUrl}
+                  compact
+                  className="top-buzz-tweet-theme"
+                />
               </div>
               <p className="mt-2 text-right text-xs text-zinc-500">{formatShortDate(item.createdAt)}</p>
             </article>

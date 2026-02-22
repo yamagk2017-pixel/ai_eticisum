@@ -297,7 +297,7 @@ export default function BuzzttaraTweetDetailPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pt-8 pb-16">
         <div className="flex flex-wrap gap-2">
           <Link
             href="/buzzttara"
@@ -311,7 +311,7 @@ export default function BuzzttaraTweetDetailPage() {
 
         {tweet && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+            <div className="space-y-6 lg:col-span-2 rounded-2xl">
             <section>
               {group?.slug ? (
                 <Link
@@ -324,7 +324,7 @@ export default function BuzzttaraTweetDetailPage() {
                 <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
               )}
               <div className="mt-1 flex items-baseline gap-2">
-                <h1 className="text-3xl font-semibold">{tweet.idolName}</h1>
+                <h1 className="text-4xl font-semibold sm:text-[2.6rem]">{tweet.idolName}</h1>
                 <p className="text-sm text-zinc-300">さんのバズったポスト</p>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
@@ -356,7 +356,7 @@ export default function BuzzttaraTweetDetailPage() {
 
             {tweet.adminComment && (
               <section className="pt-4">
-                <h2 className="text-lg font-semibold">管理者からのコメント</h2>
+                <h2 className="text-lg font-semibold">コメント</h2>
                 <p className="mt-3 whitespace-pre-wrap text-sm text-zinc-200">{tweet.adminComment}</p>
               </section>
             )}
@@ -365,13 +365,15 @@ export default function BuzzttaraTweetDetailPage() {
 
             <aside className="space-y-6">
               <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-                <h2 className="text-lg font-semibold">公式サイト</h2>
+                <h2 className="text-lg font-semibold">
+                  {group?.name_ja ?? "グループ"} 公式サイト
+                </h2>
                 {websiteUrl ? (
                   <a
                     href={websiteUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-flex break-all text-sm text-cyan-200 hover:text-cyan-100"
+                    className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
                   >
                     {websiteUrl}
                   </a>
@@ -433,7 +435,7 @@ export default function BuzzttaraTweetDetailPage() {
                       }
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex text-cyan-200 hover:text-cyan-100"
+                      className="inline-flex text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
                     >
                       {latestEvent.event_name ?? "イベント詳細"}
                     </a>

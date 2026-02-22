@@ -149,11 +149,7 @@ export function BuzzList() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">BUZZTTARA</p>
-          <h2 className="text-2xl font-semibold text-white sm:text-3xl">バズ投稿ピックアップ</h2>
-          <p className="mt-2 text-sm text-zinc-300">
-            既存buzzttaraの投稿データ（`public.tweets`）を時系列で表示。{countLabel}
-          </p>
+          <h2 className="text-2xl font-semibold text-white sm:text-3xl">{countLabel}のバズッタラ</h2>
         </div>
       </div>
 
