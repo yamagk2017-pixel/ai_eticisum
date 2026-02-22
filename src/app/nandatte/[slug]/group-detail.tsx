@@ -859,9 +859,9 @@ export function GroupDetail({ slug }: Props) {
                   上位5件をハイライト / ログインで6位以下も表示
                 </span>
               </div>
-              <div className="mt-6 flex flex-col gap-4">
+              <div className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">
                 {sortedCounts.length === 0 && (
-                  <p className="text-sm text-zinc-400">まだ投票がありません。</p>
+                  <p className="text-sm text-zinc-400 md:col-span-2">まだ投票がありません。</p>
                 )}
                 {visibleCounts.map((item, index) => {
                   const width = maxCount
@@ -888,14 +888,14 @@ export function GroupDetail({ slug }: Props) {
                   );
                 })}
                 {!isLoggedIn && hiddenCount > 0 && (
-                  <div className="px-1 py-2 text-sm text-zinc-400">
+                  <div className="px-1 py-2 text-sm text-zinc-400 md:col-span-2">
                     その他 {hiddenCount} 件
                   </div>
                 )}
               </div>
             </section>
 
-            <section className="rounded-lg border border-zinc-700 p-4">
+            <section className="rounded-lg border border-zinc-700 p-5">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                   {displayName}のナンダッテを投票する
@@ -1032,20 +1032,20 @@ export function GroupDetail({ slug }: Props) {
             </section>
           </div>
 
-          <aside className="space-y-5">
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-              <h2 className="text-sm font-semibold text-zinc-100">Spotify</h2>
+          <aside className="space-y-6">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <h2 className="text-lg font-semibold">Spotify</h2>
               {spotifyEmbedUrl ? (
                 <iframe
-                  className="mt-3 block w-full rounded-md border border-zinc-800"
+                  className="mt-3 block w-full"
                   src={spotifyEmbedUrl}
-                  height="160"
+                  height="352"
                   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                   loading="lazy"
                   title="Spotify preview"
                 />
               ) : (
-                <p className="mt-3 text-xs text-zinc-400">
+                <p className="mt-3 text-sm text-zinc-400">
                   Spotifyアーティスト情報が未登録です。
                 </p>
               )}
@@ -1054,23 +1054,23 @@ export function GroupDetail({ slug }: Props) {
                   href={spotifyUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 inline-flex text-xs text-zinc-400 hover:text-white"
+                  className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
                 >
                   Spotifyで開く →
                 </a>
               )}
             </section>
 
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-              <h2 className="text-sm font-semibold text-zinc-100">YouTube</h2>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <h2 className="text-lg font-semibold">YouTube</h2>
               {youtubeStatus === "loading" && (
-                <p className="mt-3 text-xs text-zinc-400">動画を読み込み中...</p>
+                <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
               )}
               {youtubeStatus !== "loading" && youtubeVideoId ? (
                 <iframe
-                  className="mt-3 w-full rounded-md border border-zinc-800"
+                  className="mt-3 w-full rounded-xl border border-zinc-700"
                   src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-                  height="136"
+                  height="220"
                   loading="lazy"
                   title="YouTube preview"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -1078,7 +1078,7 @@ export function GroupDetail({ slug }: Props) {
                 />
               ) : (
                 youtubeStatus !== "loading" && (
-                  <p className="mt-3 text-xs text-zinc-400">
+                  <p className="mt-3 text-sm text-zinc-400">
                     YouTubeの最新動画が取得できませんでした。
                   </p>
                 )
@@ -1088,17 +1088,17 @@ export function GroupDetail({ slug }: Props) {
                   href={youtubeUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-2 inline-flex text-xs text-zinc-400 hover:text-white"
+                  className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
                 >
                   YouTubeで開く →
                 </a>
               )}
             </section>
 
-            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-              <h2 className="text-sm font-semibold text-zinc-100">イベント情報</h2>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+              <h2 className="text-lg font-semibold">直近のイベント情報</h2>
               {latestEvent ? (
-                <div className="mt-3 space-y-1.5 text-xs">
+                <div className="mt-3 space-y-2 text-sm text-zinc-200">
                   <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
                   <a
                     href={
@@ -1110,7 +1110,7 @@ export function GroupDetail({ slug }: Props) {
                     }
                     target="_blank"
                     rel="noreferrer"
-                    className={`inline-flex ${
+                    className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
                       latestEvent.event_url
                         ? "text-cyan-200 hover:text-cyan-100"
                         : "pointer-events-none text-zinc-500"
@@ -1121,7 +1121,7 @@ export function GroupDetail({ slug }: Props) {
                   <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
                 </div>
               ) : (
-                <p className="mt-3 text-xs text-zinc-400">直近のイベント情報はありません。</p>
+                <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
               )}
             </section>
           </aside>
