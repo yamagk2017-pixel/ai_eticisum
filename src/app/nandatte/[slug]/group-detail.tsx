@@ -714,7 +714,7 @@ export function GroupDetail({ slug }: Props) {
               <span>イマキテ総合順位 {rankDisplay}</span>
             </div>
 
-            <h1 className="font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            <h1 className="font-mincho-jp text-5xl font-normal leading-tight tracking-tight sm:text-6xl lg:text-7xl">
               {displayName}
             </h1>
 

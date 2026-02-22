@@ -71,3 +71,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+.font-mincho-jp {
+  font-family: var(--font-shippori-mincho), serif;
+}
