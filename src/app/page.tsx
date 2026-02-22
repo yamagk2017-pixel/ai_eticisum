@@ -395,7 +395,7 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">IMAKITE RANKING</p>
+          <p className="text-xs font-semibold tracking-[0.08em] text-amber-500">イマキテランキング</p>
           <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
         </div>
         <Link
@@ -475,7 +475,7 @@ export default async function Home() {
       <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">IMAKITE RANKING</p>
+            <p className="text-xs font-semibold tracking-[0.08em] text-amber-500">イマキテランキング</p>
             <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
           </div>
           <Link
@@ -505,7 +505,7 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">NANDATTE</p>
+          <p className="text-xs font-semibold tracking-[0.08em] text-emerald-500">ナンダッテ</p>
           <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
         </div>
         <Link
@@ -546,8 +546,8 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">NANDATTE</p>
-          <h2 className="mt-2 text-lg font-semibold">更新順</h2>
+          <p className="text-xs font-semibold tracking-[0.08em] text-emerald-500">ナンダッテ</p>
+          <h2 className="mt-2 text-lg font-semibold">最新アップデート</h2>
         </div>
         <Link
           href="/nandatte"
@@ -587,7 +587,7 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-500">BUZZTTARA</p>
+          <p className="text-xs font-semibold tracking-[0.08em] text-cyan-500">バズッタラ</p>
           <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
         </div>
         <Link
@@ -600,7 +600,10 @@ export default async function Home() {
       <div className="mt-4 text-sm">
         {summaries.buzz.items.length > 0 ? (
           summaries.buzz.items.map((item) => (
-            <article key={`buzz-${item.id}`} className="break-inside-avoid rounded-lg">
+            <article
+              key={`buzz-${item.id}`}
+              className="break-inside-avoid rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5"
+            >
               <div className="flex items-baseline gap-3">
                 <div>
                   {item.groupSlug ? (
@@ -643,7 +646,6 @@ export default async function Home() {
                   tweetId={extractTweetId(item.tweetUrl)}
                   tweetUrl={item.tweetUrl}
                   compact
-                  className="top-buzz-tweet-theme"
                 />
               </div>
               <p className="mt-2 text-right text-xs text-zinc-500">{formatShortDate(item.createdAt)}</p>
@@ -657,26 +659,37 @@ export default async function Home() {
   );
 
   const summaryCards = [
-    { key: "imakite-daily", sortValue: toSortValue(summaries.imakite.latestDate), node: imakiteDailyCard },
+    { key: "imakite-daily", sortValue: toSortValue(summaries.imakite.latestDate), tiePriority: 0, node: imakiteDailyCard },
     {
       key: "imakite-weekly",
       sortValue: toSortValue(summaries.imakite.weeklyPlaylistDate),
+      tiePriority: 0,
       node: imakiteWeeklyCard,
     },
-    { key: "nandatte-vote", sortValue: toSortValue(nandatteVoteLatest), node: nandatteVoteCard },
+    { key: "nandatte-vote", sortValue: toSortValue(nandatteVoteLatest), tiePriority: 0, node: nandatteVoteCard },
     {
       key: "nandatte-recent",
       sortValue: toSortValue(summaries.nandatte.recentTop[0]?.lastVoteAt ?? null),
+      tiePriority: 1,
       node: nandatteRecentCard,
     },
     {
       key: "buzzttara",
       sortValue: toSortValue(summaries.buzz.items[0]?.createdAt ?? null),
+      tiePriority: 0,
       node: buzzCard,
     },
   ]
-    .filter((card): card is { key: string; sortValue: number; node: ReactElement } => card.node !== null)
-    .sort((a, b) => b.sortValue - a.sortValue);
+    .filter(
+      (card): card is { key: string; sortValue: number; tiePriority: number; node: ReactElement } =>
+        card.node !== null
+    )
+    .sort((a, b) => {
+      if (b.sortValue !== a.sortValue) {
+        return b.sortValue - a.sortValue;
+      }
+      return b.tiePriority - a.tiePriority;
+    });
 
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">

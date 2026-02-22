@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 type NavItem = {
   href: string;
@@ -10,23 +12,69 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: "/", label: "Home", match: (pathname) => pathname === "/" },
+  { href: "/", label: "ホーム", match: (pathname) => pathname === "/" },
   {
     href: "/imakite",
-    label: "IMAKITE",
+    label: "イマキテランキング",
     match: (pathname) => pathname.startsWith("/imakite") && !pathname.startsWith("/imakite/weekly"),
   },
   {
     href: "/imakite/weekly",
-    label: "IMAKITE Weekly",
+    label: "イマキテWEEKLY",
     match: (pathname) => pathname.startsWith("/imakite/weekly"),
   },
-  { href: "/nandatte", label: "NANDATTE", match: (pathname) => pathname.startsWith("/nandatte") },
-  { href: "/buzzttara", label: "BUZZTTARA", match: (pathname) => pathname.startsWith("/buzzttara") },
+  { href: "/nandatte", label: "ナンダッテ", match: (pathname) => pathname.startsWith("/nandatte") },
+  { href: "/buzzttara", label: "バズッタラ", match: (pathname) => pathname.startsWith("/buzzttara") },
 ];
 
 export function GlobalHeader() {
   const pathname = usePathname();
+  const [userLabel, setUserLabel] = useState<string | null>(null);
+  const [authBusy, setAuthBusy] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const syncUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      const email = data.user?.email ?? null;
+      setUserLabel(email ? email.split("@")[0] ?? email : null);
+    };
+
+    syncUser().catch(() => null);
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const email = session?.user?.email ?? null;
+      setUserLabel(email ? email.split("@")[0] ?? email : null);
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    setAuthBusy(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.href },
+      });
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    setAuthBusy(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } finally {
+      setAuthBusy(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--ui-border)] bg-[color-mix(in_oklab,var(--ui-panel)_88%,transparent)] backdrop-blur">
@@ -43,12 +91,13 @@ export function GlobalHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`inline-flex rounded-full px-3 py-1.5 text-xs transition ${
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                       active
-                        ? "bg-[var(--ui-text)] text-[var(--ui-page)]"
+                        ? "text-[var(--ui-text)]"
                         : "text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
                     }`}
                   >
+                    {active && <span aria-hidden="true">✓</span>}
                     {item.label}
                   </Link>
                 </li>
@@ -56,6 +105,31 @@ export function GlobalHeader() {
             })}
           </ul>
         </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {userLabel ? (
+            <>
+              <span className="hidden text-xs text-[var(--ui-text-subtle)] sm:inline">{userLabel}</span>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={authBusy}
+                className="inline-flex rounded-full bg-[var(--ui-text)] px-3 py-1.5 text-xs text-[var(--ui-page)] hover:opacity-90 disabled:opacity-60"
+              >
+                ログアウト
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={authBusy}
+              className="inline-flex rounded-full bg-white px-3 py-1.5 text-xs text-black hover:bg-zinc-100 disabled:opacity-60"
+            >
+              Googleログイン
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
