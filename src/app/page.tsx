@@ -612,7 +612,7 @@ export default async function Home() {
           summaries.buzz.items.map((item) => (
             <article
               key={`buzz-${item.id}`}
-              className="break-inside-avoid rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5"
+              className="break-inside-avoid rounded-2xl"
             >
               <div className="flex items-baseline gap-3">
                 <div>

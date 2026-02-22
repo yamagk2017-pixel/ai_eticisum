@@ -81,6 +81,7 @@ body {
   --tweet-bg-color-hover: rgba(24, 24, 27, 0.4) !important;
   --tweet-border: 1px solid rgb(39, 39, 42) !important;
   background-color: rgba(24, 24, 27, 0.4) !important;
+  border: 1px solid rgb(39, 39, 42) !important;
 }
 
 .buzzttara-tweet-theme .react-tweet-theme:hover {
