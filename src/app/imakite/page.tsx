@@ -15,14 +15,6 @@ export default function ImakitePage() {
             <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
               イマキテランキング
             </h1>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/imakite/archive"
-                className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
-              >
-                過去のランキングを見る →
-              </Link>
-            </div>
           </div>
           <p className="max-w-4xl text-base text-zinc-300 sm:text-lg">
             Spotifyのデータを毎日集計＆毎日発表。イマキテるアイドルTOP20がひと目で分かるランキング！

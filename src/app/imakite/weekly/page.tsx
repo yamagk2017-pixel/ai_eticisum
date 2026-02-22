@@ -15,14 +15,6 @@ export default function ImakiteWeeklyPage() {
             <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
               イマキテ週間ランキング
             </h1>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/imakite/weekly/archive"
-                className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
-              >
-                過去の週間ランキングを見る →
-              </Link>
-            </div>
           </div>
           <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
             イマキテランキングの一週間のデータを集計。週間TOP20を発表します。
