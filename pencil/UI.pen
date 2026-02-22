@@ -1,0 +1,632 @@
+{
+  "version": "2.8",
+  "children": [
+    {
+      "type": "frame",
+      "id": "bi8Au",
+      "x": 0,
+      "y": 0,
+      "name": "NANDATTE Detail Wireframe",
+      "clip": true,
+      "width": 1200,
+      "height": 1880,
+      "fill": "#F7F7F8",
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 24,
+      "children": [
+        {
+          "type": "text",
+          "id": "NoaZt",
+          "name": "pageTitleA",
+          "fill": "#111827",
+          "content": "NANDATTE 詳細ページ（Wireframe）",
+          "fontFamily": "Inter",
+          "fontSize": 20,
+          "fontWeight": "600"
+        },
+        {
+          "type": "text",
+          "id": "8uNqT",
+          "name": "backLinkA",
+          "fill": "#6B7280",
+          "content": "← ナンダッテ一覧に戻る",
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "g8ifz",
+          "name": "headerCardA",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Od2NB",
+              "name": "headerRowA",
+              "width": "fill_container",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "58EFk",
+                  "name": "headerMainA",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 6,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "RPWi2",
+                      "name": "headerMetaRowA",
+                      "width": "fill_container",
+                      "height": 24,
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "4QxoK",
+                          "name": "headerStat1A",
+                          "fill": "#6B7280",
+                          "content": "総投票数 12,345",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "uf0Ib",
+                          "name": "headerStat2A",
+                          "fill": "#6B7280",
+                          "content": "投票ランキング #18",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "4FzVI",
+                          "name": "headerStat3A",
+                          "fill": "#6B7280",
+                          "content": "イマキテ総合順位 #42",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "KX2EV",
+                      "name": "groupNameA",
+                      "fill": "#111827",
+                      "content": "RAY",
+                      "fontFamily": "Noto Serif JP",
+                      "fontSize": 44,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "AovIE",
+                      "name": "metaInfoBoxA",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 10,
+                      "layout": "vertical",
+                      "gap": 6,
+                      "padding": 10,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "l7UiB",
+                          "name": "headerInfo1A",
+                          "fill": "#4B5563",
+                          "content": "メンバー: 内山結愛, 琴山しずく, 月海まお, 紬実詩, 春音友希",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "TfX0Z",
+                          "name": "headerInfo2A",
+                          "fill": "#4B5563",
+                          "content": "活動拠点: 東京 ／ 事務所: SOVA",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "CEwqT",
+                      "name": "profileTextBoxA",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 8,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "UrNTp",
+                          "name": "introLineA",
+                          "width": 240,
+                          "height": 10,
+                          "fill": "#D1D5DB",
+                          "cornerRadius": 5
+                        },
+                        {
+                          "type": "frame",
+                          "id": "n5a1i",
+                          "name": "para1A",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "5sKua",
+                              "name": "p1l1A",
+                              "width": "fill_container",
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "nriuh",
+                              "name": "p1l2A",
+                              "width": "fill_container",
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "xyvvV",
+                              "name": "p1l3A",
+                              "width": 620,
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GDvHN",
+                          "name": "para2A",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Ptkel",
+                              "name": "p2l1A",
+                              "width": "fill_container",
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "ogNHk",
+                              "name": "p2l2A",
+                              "width": 700,
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IHmA5",
+                          "name": "para3A",
+                          "layout": "vertical",
+                          "gap": 6,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "fBB2X",
+                              "name": "p3l1A",
+                              "width": "fill_container",
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "zaczw",
+                              "name": "p3l2A",
+                              "width": "fill_container",
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JEdab",
+                              "name": "p3l3A",
+                              "width": 560,
+                              "height": 8,
+                              "fill": "#E5E7EB",
+                              "cornerRadius": 4
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "QxhAm",
+                  "name": "rightRailA",
+                  "width": 264,
+                  "height": 235,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "busvd",
+                      "x": 79,
+                      "y": 0,
+                      "name": "heroImgA",
+                      "width": 185,
+                      "height": 185,
+                      "fill": "#E5E7EB",
+                      "cornerRadius": 18
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UVxEz",
+                      "x": 4,
+                      "y": 195,
+                      "name": "iconRowA",
+                      "gap": 4,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "MysDB",
+                          "name": "icon1A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        },
+                        {
+                          "type": "frame",
+                          "id": "8EfIq",
+                          "name": "icon2A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        },
+                        {
+                          "type": "frame",
+                          "id": "CXf6Y",
+                          "name": "icon3A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yOcw5",
+                          "name": "icon4A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        },
+                        {
+                          "type": "frame",
+                          "id": "aAk6q",
+                          "name": "icon5A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xjCNh",
+                          "name": "icon6A",
+                          "width": 40,
+                          "height": 40,
+                          "fill": "#F3F4F6",
+                          "cornerRadius": 20
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7Dq3b",
+          "name": "bottomWrapA",
+          "width": "fill_container",
+          "fill": "#FFFFFF",
+          "cornerRadius": 16,
+          "gap": 16,
+          "padding": 16,
+          "children": [
+            {
+              "type": "frame",
+              "id": "FTBIR",
+              "name": "leftStackA",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "1viPV",
+                  "name": "rankSectionA",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 14,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 18,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "k22fa",
+                      "name": "rankTitleA",
+                      "fill": "#111827",
+                      "content": "みんなが思う！RAYのナンダッテ",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "J2g7r",
+                      "name": "rankHintA",
+                      "fill": "#6B7280",
+                      "content": "上位5件を棒グラフ表示。ログイン時は6位以下も展開",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "FyKbh",
+                      "name": "barRow1A",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j5wnI",
+                      "name": "barRow2A",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "gB4Nj",
+                      "name": "barRow3A",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nbogj",
+                      "name": "barRow4A",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o5dHY",
+                      "name": "barRow5A",
+                      "width": "fill_container",
+                      "height": 48,
+                      "fill": "#FEF3C7",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "2Pfb0",
+                      "name": "barRowOtherA",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 10
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "TLWLu",
+                  "name": "voteSectionA",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 14,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 18,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "1UoIt",
+                      "name": "voteTitleA",
+                      "fill": "#111827",
+                      "content": "投票する（最大5件）",
+                      "fontFamily": "Inter",
+                      "fontSize": 18,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oXKPz",
+                      "name": "loginBoxA",
+                      "width": "fill_container",
+                      "height": 60,
+                      "fill": "#F9FAFB",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F01MN",
+                      "name": "voteColsA",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GuVLj",
+                          "name": "fixedChoicesA",
+                          "width": "fill_container",
+                          "height": 220,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 10
+                        },
+                        {
+                          "type": "frame",
+                          "id": "R9UAG",
+                          "name": "freeChoicesA",
+                          "width": "fill_container",
+                          "height": 220,
+                          "fill": "#FFFFFF",
+                          "cornerRadius": 10
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VcKxj",
+                      "name": "freewordInputA",
+                      "width": "fill_container",
+                      "height": 92,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 10
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HMEZ0",
+                      "name": "submitRowA",
+                      "width": "fill_container",
+                      "height": 56,
+                      "fill": "#FFF7ED",
+                      "cornerRadius": 10
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "4GDMh",
+              "name": "rightStackA",
+              "width": 264,
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XNIc9",
+                  "name": "spotifyCardA",
+                  "width": 264,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 14,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "gu8j0",
+                      "name": "spotifyTitleA",
+                      "fill": "#111827",
+                      "content": "Spotify",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LHHlq",
+                      "name": "spotifyPhA",
+                      "width": 240,
+                      "height": 74,
+                      "fill": "#F3F4F6",
+                      "cornerRadius": 10
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "4hphX",
+                  "name": "youtubeCardA",
+                  "width": 264,
+                  "height": 128,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 14,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "MkWvh",
+                      "name": "youtubeTitleA",
+                      "fill": "#111827",
+                      "content": "YouTube",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Eqdbf",
+                      "name": "youtubePhA",
+                      "width": 240,
+                      "height": 74,
+                      "fill": "#F3F4F6",
+                      "cornerRadius": 10
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "0WZai",
+          "name": "mobileNoteA",
+          "fill": "#6B7280",
+          "content": "※ モバイルでは横並びブロックを縦積みに変更",
+          "fontFamily": "Inter",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ]
+}
