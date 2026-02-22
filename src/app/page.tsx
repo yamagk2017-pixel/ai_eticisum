@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -132,158 +133,188 @@ function formatShortDate(value: string | null) {
 }
 
 async function getHomeSummaries() {
+  const fallback = {
+    imakite: { latestDate: null, items: [] as ImakiteSummaryItem[] },
+    nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
+    buzz: { items: [] as BuzzSummaryItem[] },
+  };
+  const errors: string[] = [];
+
   try {
-    const supabase = createServerClient();
+    // トップページの読み取りは anon 相当の権限で実行して、既存クライアント画面と同じ権限挙動に寄せる。
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    const supabase =
+      url && anonKey
+        ? createSupabaseClient(url, anonKey, {
+            auth: { persistSession: false, autoRefreshToken: false },
+          })
+        : createServerClient();
 
     const imakitePromise = (async () => {
-      const latest = await supabase
-        .schema("ihc")
-        .from("daily_top20")
-        .select("snapshot_date")
-        .order("snapshot_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      try {
+        const latest = await supabase
+          .schema("ihc")
+          .from("daily_top20")
+          .select("snapshot_date")
+          .order("snapshot_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (latest.error) {
-        throw new Error(`IMAKITE latest date: ${latest.error.message}`);
+        if (latest.error) {
+          throw new Error(`IMAKITE latest date: ${latest.error.message}`);
+        }
+
+        const latestDate = (latest.data as { snapshot_date?: string } | null)?.snapshot_date ?? null;
+        if (!latestDate) {
+          return { latestDate: null, items: [] as ImakiteSummaryItem[] };
+        }
+
+        const rowsRes = await supabase
+          .schema("ihc")
+          .from("daily_top20")
+          .select("*")
+          .eq("snapshot_date", latestDate)
+          .order("rank", { ascending: true })
+          .limit(5);
+
+        if (rowsRes.error) {
+          throw new Error(`IMAKITE rows: ${rowsRes.error.message}`);
+        }
+
+        const items = ((rowsRes.data ?? []) as unknown[])
+          .map((row) => {
+            const r = asRecord(row);
+            return {
+              rank: pickNumber(r, ["rank"]) ?? 0,
+              name: pickString(r, ["artist_name", "group_name"]) ?? "-",
+              point: pickNumber(r, ["total_score", "score", "weekly_score"]) ?? 0,
+            };
+          })
+          .filter((row) => row.rank > 0)
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 5);
+
+        return { latestDate, items };
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : "IMAKITE summary error");
+        return fallback.imakite;
       }
-
-      const latestDate = (latest.data as { snapshot_date?: string } | null)?.snapshot_date ?? null;
-      if (!latestDate) {
-        return { latestDate: null, items: [] as ImakiteSummaryItem[] };
-      }
-
-      const rowsRes = await supabase
-        .schema("ihc")
-        .from("daily_top20")
-        .select("*")
-        .eq("snapshot_date", latestDate)
-        .order("rank", { ascending: true })
-        .limit(5);
-
-      if (rowsRes.error) {
-        throw new Error(`IMAKITE rows: ${rowsRes.error.message}`);
-      }
-
-      const items = ((rowsRes.data ?? []) as unknown[])
-        .map((row) => {
-          const r = asRecord(row);
-          return {
-            rank: pickNumber(r, ["rank"]) ?? 0,
-            name: pickString(r, ["artist_name", "group_name"]) ?? "-",
-            point: pickNumber(r, ["total_score", "score", "weekly_score"]) ?? 0,
-          };
-        })
-        .filter((row) => row.rank > 0)
-        .sort((a, b) => a.rank - b.rank)
-        .slice(0, 5);
-
-      return { latestDate, items };
     })();
 
     const nandattePromise = (async () => {
-      const [voteRes, recentRes] = await Promise.all([
-        supabase.schema("nandatte").rpc("get_vote_top5"),
-        supabase.schema("nandatte").rpc("get_recent_vote_top5"),
-      ]);
+      try {
+        const [voteRes, recentRes] = await Promise.all([
+          supabase.schema("nandatte").rpc("get_vote_top5"),
+          supabase.schema("nandatte").rpc("get_recent_vote_top5"),
+        ]);
 
-      if (voteRes.error || recentRes.error) {
-        throw new Error(voteRes.error?.message ?? recentRes.error?.message ?? "NANDATTE RPC error");
-      }
+        if (voteRes.error || recentRes.error) {
+          throw new Error(voteRes.error?.message ?? recentRes.error?.message ?? "NANDATTE RPC error");
+        }
 
-      const voteRows = ((voteRes.data ?? []) as unknown[]).map((row) => asRecord(row));
-      const recentRows = ((recentRes.data ?? []) as unknown[]).map((row) => asRecord(row));
-      const groupIds = Array.from(
-        new Set(
-          [...voteRows, ...recentRows]
-            .map((row) => pickString(row, ["group_id"]))
-            .filter((id): id is string => !!id)
-        )
-      );
+        const voteRows = ((voteRes.data ?? []) as unknown[]).map((row) => asRecord(row));
+        const recentRows = ((recentRes.data ?? []) as unknown[]).map((row) => asRecord(row));
+        const groupIds = Array.from(
+          new Set(
+            [...voteRows, ...recentRows]
+              .map((row) => pickString(row, ["group_id"]))
+              .filter((id): id is string => !!id)
+          )
+        );
 
-      const groupMap = new Map<string, { name: string; slug: string | null }>();
-      if (groupIds.length > 0) {
-        const groupsRes = await supabase
-          .schema("imd")
-          .from("groups")
-          .select("id,name_ja,slug")
-          .in("id", groupIds);
-        if (!groupsRes.error) {
-          for (const row of (groupsRes.data ?? []) as Array<{
-            id: string;
-            name_ja: string | null;
-            slug: string | null;
-          }>) {
-            groupMap.set(row.id, { name: row.name_ja ?? row.id, slug: row.slug ?? null });
+        const groupMap = new Map<string, { name: string; slug: string | null }>();
+        if (groupIds.length > 0) {
+          const groupsRes = await supabase
+            .schema("imd")
+            .from("groups")
+            .select("id,name_ja,slug")
+            .in("id", groupIds);
+          if (!groupsRes.error) {
+            for (const row of (groupsRes.data ?? []) as Array<{
+              id: string;
+              name_ja: string | null;
+              slug: string | null;
+            }>) {
+              groupMap.set(row.id, { name: row.name_ja ?? row.id, slug: row.slug ?? null });
+            }
           }
         }
-      }
 
-      const mapItem = (row: RowRecord): NandatteSummaryItem => {
-        const groupId = pickString(row, ["group_id"]) ?? "";
-        const group = groupMap.get(groupId);
-        return {
-          groupId,
-          name: group?.name ?? groupId ?? "-",
-          slug: group?.slug ?? null,
-          voteCount: pickNumber(row, ["vote_count"]) ?? 0,
-          lastVoteAt: pickString(row, ["last_vote_at"]),
+        const mapItem = (row: RowRecord): NandatteSummaryItem => {
+          const groupId = pickString(row, ["group_id"]) ?? "";
+          const group = groupMap.get(groupId);
+          return {
+            groupId,
+            name: group?.name ?? groupId ?? "-",
+            slug: group?.slug ?? null,
+            voteCount: pickNumber(row, ["vote_count"]) ?? 0,
+            lastVoteAt: pickString(row, ["last_vote_at"]),
+          };
         };
-      };
 
-      return {
-        voteTop: voteRows.map(mapItem).slice(0, 3),
-        recentTop: recentRows.map(mapItem).slice(0, 3),
-      };
+        return {
+          voteTop: voteRows.map(mapItem).slice(0, 3),
+          recentTop: recentRows.map(mapItem).slice(0, 3),
+        };
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : "NANDATTE summary error");
+        return fallback.nandatte;
+      }
     })();
 
     const buzzPromise = (async () => {
-      const tweetsRes = await supabase
-        .from("tweets")
-        .select("id,idol_name,group_id,created_at,like_count")
-        .order("created_at", { ascending: false })
-        .limit(3);
+      try {
+        const tweetsRes = await supabase
+          .from("tweets")
+          .select("id,idol_name,group_id,created_at,like_count")
+          .order("created_at", { ascending: false })
+          .limit(3);
 
-      if (tweetsRes.error) {
-        throw new Error(`BUZZTTARA tweets: ${tweetsRes.error.message}`);
-      }
+        if (tweetsRes.error) {
+          throw new Error(`BUZZTTARA tweets: ${tweetsRes.error.message}`);
+        }
 
-      const rows = ((tweetsRes.data ?? []) as Array<{
-        id: string;
-        idol_name: string | null;
-        group_id: string | null;
-        created_at: string | null;
-        like_count: number | null;
-      }>).filter((row) => !!row.id && !!row.idol_name);
+        const rows = ((tweetsRes.data ?? []) as Array<{
+          id: string;
+          idol_name: string | null;
+          group_id: string | null;
+          created_at: string | null;
+          like_count: number | null;
+        }>).filter((row) => !!row.id && !!row.idol_name);
 
-      const groupIds = Array.from(
-        new Set(rows.map((row) => row.group_id).filter((id): id is string => !!id))
-      );
-      const groupMap = new Map<string, string>();
+        const groupIds = Array.from(
+          new Set(rows.map((row) => row.group_id).filter((id): id is string => !!id))
+        );
+        const groupMap = new Map<string, string>();
 
-      if (groupIds.length > 0) {
-        const groupsRes = await supabase
-          .schema("imd")
-          .from("groups")
-          .select("id,name_ja")
-          .in("id", groupIds);
-        if (!groupsRes.error) {
-          for (const row of (groupsRes.data ?? []) as Array<{ id: string; name_ja: string | null }>) {
-            groupMap.set(row.id, row.name_ja ?? row.id);
+        if (groupIds.length > 0) {
+          const groupsRes = await supabase
+            .schema("imd")
+            .from("groups")
+            .select("id,name_ja")
+            .in("id", groupIds);
+          if (!groupsRes.error) {
+            for (const row of (groupsRes.data ?? []) as Array<{ id: string; name_ja: string | null }>) {
+              groupMap.set(row.id, row.name_ja ?? row.id);
+            }
           }
         }
+
+        const items: BuzzSummaryItem[] = rows.map((row) => ({
+          id: row.id,
+          idolName: row.idol_name ?? "-",
+          groupId: row.group_id,
+          groupName: row.group_id ? groupMap.get(row.group_id) ?? null : null,
+          createdAt: row.created_at,
+          likeCount: row.like_count,
+        }));
+
+        return { items };
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : "BUZZTTARA summary error");
+        return fallback.buzz;
       }
-
-      const items: BuzzSummaryItem[] = rows.map((row) => ({
-        id: row.id,
-        idolName: row.idol_name ?? "-",
-        groupId: row.group_id,
-        groupName: row.group_id ? groupMap.get(row.group_id) ?? null : null,
-        createdAt: row.created_at,
-        likeCount: row.like_count,
-      }));
-
-      return { items };
     })();
 
     const [imakite, nandatte, buzz] = await Promise.all([
@@ -293,18 +324,16 @@ async function getHomeSummaries() {
     ]);
 
     return {
-      ok: true as const,
+      ok: errors.length === 0,
       imakite,
       nandatte,
       buzz,
-      error: null,
+      error: errors.length > 0 ? errors.join(" | ") : null,
     };
   } catch (error) {
     return {
       ok: false as const,
-      imakite: { latestDate: null, items: [] as ImakiteSummaryItem[] },
-      nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
-      buzz: { items: [] as BuzzSummaryItem[] },
+      ...fallback,
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
