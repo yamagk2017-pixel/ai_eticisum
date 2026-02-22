@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactElement } from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
 import { createServerClient } from "@/lib/supabase/server";
@@ -669,7 +670,7 @@ export default async function Home() {
       node: buzzCard,
     },
   ]
-    .filter((card): card is { key: string; sortValue: number; node: JSX.Element } => card.node !== null)
+    .filter((card): card is { key: string; sortValue: number; node: ReactElement } => card.node !== null)
     .sort((a, b) => b.sortValue - a.sortValue);
 
   return (
