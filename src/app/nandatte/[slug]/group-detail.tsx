@@ -814,11 +814,11 @@ export function GroupDetail({ slug }: Props) {
               <img
                 src={group.artist_image_url}
                 alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
-                className="h-[110px] w-[110px] rounded-xl border border-zinc-700 object-cover sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px] lg:rounded-2xl"
+                className="h-[110px] w-[110px] rounded-xl border border-zinc-700 object-cover sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]"
                 loading="lazy"
               />
             ) : (
-              <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px] lg:rounded-2xl" />
+              <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]" />
             )}
 
             <div className="flex max-w-[176px] flex-wrap justify-end gap-1.5 lg:max-w-[264px] lg:gap-2">

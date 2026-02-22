@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { GroupDetail } from "./group-detail";
 
 type PageProps = {
@@ -19,7 +18,6 @@ export default function GroupPage({ params }: PageProps) {
           >
             ← ナンダッテ一覧に戻る
           </Link>
-          <ThemeToggle />
         </div>
         <GroupDetail slug={params.slug} />
       </main>
