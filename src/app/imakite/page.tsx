@@ -9,11 +9,11 @@ export default function ImakitePage() {
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
-            IMAKITE
+            毎日更新！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
-              いま来てるアイドルを可視化する
+              イマキテランキング
             </h1>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -24,8 +24,8 @@ export default function ImakitePage() {
               </Link>
             </div>
           </div>
-          <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
-            IMAKITE RANKING の日次スコアから、最新トップ20を表示します。
+          <p className="max-w-4xl text-base text-zinc-300 sm:text-lg">
+            Spotifyのデータを毎日集計＆毎日発表。イマキテるアイドルTOP20がひと目で分かるランキング！
           </p>
           <div className="flex flex-wrap gap-2">
             <Link

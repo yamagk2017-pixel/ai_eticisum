@@ -9,11 +9,11 @@ export default function ImakiteWeeklyPage() {
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
-            IMAKITE
+            毎週火曜日発表！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
-              いま来てるアイドルを週間で可視化する
+              イマキテ週間ランキング
             </h1>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -25,7 +25,7 @@ export default function ImakiteWeeklyPage() {
             </div>
           </div>
           <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
-            月曜夜集計の週間スコアから、最新トップ20を表示します。
+            イマキテランキングの一週間のデータを集計。週間TOP20を発表します。
           </p>
           <div className="flex flex-wrap gap-2">
             <Link

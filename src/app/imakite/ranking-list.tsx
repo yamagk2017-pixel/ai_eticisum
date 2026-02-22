@@ -85,6 +85,31 @@ function formatJapaneseDate(dateString: string) {
   return `${year}年${month}月${day}日付`;
 }
 
+function formatJapaneseDatePlain(dateString: string) {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  if (!year || !month || !day) return dateString;
+  return `${year}年${month}月${day}日`;
+}
+
+function formatWeeklyRangeLabel(weekEndDate: string) {
+  if (!weekEndDate) return "";
+  const [year, month, day] = weekEndDate.split("-").map(Number);
+  if (!year || !month || !day) return weekEndDate;
+
+  const end = new Date(Date.UTC(year, month - 1, day));
+  if (Number.isNaN(end.getTime())) return weekEndDate;
+
+  const start = new Date(end);
+  start.setUTCDate(end.getUTCDate() - 6);
+
+  const startIso = `${start.getUTCFullYear()}-${String(start.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    start.getUTCDate()
+  ).padStart(2, "0")}`;
+
+  return `${formatJapaneseDatePlain(startIso)}〜${formatJapaneseDatePlain(weekEndDate)}`;
+}
+
 function formatScore(value: number | string) {
   const num = typeof value === "number" ? value : Number(value);
   return Number.isFinite(num) ? num.toFixed(2) : "-";
@@ -359,6 +384,12 @@ export function ImakiteRankingList({
 
   const config = useMemo(() => getRankingConfig(source), [source]);
   const dateLabel = useMemo(() => (activeDate ? formatJapaneseDate(activeDate) : ""), [activeDate]);
+  const eyebrowLabel =
+    source === "daily" && dateLabel
+      ? dateLabel
+      : source === "weekly" && activeDate
+        ? formatWeeklyRangeLabel(activeDate)
+        : `IMAKITE RANKING ${config.label}`;
 
   if (status === "error") {
     return (
@@ -373,12 +404,14 @@ export function ImakiteRankingList({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
-            IMAKITE RANKING {config.label}
+            {eyebrowLabel}
           </p>
           <h2 className="text-2xl font-semibold text-white sm:text-3xl">
             {title ?? config.defaultTitle}
           </h2>
-          {dateLabel && <p className="mt-2 text-sm text-zinc-300">{dateLabel}</p>}
+          {source !== "daily" && source !== "weekly" && dateLabel && (
+            <p className="mt-2 text-sm text-zinc-300">{dateLabel}</p>
+          )}
         </div>
         {showArchiveLink && (
           <Link
@@ -396,7 +429,7 @@ export function ImakiteRankingList({
             title="Weekly Playlist"
             src={playlistEmbedLink}
             width="100%"
-            height={152}
+            height={352}
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
           />
