@@ -473,7 +473,7 @@ export function ImakiteRankingList({
                       {slugMap.get(row.group_id) ? (
                         <Link
                           href={`/nandatte/${slugMap.get(row.group_id)}`}
-                          className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
+                          className="underline decoration-white/80 underline-offset-4 hover:text-zinc-100"
                         >
                           {row.artist_name}
                         </Link>
@@ -485,7 +485,7 @@ export function ImakiteRankingList({
                       <p className="mt-1 text-sm text-zinc-200">♪ {row.latest_track_name}</p>
                     )}
                   </div>
-                  <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-amber-200">
+                  <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-zinc-100">
                     {formatScore(row.score)} pts
                   </div>
                 </div>
@@ -547,7 +547,7 @@ export function ImakiteRankingList({
                         )}
                       </h3>
                     </div>
-                    <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-amber-200">
+                    <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-zinc-100">
                       {formatScore(row.score)} pts
                     </div>
                   </div>
