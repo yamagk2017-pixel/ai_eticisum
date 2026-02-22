@@ -5,10 +5,10 @@ import { ImakiteRankingList } from "../ranking-list";
 
 export default function ImakiteWeeklyPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[var(--ui-page)] text-white">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
         <header className="flex flex-col gap-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
             毎週火曜日発表！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -28,7 +28,7 @@ export default function ImakiteWeeklyPage() {
             </Link>
             <Link
               href="/imakite/weekly"
-              className="rounded-full border border-amber-400/70 bg-amber-500/20 px-4 py-2 text-xs font-semibold text-amber-200"
+              className="rounded-full border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-xs font-semibold text-zinc-200"
             >
               Weekly
             </Link>

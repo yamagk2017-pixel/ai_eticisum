@@ -403,7 +403,7 @@ export function ImakiteRankingList({
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
             {eyebrowLabel}
           </p>
           <h2 className="text-2xl font-semibold text-white sm:text-3xl">
