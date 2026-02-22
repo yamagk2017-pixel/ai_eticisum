@@ -693,353 +693,368 @@ export function GroupDetail({ slug }: Props) {
     return <p className="text-sm text-zinc-400">該当グループがありません。</p>;
   }
 
+  const displayName = group.name_ja ?? group.slug ?? "グループ";
+  const headerLinkItems = [
+    { label: "公式", short: "W", key: "website" },
+    { label: "X", short: "X", key: "x" },
+    { label: "YouTube", short: "YT", key: "youtube_channel" },
+    { label: "Instagram", short: "IG", key: "instagram" },
+    { label: "TikTok", short: "TT", key: "tiktok" },
+    { label: "カレンダー", short: "Cal", key: "schedule" },
+  ] as const;
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Group</p>
-        <div className="mt-3 flex flex-wrap items-start gap-6">
-          {group.artist_image_url ? (
-            <img
-              src={group.artist_image_url}
-              alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
-              className="h-24 w-24 rounded-xl object-cover border border-zinc-700"
-              loading="lazy"
-            />
-          ) : null}
-          <h1 className="text-3xl font-semibold">
-            {group.name_ja ?? group.slug}
-          </h1>
-          <div className="text-sm text-zinc-300">
-            <p>総合順位: {rankDisplay}</p>
-            <p>投票数順位: {voteRank ?? "-"}</p>
-            <p>総得票数: {totalVotes ?? 0}</p>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
+          <div className="min-w-0 space-y-4">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
+              <span>総投票数 {totalVotes ?? 0}</span>
+              <span>投票ランキング {voteRank ?? "-"}</span>
+              <span>イマキテ総合順位 {rankDisplay}</span>
+            </div>
+
+            <h1 className="font-serif text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+              {displayName}
+            </h1>
+
+            <div className="space-y-1 text-xs text-zinc-300 sm:text-sm">
+              <p>メンバー: {groupAttributes?.members ?? "-"}</p>
+              <p>
+                活動拠点: {groupAttributes?.location ?? "-"} ／ 事務所:{" "}
+                {groupAttributes?.agency ?? "-"}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-zinc-900/30 p-3">
+              {profileBody ? (
+                <p className="text-sm leading-7 text-zinc-200 whitespace-pre-wrap break-words">
+                  {profileBody}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <div className="h-2 w-40 rounded bg-zinc-700/70" />
+                  <div className="h-2 w-full rounded bg-zinc-800" />
+                  <div className="h-2 w-full rounded bg-zinc-800" />
+                  <div className="h-2 w-4/5 rounded bg-zinc-800" />
+                </div>
+              )}
+            </div>
           </div>
+
+          <aside className="flex flex-col items-end gap-3">
+            {group.artist_image_url ? (
+              <img
+                src={group.artist_image_url}
+                alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
+                className="h-[185px] w-[185px] rounded-2xl border border-zinc-700 object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-[185px] w-[185px] rounded-2xl border border-zinc-700 bg-zinc-800/60" />
+            )}
+
+            <div className="flex flex-wrap justify-end gap-2">
+              {headerLinkItems.map((item) => {
+                const url = serviceMap.get(item.key)?.url ?? null;
+                if (!url) {
+                  return null;
+                }
+                return (
+                  <a
+                    key={item.key}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={item.label}
+                    aria-label={item.label}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/40 text-[10px] font-semibold text-zinc-200 hover:border-zinc-500"
+                  >
+                    {item.short}
+                  </a>
+                );
+              })}
+            </div>
+          </aside>
         </div>
-        <p className="mt-2 text-xs text-zinc-500">slug: {group.slug}</p>
       </header>
 
-      {(profileBody || groupAttributes) && (
-        <section className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-            <h2 className="text-xl font-semibold">プロフィール</h2>
-            {profileBody ? (
-              <p className="mt-4 text-sm leading-7 text-zinc-200 whitespace-pre-wrap">
-                {profileBody}
-              </p>
-            ) : (
-              <p className="mt-4 text-sm text-zinc-400">プロフィールが未登録です。</p>
-            )}
-          </div>
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-            <h2 className="text-xl font-semibold">基本情報</h2>
-            {groupAttributes ? (
-              <dl className="mt-4 space-y-3 text-sm text-zinc-200">
-                <div className="flex flex-col gap-1">
-                  <dt className="text-xs text-zinc-400">メンバー</dt>
-                  <dd>{groupAttributes.members ?? "-"}</dd>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <dt className="text-xs text-zinc-400">活動拠点</dt>
-                  <dd>{groupAttributes.location ?? "-"}</dd>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <dt className="text-xs text-zinc-400">事務所</dt>
-                  <dd>{groupAttributes.agency ?? "-"}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p className="mt-4 text-sm text-zinc-400">基本情報が未登録です。</p>
-            )}
-          </div>
-        </section>
-      )}
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
+          <div className="min-w-0 space-y-6">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <h2 className="text-xl font-semibold">
+                  みんなが思う！{displayName}のナンダッテ
+                </h2>
+                <span className="text-xs text-zinc-400">
+                  上位5件をハイライト / 6位以下も表示
+                </span>
+              </div>
+              <div className="mt-6 flex flex-col gap-4">
+                {sortedCounts.length === 0 && (
+                  <p className="text-sm text-zinc-400">まだ投票がありません。</p>
+                )}
+                {visibleCounts.map((item, index) => {
+                  const width = maxCount
+                    ? Math.round((item.count / maxCount) * 100)
+                    : 0;
+                  const isTopFive = index < 5;
+                  return (
+                    <div
+                      key={`${item.label}-${index}`}
+                      className={`rounded-xl border px-4 py-3 ${
+                        isTopFive
+                          ? "border-zinc-500 bg-zinc-800/60"
+                          : "border-zinc-800 bg-zinc-900/40"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-4 text-sm">
+                        <span className="font-medium">
+                          {index + 1}. {item.label}
+                        </span>
+                        <span className="text-zinc-300">{item.count}</span>
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-zinc-800">
+                        <div
+                          className={`h-2 rounded-full ${
+                            isTopFive ? "bg-amber-400" : "bg-zinc-600"
+                          }`}
+                          style={{ width: `${width}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                {!isLoggedIn && hiddenCount > 0 && (
+                  <div className="rounded-xl border border-dashed border-zinc-700 px-4 py-3 text-sm text-zinc-400">
+                    その他 {hiddenCount} 件
+                  </div>
+                )}
+              </div>
+            </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">公式リンク</h2>
-          <span className="text-xs text-zinc-400">imd.external_ids</span>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          {[
-            { label: "X", key: "x" },
-            { label: "Instagram", key: "instagram" },
-            { label: "TikTok", key: "tiktok" },
-            { label: "公式サイト", key: "website" },
-            { label: "スケジュール", key: "schedule" },
-          ].map((item) => {
-            const url = serviceMap.get(item.key)?.url ?? null;
-            if (!url) return null;
-            return (
-              <a
-                key={item.key}
-                href={url}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
-              >
-                {item.label}
-              </a>
-            );
-          })}
-        </div>
-        {!serviceMap.size && (
-          <p className="mt-4 text-sm text-zinc-400">外部リンクがまだ登録されていません。</p>
-        )}
-      </section>
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-xl font-semibold">投票する</h2>
+                <span className="text-xs text-zinc-400">最大5件まで選択</span>
+              </div>
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-          <h2 className="text-xl font-semibold">Spotify プレビュー</h2>
-          {spotifyEmbedUrl ? (
-            <iframe
-              className="mt-4 block w-full"
-              src={spotifyEmbedUrl}
-              height="352"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              loading="lazy"
-              title="Spotify preview"
-            />
-          ) : (
-            <p className="mt-4 text-sm text-zinc-400">
-              Spotifyアーティスト情報が未登録です。
-            </p>
-          )}
-          {spotifyUrl && (
-            <a
-              href={spotifyUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex text-xs text-zinc-400 hover:text-white"
-            >
-              Spotifyで開く →
-            </a>
-          )}
-        </div>
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-          <h2 className="text-xl font-semibold">YouTube プレビュー</h2>
-          {youtubeStatus === "loading" && (
-            <p className="mt-4 text-sm text-zinc-400">動画を読み込み中...</p>
-          )}
-          {youtubeStatus !== "loading" && youtubeVideoId ? (
-            <iframe
-              className="mt-4 w-full rounded-xl border border-zinc-800"
-              src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-              height="152"
-              loading="lazy"
-              title="YouTube preview"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          ) : (
-            youtubeStatus !== "loading" && (
-              <p className="mt-4 text-sm text-zinc-400">
-                YouTubeの最新動画が取得できませんでした。
-              </p>
-            )
-          )}
-          {youtubeUrl && (
-            <a
-              href={youtubeUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex text-xs text-zinc-400 hover:text-white"
-            >
-              YouTubeで開く →
-            </a>
-          )}
-        </div>
-      </section>
+              <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
+                {!authReady && <p>ログイン状態を確認中...</p>}
+                {authReady && userEmail && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-zinc-200">ログイン中: {userEmail}</span>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                    >
+                      ログアウト
+                    </button>
+                  </div>
+                )}
+                {authReady && !userEmail && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span>投票にはログインが必要です。</span>
+                    <button
+                      type="button"
+                      onClick={handleSignIn}
+                      className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
+                    >
+                      Googleでログイン
+                    </button>
+                  </div>
+                )}
+              </div>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">魅力ランキング</h2>
-          <span className="text-xs text-zinc-400">
-            上位5件をハイライト / 6位以下も表示
-          </span>
-        </div>
-        <div className="mt-6 flex flex-col gap-4">
-          {sortedCounts.length === 0 && (
-            <p className="text-sm text-zinc-400">まだ投票がありません。</p>
-          )}
-          {visibleCounts.map((item, index) => {
-            const width = maxCount ? Math.round((item.count / maxCount) * 100) : 0;
-            const isTopFive = index < 5;
-            return (
-              <div
-                key={`${item.label}-${index}`}
-                className={`rounded-xl border px-4 py-3 ${
-                  isTopFive
-                    ? "border-zinc-500 bg-zinc-800/60"
-                    : "border-zinc-800 bg-zinc-900/40"
-                }`}
-              >
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {index + 1}. {item.label}
-                  </span>
-                  <span className="text-zinc-300">{item.count}</span>
+              <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-200">
+                    固定の魅力候補
+                  </h3>
+                  <div className="mt-3 grid gap-2">
+                    {fixedMetrics.map((metric) => {
+                      const selected = selectedItems.some(
+                        (item) => item.kind === "fixed" && item.id === metric.id
+                      );
+                      return (
+                        <button
+                          key={metric.id}
+                          type="button"
+                          className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            selected
+                              ? "border-amber-400 bg-amber-400/10 text-amber-100"
+                              : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
+                          }`}
+                          onClick={() =>
+                            toggleSelection({
+                              kind: "fixed",
+                              id: metric.id,
+                              label: metric.label,
+                            })
+                          }
+                        >
+                          {metric.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="mt-2 h-2 w-full rounded-full bg-zinc-800">
-                  <div
-                    className={`h-2 rounded-full ${
-                      isTopFive ? "bg-amber-400" : "bg-zinc-600"
-                    }`}
-                    style={{ width: `${width}%` }}
-                  />
+
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-200">
+                    このグループで使われているフリーワード
+                  </h3>
+                  <div className="mt-3 grid gap-2">
+                    {freewordCounts.length === 0 && (
+                      <p className="text-xs text-zinc-500">
+                        まだフリーワードがありません。
+                      </p>
+                    )}
+                    {freewordCounts.map((freeword) => {
+                      const selected = selectedItems.some(
+                        (item) =>
+                          item.kind === "freeword" && item.id === freeword.id
+                      );
+                      return (
+                        <button
+                          key={freeword.id}
+                          type="button"
+                          className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition ${
+                            selected
+                              ? "border-amber-400 bg-amber-400/10 text-amber-100"
+                              : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
+                          }`}
+                          onClick={() =>
+                            toggleSelection({
+                              kind: "freeword",
+                              id: freeword.id,
+                              label: freeword.text,
+                            })
+                          }
+                        >
+                          <span>{freeword.text}</span>
+                          <span className="text-xs text-zinc-500">
+                            {freeword.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            );
-          })}
-          {!isLoggedIn && hiddenCount > 0 && (
-            <div className="rounded-xl border border-dashed border-zinc-700 px-4 py-3 text-sm text-zinc-400">
-              その他 {hiddenCount} 件
-            </div>
-          )}
-        </div>
-      </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">投票する</h2>
-          <span className="text-xs text-zinc-400">最大5件まで選択</span>
-        </div>
+              <div className="mt-6">
+                <label
+                  className="text-sm font-semibold text-zinc-200"
+                  htmlFor="freeword"
+                >
+                  新規フリーワード（10文字以内）
+                </label>
+                <input
+                  id="freeword"
+                  value={newFreeword}
+                  onChange={(event) => setNewFreeword(event.target.value)}
+                  maxLength={10}
+                  className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
+                  placeholder="例: 世界観が良い"
+                />
+                <p className="mt-2 text-xs text-zinc-500">
+                  新規フリーワードは投票時に1件としてカウントされます。
+                </p>
+              </div>
 
-        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
-          {!authReady && <p>ログイン状態を確認中...</p>}
-          {authReady && userEmail && (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-zinc-200">ログイン中: {userEmail}</span>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
-              >
-                ログアウト
-              </button>
-            </div>
-          )}
-          {authReady && !userEmail && (
-            <div className="flex flex-wrap items-center gap-3">
-              <span>投票にはログインが必要です。</span>
-              <button
-                type="button"
-                onClick={handleSignIn}
-                className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
-              >
-                Googleでログイン
-              </button>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div>
-            <h3 className="text-sm font-semibold text-zinc-200">固定の魅力候補</h3>
-            <div className="mt-3 grid gap-2">
-              {fixedMetrics.map((metric) => {
-                const selected = selectedItems.some(
-                  (item) => item.kind === "fixed" && item.id === metric.id
-                );
-                return (
-                  <button
-                    key={metric.id}
-                    type="button"
-                    className={`rounded-lg border px-3 py-2 text-left text-sm transition ${
-                      selected
-                        ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                        : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={handleVoteSubmit}
+                  className="rounded-full bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300"
+                  disabled={voteStatus === "saving"}
+                >
+                  {voteStatus === "saving" ? "保存中..." : "投票する"}
+                </button>
+                <span className="text-xs text-zinc-400">
+                  選択数: {selectedCount} / 5
+                </span>
+                {voteMessage && (
+                  <span
+                    className={`text-xs ${
+                      voteStatus === "success"
+                        ? "text-emerald-300"
+                        : "text-red-200"
                     }`}
-                    onClick={() =>
-                      toggleSelection({
-                        kind: "fixed",
-                        id: metric.id,
-                        label: metric.label,
-                      })
-                    }
                   >
-                    {metric.label}
-                  </button>
-                );
-              })}
-            </div>
+                    {voteMessage}
+                  </span>
+                )}
+              </div>
+            </section>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-zinc-200">
-              このグループで使われているフリーワード
-            </h3>
-            <div className="mt-3 grid gap-2">
-              {freewordCounts.length === 0 && (
-                <p className="text-xs text-zinc-500">まだフリーワードがありません。</p>
+          <aside className="space-y-3">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+              <h2 className="text-sm font-semibold text-zinc-100">Spotify</h2>
+              {spotifyEmbedUrl ? (
+                <iframe
+                  className="mt-3 block w-full rounded-xl border border-zinc-800"
+                  src={spotifyEmbedUrl}
+                  height="160"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  title="Spotify preview"
+                />
+              ) : (
+                <p className="mt-3 text-xs text-zinc-400">
+                  Spotifyアーティスト情報が未登録です。
+                </p>
               )}
-              {freewordCounts.map((freeword) => {
-                const selected = selectedItems.some(
-                  (item) => item.kind === "freeword" && item.id === freeword.id
-                );
-                return (
-                  <button
-                    key={freeword.id}
-                    type="button"
-                    className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-sm transition ${
-                      selected
-                        ? "border-amber-400 bg-amber-400/10 text-amber-100"
-                        : "border-zinc-800 bg-zinc-950 text-zinc-200 hover:border-zinc-600"
-                    }`}
-                    onClick={() =>
-                      toggleSelection({
-                        kind: "freeword",
-                        id: freeword.id,
-                        label: freeword.text,
-                      })
-                    }
-                  >
-                    <span>{freeword.text}</span>
-                    <span className="text-xs text-zinc-500">{freeword.count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+              {spotifyUrl && (
+                <a
+                  href={spotifyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-flex text-xs text-zinc-400 hover:text-white"
+                >
+                  Spotifyで開く →
+                </a>
+              )}
+            </section>
 
-        <div className="mt-6">
-          <label className="text-sm font-semibold text-zinc-200" htmlFor="freeword">
-            新規フリーワード（10文字以内）
-          </label>
-          <input
-            id="freeword"
-            value={newFreeword}
-            onChange={(event) => setNewFreeword(event.target.value)}
-            maxLength={10}
-            className="mt-2 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
-            placeholder="例: 世界観が良い"
-          />
-          <p className="mt-2 text-xs text-zinc-500">
-            新規フリーワードは投票時に1件としてカウントされます。
-          </p>
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-4">
-          <button
-            type="button"
-            onClick={handleVoteSubmit}
-            className="rounded-full bg-amber-400 px-6 py-2 text-sm font-semibold text-black hover:bg-amber-300"
-            disabled={voteStatus === "saving"}
-          >
-            {voteStatus === "saving" ? "保存中..." : "投票する"}
-          </button>
-          <span className="text-xs text-zinc-400">
-            選択数: {selectedCount} / 5
-          </span>
-          {voteMessage && (
-            <span
-              className={`text-xs ${
-                voteStatus === "success" ? "text-emerald-300" : "text-red-200"
-              }`}
-            >
-              {voteMessage}
-            </span>
-          )}
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
+              <h2 className="text-sm font-semibold text-zinc-100">YouTube</h2>
+              {youtubeStatus === "loading" && (
+                <p className="mt-3 text-xs text-zinc-400">動画を読み込み中...</p>
+              )}
+              {youtubeStatus !== "loading" && youtubeVideoId ? (
+                <iframe
+                  className="mt-3 w-full rounded-xl border border-zinc-800"
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+                  height="136"
+                  loading="lazy"
+                  title="YouTube preview"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                youtubeStatus !== "loading" && (
+                  <p className="mt-3 text-xs text-zinc-400">
+                    YouTubeの最新動画が取得できませんでした。
+                  </p>
+                )
+              )}
+              {youtubeUrl && (
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 inline-flex text-xs text-zinc-400 hover:text-white"
+                >
+                  YouTubeで開く →
+                </a>
+              )}
+            </section>
+          </aside>
         </div>
       </section>
     </div>
