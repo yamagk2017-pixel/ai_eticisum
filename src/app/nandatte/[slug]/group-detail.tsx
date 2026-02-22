@@ -705,7 +705,7 @@ export function GroupDetail({ slug }: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+      <header>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_176px] lg:gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-4">
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-400">
@@ -779,16 +779,16 @@ export function GroupDetail({ slug }: Props) {
         </div>
       </header>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4 sm:p-6">
+      <section>
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
           <div className="min-w-0 space-y-6">
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
               <div className="flex items-baseline justify-between gap-4">
                 <h2 className="text-xl font-semibold">
-                  みんなが思う！{displayName}のナンダッテ
+                  {displayName}ってこんなグループ「ナンダッテ」
                 </h2>
                 <span className="text-xs text-zinc-400">
-                  上位5件をハイライト / 6位以下も表示
+                  上位5件をハイライト / ログインで6位以下も表示
                 </span>
               </div>
               <div className="mt-6 flex flex-col gap-4">
@@ -801,14 +801,7 @@ export function GroupDetail({ slug }: Props) {
                     : 0;
                   const isTopFive = index < 5;
                   return (
-                    <div
-                      key={`${item.label}-${index}`}
-                      className={`rounded-xl border px-4 py-3 ${
-                        isTopFive
-                          ? "border-zinc-500 bg-zinc-800/60"
-                          : "border-zinc-800 bg-zinc-900/40"
-                      }`}
-                    >
+                    <div key={`${item.label}-${index}`} className="px-1 py-2">
                       <div className="flex items-center justify-between gap-4 text-sm">
                         <span className="font-medium">
                           {index + 1}. {item.label}
@@ -827,16 +820,18 @@ export function GroupDetail({ slug }: Props) {
                   );
                 })}
                 {!isLoggedIn && hiddenCount > 0 && (
-                  <div className="rounded-xl border border-dashed border-zinc-700 px-4 py-3 text-sm text-zinc-400">
+                  <div className="px-1 py-2 text-sm text-zinc-400">
                     その他 {hiddenCount} 件
                   </div>
                 )}
               </div>
             </section>
 
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
               <div className="flex items-center justify-between gap-4">
-                <h2 className="text-xl font-semibold">投票する</h2>
+                <h2 className="text-xl font-semibold">
+                  {displayName}のナンダッテを投票する
+                </h2>
                 <span className="text-xs text-zinc-400">最大5件まで選択</span>
               </div>
 
