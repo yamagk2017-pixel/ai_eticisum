@@ -357,8 +357,8 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+        <section className="columns-1 gap-6 lg:columns-3">
+          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-500">
@@ -449,8 +449,7 @@ export default async function Home() {
             )}
           </div>
 
-          <div className="grid gap-6">
-            <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
@@ -502,7 +501,7 @@ export default async function Home() {
               </ol>
             </div>
 
-            <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+            <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-500">
@@ -555,9 +554,8 @@ export default async function Home() {
                 )}
               </ol>
             </div>
-          </div>
 
-          <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+          <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-500">
