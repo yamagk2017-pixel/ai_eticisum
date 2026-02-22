@@ -56,6 +56,13 @@ type GroupAttributeKVRow = {
   value: string | null;
 };
 
+type EventRow = {
+  event_name: string | null;
+  event_date: string | null;
+  venue_name: string | null;
+  event_url: string | null;
+};
+
 type Props = {
   slug: string;
 };
@@ -87,6 +94,7 @@ export function GroupDetail({ slug }: Props) {
     location: string | null;
     agency: string | null;
   } | null>(null);
+  const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
   const [metricsReady, setMetricsReady] = useState(false);
 
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
@@ -181,12 +189,23 @@ export function GroupDetail({ slug }: Props) {
       } else {
         setGroupAttributes(null);
       }
+
+      const { data: eventRow } = await supabase
+        .from("events")
+        .select("event_name,event_date,venue_name,event_url")
+        .eq("group_id", group.id)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      setLatestEvent((eventRow as EventRow | null) ?? null);
     };
 
     run().catch(() => {
       setExternalIds([]);
       setProfileBody(null);
       setGroupAttributes(null);
+      setLatestEvent(null);
     });
   }, [group?.id]);
 
@@ -1073,6 +1092,36 @@ export function GroupDetail({ slug }: Props) {
                 >
                   YouTubeで開く →
                 </a>
+              )}
+            </section>
+
+            <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+              <h2 className="text-sm font-semibold text-zinc-100">イベント情報</h2>
+              {latestEvent ? (
+                <div className="mt-3 space-y-1.5 text-xs">
+                  <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
+                  <a
+                    href={
+                      latestEvent.event_url
+                        ? latestEvent.event_url.startsWith("http")
+                          ? latestEvent.event_url
+                          : `https://ticketdive.com/event/${latestEvent.event_url}`
+                        : "#"
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`inline-flex ${
+                      latestEvent.event_url
+                        ? "text-zinc-200 hover:text-white"
+                        : "pointer-events-none text-zinc-500"
+                    }`}
+                  >
+                    {latestEvent.event_name ?? "イベント詳細"}
+                  </a>
+                  <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-zinc-400">直近のイベント情報はありません。</p>
               )}
             </section>
           </aside>
