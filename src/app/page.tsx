@@ -395,14 +395,16 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.08em] text-amber-500">イマキテランキング</p>
+          <Link href="/imakite" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
+            イマキテランキング
+          </Link>
           <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
         </div>
         <Link
           href="/imakite"
           className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
         >
-          詳細へ
+          more...
         </Link>
       </div>
       {summaries.imakite.latestDate && (
@@ -475,14 +477,16 @@ export default async function Home() {
       <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold tracking-[0.08em] text-amber-500">イマキテランキング</p>
+            <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
+              イマキテランキング
+            </Link>
             <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
           </div>
           <Link
             href="/imakite/weekly"
             className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
           >
-            詳細へ
+            more...
           </Link>
         </div>
         {summaries.imakite.weeklyPlaylistDate && (
@@ -505,14 +509,16 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.08em] text-emerald-500">ナンダッテ</p>
+          <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
+            ナンダッテ
+          </Link>
           <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
         </div>
         <Link
           href="/nandatte"
           className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
         >
-          詳細へ
+          more...
         </Link>
       </div>
       <ol className="mt-4 space-y-2 text-sm">
@@ -546,14 +552,16 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.08em] text-emerald-500">ナンダッテ</p>
+          <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
+            ナンダッテ
+          </Link>
           <h2 className="mt-2 text-lg font-semibold">最新アップデート</h2>
         </div>
         <Link
           href="/nandatte"
           className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
         >
-          詳細へ
+          more...
         </Link>
       </div>
       <ol className="mt-4 space-y-2 text-sm">
@@ -587,14 +595,16 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold tracking-[0.08em] text-cyan-500">バズッタラ</p>
+          <Link href="/buzzttara" className="text-xs font-semibold tracking-[0.08em] text-cyan-500 underline">
+            バズッタラ
+          </Link>
           <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
         </div>
         <Link
           href="/buzzttara"
           className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
         >
-          詳細へ
+          more...
         </Link>
       </div>
       <div className="mt-4 text-sm">
