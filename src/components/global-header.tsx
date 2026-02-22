@@ -108,17 +108,15 @@ export function GlobalHeader() {
 
         <div className="flex shrink-0 items-center gap-2">
           {userLabel ? (
-            <>
-              <span className="hidden text-xs text-[var(--ui-text-subtle)] sm:inline">{userLabel}</span>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                disabled={authBusy}
-                className="inline-flex rounded-full bg-[var(--ui-text)] px-3 py-1.5 text-xs text-[var(--ui-page)] hover:opacity-90 disabled:opacity-60"
-              >
-                ログアウト
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={authBusy}
+              className="inline-flex rounded-full bg-[var(--ui-text)] px-3 py-1.5 text-xs text-[var(--ui-page)] hover:opacity-90 disabled:opacity-60"
+              title="クリックでログアウト"
+            >
+              {userLabel}
+            </button>
           ) : (
             <button
               type="button"
