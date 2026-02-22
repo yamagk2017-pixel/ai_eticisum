@@ -1112,7 +1112,7 @@ export function GroupDetail({ slug }: Props) {
                     rel="noreferrer"
                     className={`inline-flex ${
                       latestEvent.event_url
-                        ? "text-zinc-200 hover:text-white"
+                        ? "text-cyan-200 hover:text-cyan-100"
                         : "pointer-events-none text-zinc-500"
                     }`}
                   >
