@@ -393,7 +393,7 @@ export function ImakiteRankingList({
 
   if (status === "error") {
     return (
-      <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-6 text-sm text-red-100">
+      <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-6 text-sm text-red-100">
         ランキングの取得に失敗しました: {message}
       </div>
     );
@@ -424,7 +424,7 @@ export function ImakiteRankingList({
       </div>
 
       {source === "weekly" && playlistEmbedLink && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+        <div className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
           <iframe
             title="Weekly Playlist"
             src={playlistEmbedLink}
@@ -447,7 +447,7 @@ export function ImakiteRankingList({
           {rows.map((row) => (
             <article
               key={`${row.snapshot_date}-${row.rank}-${row.group_id}`}
-              className={`relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 shadow-lg backdrop-blur ${
+              className={`relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg backdrop-blur ${
                 cardClass(row.rank)
               } ${cardHeight(row.rank)}`}
             >
@@ -491,7 +491,7 @@ export function ImakiteRankingList({
                 </div>
 
                 {row.latest_track_embed_link ? (
-                  <div className="mt-auto overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                  <div className="mt-auto overflow-hidden rounded-lg border border-white/10 bg-black/30">
                     <iframe
                       title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
                       src={row.latest_track_embed_link}
@@ -502,7 +502,7 @@ export function ImakiteRankingList({
                     />
                   </div>
                 ) : (
-                  <div className="mt-auto rounded-2xl border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
+                  <div className="mt-auto rounded-lg border border-white/10 bg-black/30 px-4 py-6 text-sm text-zinc-300">
                     Spotify埋め込みがありません。
                   </div>
                 )}
@@ -515,10 +515,10 @@ export function ImakiteRankingList({
           {rows.map((row) => (
             <article
               key={`${row.snapshot_date}-${row.rank}-${row.group_id}`}
-              className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 shadow-lg backdrop-blur"
+              className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/40 shadow-lg backdrop-blur"
             >
               <div className="flex items-start gap-4 p-4 sm:p-5">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-800 sm:h-24 sm:w-24">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-slate-800 sm:h-24 sm:w-24">
                   {row.artist_image_url ? (
                     <img
                       src={row.artist_image_url}
@@ -538,7 +538,7 @@ export function ImakiteRankingList({
                         {slugMap.get(row.group_id) ? (
                           <Link
                             href={`/nandatte/${slugMap.get(row.group_id)}`}
-                            className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
+                            className="underline decoration-white/80 underline-offset-4 hover:text-zinc-100"
                           >
                             {row.artist_name}
                           </Link>
