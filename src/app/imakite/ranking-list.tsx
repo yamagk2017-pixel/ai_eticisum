@@ -511,7 +511,7 @@ export function ImakiteRankingList({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           {rows.map((row) => (
             <article
               key={`${row.snapshot_date}-${row.rank}-${row.group_id}`}
