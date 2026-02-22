@@ -145,7 +145,7 @@ async function getHomeSummaries() {
           .limit(5);
         if (rowsRes.error) throw new Error(`IMAKITE rows: ${rowsRes.error.message}`);
 
-        const baseItems = ((rowsRes.data ?? []) as unknown[])
+        const baseItems: ImakiteSummaryItem[] = ((rowsRes.data ?? []) as unknown[])
           .map((row) => {
             const r = asRecord(row);
             return {
