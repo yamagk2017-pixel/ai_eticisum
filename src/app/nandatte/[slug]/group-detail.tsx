@@ -896,36 +896,34 @@ export function GroupDetail({ slug }: Props) {
             </section>
 
             <section className="rounded-lg border border-zinc-700 p-5">
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col gap-3">
                 <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                   {displayName}のナンダッテを投票する
                 </h2>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-300">
-                  {!authReady && <p>ログイン状態を確認中...</p>}
-                  {authReady && userEmail && (
-                    <div className="flex flex-wrap items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleSignOut}
-                        className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
-                      >
-                        ログアウト
-                      </button>
-                    </div>
-                  )}
-                  {authReady && !userEmail && (
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span>投票にはログインが必要</span>
-                      <button
-                        type="button"
-                        onClick={handleSignIn}
-                        className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
-                      >
-                        Googleでログイン
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {!authReady && <p className="text-sm text-zinc-300">ログイン状態を確認中...</p>}
+                {authReady && userEmail && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                    >
+                      ログアウト
+                    </button>
+                  </div>
+                )}
+                {authReady && !userEmail && (
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300">
+                    <span>投票にはログインが必要</span>
+                    <button
+                      type="button"
+                      onClick={handleSignIn}
+                      className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
+                    >
+                      Googleでログイン
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
