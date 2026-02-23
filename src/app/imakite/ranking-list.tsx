@@ -33,6 +33,8 @@ type GroupSlugRow = {
 
 type RowRecord = Record<string, unknown>;
 
+const DAILY_AD_TRACK_EMBED_URL = "https://open.spotify.com/embed/track/42lqjQaeSbs6uEJa150HMA";
+
 function getRankingConfig(source: RankingSource) {
   if (source === "weekly") {
     return {
@@ -509,6 +511,33 @@ export function ImakiteRankingList({
               </div>
             </article>
           ))}
+          <article className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg backdrop-blur lg:col-span-1 min-h-[180px]">
+            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-900 to-black" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/70" />
+
+            <div className="relative flex h-full flex-col gap-4 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-amber-300">AD</p>
+                  <h3 className="mt-1 text-xl font-semibold text-white sm:text-2xl">SECRETDIVE</h3>
+                  <p className="mt-1 text-sm text-zinc-200">♪ Oi Oi Oi</p>
+                </div>
+              </div>
+
+              <div className="mt-auto">
+                <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                  <iframe
+                    title="SECRETDIVE - Oi Oi Oi (Ad)"
+                    src={DAILY_AD_TRACK_EMBED_URL}
+                    width="100%"
+                    height={80}
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
