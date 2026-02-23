@@ -848,7 +848,7 @@ export function GroupDetail({ slug }: Props) {
       </header>
 
       <section>
-        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-10">
             <section>
               <div className="flex flex-col gap-2">
@@ -913,7 +913,7 @@ export function GroupDetail({ slug }: Props) {
                   </div>
                 )}
                 {authReady && !userEmail && (
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-400">
                     <span>投票にはログインが必要</span>
                     <button
                       type="button"
@@ -928,7 +928,7 @@ export function GroupDetail({ slug }: Props) {
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-zinc-200">
+                  <h3 className="text-base font-semibold text-zinc-200">
                     {displayName}の👍ワード
                   </h3>
                   <div className="mt-2 flex items-center gap-1 text-xs text-zinc-500">
@@ -979,7 +979,7 @@ export function GroupDetail({ slug }: Props) {
 
                 <div>
                   <label
-                    className="text-sm font-semibold text-zinc-200"
+                    className="text-base font-semibold text-zinc-200"
                     htmlFor="freeword"
                   >
                     👍フリーワード（10文字以内）
