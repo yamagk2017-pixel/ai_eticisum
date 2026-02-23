@@ -765,7 +765,7 @@ export function GroupDetail({ slug }: Props) {
     <div className="flex flex-col gap-10">
       <header>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_176px] lg:gap-6 lg:grid-cols-[minmax(0,1fr)_264px]">
-          <div className="min-w-0 space-y-4">
+          <div className="min-w-0 space-y-1">
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>総投票数 {totalVotes ?? 0}</span>
               <span>投票ランキング {voteRank ?? "-"}</span>
@@ -1029,9 +1029,23 @@ export function GroupDetail({ slug }: Props) {
             </section>
           </div>
 
-          <aside className="space-y-6">
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-lg font-semibold">Spotify</h2>
+          <aside className="space-y-8">
+            <section>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                  Spotify
+                </h2>
+                {spotifyUrl && (
+                  <a
+                    href={spotifyUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+                  >
+                    Spotifyで開く
+                  </a>
+                )}
+              </div>
               {spotifyEmbedUrl ? (
                 <iframe
                   className="mt-3 block w-full"
@@ -1046,20 +1060,24 @@ export function GroupDetail({ slug }: Props) {
                   Spotifyアーティスト情報が未登録です。
                 </p>
               )}
-              {spotifyUrl && (
-                <a
-                  href={spotifyUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                >
-                  Spotifyで開く →
-                </a>
-              )}
             </section>
 
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-lg font-semibold">YouTube</h2>
+            <section>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                  YouTube
+                </h2>
+                {youtubeUrl && (
+                  <a
+                    href={youtubeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+                  >
+                    YouTubeで開く
+                  </a>
+                )}
+              </div>
               {youtubeStatus === "loading" && (
                 <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
               )}
@@ -1080,20 +1098,12 @@ export function GroupDetail({ slug }: Props) {
                   </p>
                 )
               )}
-              {youtubeUrl && (
-                <a
-                  href={youtubeUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                >
-                  YouTubeで開く →
-                </a>
-              )}
             </section>
 
-            <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-              <h2 className="text-lg font-semibold">直近のイベント情報</h2>
+            <section>
+              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                直近のイベント情報
+              </h2>
               {latestEvent ? (
                 <div className="mt-3 space-y-2 text-sm text-zinc-200">
                   <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
