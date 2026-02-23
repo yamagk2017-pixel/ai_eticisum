@@ -392,7 +392,7 @@ export default async function Home() {
   }, null);
 
   const imakiteDailyCard = (
-    <div className="mb-10 break-inside-avoid">
+    <div className="mb-12 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -476,7 +476,7 @@ export default async function Home() {
 
   const imakiteWeeklyCard =
     summaries.imakite.weeklyPlaylistEmbedUrl ? (
-      <div className="mb-10 break-inside-avoid">
+      <div className="mb-12 break-inside-avoid">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -510,7 +510,7 @@ export default async function Home() {
     ) : null;
 
   const nandatteVoteCard = (
-    <div className="mb-10 break-inside-avoid">
+    <div className="mb-12 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -555,7 +555,7 @@ export default async function Home() {
   );
 
   const nandatteRecentCard = (
-    <div className="mb-10 break-inside-avoid">
+    <div className="mb-12 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -600,7 +600,7 @@ export default async function Home() {
   );
 
   const buzzCard = (
-    <div className="mb-10 break-inside-avoid">
+    <div className="mb-12 break-inside-avoid">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
