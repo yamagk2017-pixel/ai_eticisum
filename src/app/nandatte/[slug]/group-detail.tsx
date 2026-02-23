@@ -809,7 +809,7 @@ export function GroupDetail({ slug }: Props) {
             </div>
           </div>
 
-          <aside className="flex min-w-0 flex-col items-end gap-2 lg:gap-3">
+          <aside className="flex min-w-0 items-start justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-2 lg:gap-3">
             {group.artist_image_url ? (
               <img
                 src={group.artist_image_url}
@@ -821,7 +821,7 @@ export function GroupDetail({ slug }: Props) {
               <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]" />
             )}
 
-            <div className="flex max-w-[176px] flex-wrap justify-end gap-1.5 lg:max-w-[264px] lg:gap-2">
+            <div className="flex flex-1 flex-wrap justify-end gap-1.5 sm:max-w-[176px] sm:flex-none lg:max-w-[264px] lg:gap-2">
               {headerLinkItems.map((item) => {
                 const url = serviceMap.get(item.key)?.url ?? null;
                 if (!url) {
