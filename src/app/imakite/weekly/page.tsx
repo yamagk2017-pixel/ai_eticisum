@@ -6,7 +6,7 @@ import { ImakiteRankingList } from "../ranking-list";
 export default function ImakiteWeeklyPage() {
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-white">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-10 py-16 sm:px-12">
         <header className="flex flex-col gap-4">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
             毎週火曜日発表！

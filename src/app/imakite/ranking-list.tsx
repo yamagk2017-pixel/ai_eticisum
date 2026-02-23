@@ -495,10 +495,11 @@ export function ImakiteRankingList({
                 {row.latest_track_embed_link ? (
                   <div className="mt-auto overflow-hidden rounded-lg border border-white/10 bg-black/30">
                     <iframe
+                      className="block"
                       title={`${row.artist_name} - ${row.latest_track_name ?? "Spotify"}`}
                       src={row.latest_track_embed_link}
                       width="100%"
-                      height={row.rank === 1 ? 152 : 80}
+                      height={row.rank === 1 ? 152 : 84}
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                       loading="lazy"
                     />
@@ -527,6 +528,7 @@ export function ImakiteRankingList({
               <div className="mt-auto">
                 <div className="overflow-hidden rounded-lg border border-white/10 bg-black/30">
                   <iframe
+                    className="block"
                     title="SECRETDIVE - Oi Oi Oi (Ad)"
                     src={DAILY_AD_TRACK_EMBED_URL}
                     width="100%"
