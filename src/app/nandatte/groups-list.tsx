@@ -13,12 +13,6 @@ type GroupRow = {
 const PAGE_SIZE = 20;
 const INITIAL_FILTERS = [
   { key: "all", label: "すべて", pattern: null },
-  { key: "number", label: "数字", pattern: "^[0-9０-９]" },
-  { key: "ae", label: "A-E", pattern: "^[A-Ea-eＡ-Ｅａ-ｅ]" },
-  { key: "fj", label: "F-J", pattern: "^[F-Jf-jＦ-Ｊｆ-ｊ]" },
-  { key: "ko", label: "K-O", pattern: "^[K-Ok-oＫ-Ｏｋ-ｏ]" },
-  { key: "pt", label: "P-T", pattern: "^[P-Tp-tＰ-Ｔｐ-ｔ]" },
-  { key: "uz", label: "U-Z", pattern: "^[U-Zu-zＵ-Ｚｕ-ｚ]" },
   { key: "a", label: "あ", pattern: "^[あいうえおぁぃぅぇぉアイウエオァィゥェォヴゔ]" },
   { key: "ka", label: "か", pattern: "^[かきくけこがぎぐげごカキクケコガギグゲゴ]" },
   { key: "sa", label: "さ", pattern: "^[さしすせそざじずぜぞサシスセソザジズゼゾ]" },
@@ -29,6 +23,13 @@ const INITIAL_FILTERS = [
   { key: "ya", label: "や", pattern: "^[やゆよゃゅょヤユヨャュョ]" },
   { key: "ra", label: "ら", pattern: "^[らりるれろラリルレロ]" },
   { key: "wa", label: "わ", pattern: "^[わをんゎワヲンヮ]" },
+  { key: "ae", label: "A-E", pattern: "^[A-Ea-eＡ-Ｅａ-ｅ]" },
+  { key: "fj", label: "F-J", pattern: "^[F-Jf-jＦ-Ｊｆ-ｊ]" },
+  { key: "ko", label: "K-O", pattern: "^[K-Ok-oＫ-Ｏｋ-ｏ]" },
+  { key: "pt", label: "P-T", pattern: "^[P-Tp-tＰ-Ｔｐ-ｔ]" },
+  { key: "uz", label: "U-Z", pattern: "^[U-Zu-zＵ-Ｚｕ-ｚ]" },
+  { key: "number_symbol", label: "数字・記号", pattern: "^[^A-Za-zＡ-Ｚａ-ｚあ-んァ-ン一-龯々〆ヵヶ]" },
+  { key: "kanji", label: "漢字", pattern: "^[一-龯々〆ヵヶ]" },
 ] as const;
 
 type InitialFilterKey = (typeof INITIAL_FILTERS)[number]["key"];
@@ -184,7 +185,7 @@ export function GroupsList() {
               type="button"
               onClick={() => {
                 setHasSearched(true);
-                setInitialFilter(filter.key);
+                setInitialFilter((prev) => (prev === filter.key ? "all" : filter.key));
                 setPage(1);
               }}
               className={[

@@ -904,7 +904,6 @@ export function GroupDetail({ slug }: Props) {
                   {!authReady && <p>ログイン状態を確認中...</p>}
                   {authReady && userEmail && (
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-zinc-200">ログイン中: {userEmail}</span>
                       <button
                         type="button"
                         onClick={handleSignOut}
