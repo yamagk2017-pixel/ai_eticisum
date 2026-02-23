@@ -402,7 +402,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">毎日発表！</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-xl font-semibold">デイリーランキング</h2>
+            <h2 className="font-mincho-jp text-2xl font-semibold">デイリーランキング</h2>
             <Link href="/imakite" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -486,7 +486,7 @@ export default async function Home() {
               <span className="text-xs text-[var(--ui-text-subtle)]">毎週火曜日発表！</span>
             </div>
             <div className="mt-2 flex items-baseline gap-3">
-              <h2 className="font-mincho-jp text-xl font-semibold">週間ランキング</h2>
+              <h2 className="font-mincho-jp text-2xl font-semibold">週間ランキング</h2>
               <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
                 more...
               </Link>
@@ -520,7 +520,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-xl font-semibold">投票ランキング</h2>
+            <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
             <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -565,7 +565,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-xl font-semibold">最新アップデート</h2>
+            <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
             <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -610,7 +610,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">100万view以上のポストをアーカイブ</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-xl font-semibold">最新の投稿</h2>
+            <h2 className="font-mincho-jp text-2xl font-semibold">最新の投稿</h2>
             <Link href="/buzzttara" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
