@@ -103,10 +103,10 @@ export function Rankings() {
   }
 
   return (
-    <section className="grid gap-6 md:grid-cols-2">
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+    <section className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] md:gap-8">
+      <div>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">投票ランキング</h2>
+          <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
         </div>
         {status === "loading" && (
           <p className="mt-4 text-sm text-zinc-400">読み込み中...</p>
@@ -153,9 +153,11 @@ export function Rankings() {
         </ol>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+      <div className="hidden bg-zinc-800/80 md:block" aria-hidden="true" />
+
+      <div>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-semibold">最新アップデート</h2>
+          <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
         </div>
         {status === "loading" && (
           <p className="mt-4 text-sm text-zinc-400">読み込み中...</p>

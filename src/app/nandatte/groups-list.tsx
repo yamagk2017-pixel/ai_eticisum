@@ -132,11 +132,11 @@ export function GroupsList() {
   }, [status]);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+    <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-semibold">グループ検索</h2>
+            <h2 className="font-mincho-jp text-2xl font-semibold">グループ検索</h2>
             {registeredCount !== null && (
                 <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300">
                 登録グループ{registeredCount.toLocaleString("ja-JP")}組
