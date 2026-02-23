@@ -286,7 +286,7 @@ export default function BuzzttaraTweetDetailPage() {
   if (status === "error") {
     return (
       <div className="min-h-screen bg-zinc-950 text-white">
-        <main className="mx-auto w-full max-w-5xl px-6 py-16">
+        <main className="mx-auto w-full max-w-5xl px-10 py-16 sm:px-12">
           <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-6 text-sm text-red-100">
             投稿の取得に失敗しました: {message}
           </div>
@@ -297,7 +297,7 @@ export default function BuzzttaraTweetDetailPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 pt-8 pb-16">
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-10 pt-8 pb-16 sm:px-12">
         <div className="flex flex-wrap gap-2">
           <Link
             href="/buzzttara"

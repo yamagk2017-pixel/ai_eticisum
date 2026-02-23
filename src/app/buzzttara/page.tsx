@@ -3,7 +3,7 @@ import { BuzzList } from "./buzz-list";
 export default function BuzzttaraPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-16">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-10 py-16 sm:px-12">
         <header className="flex flex-col gap-3">
           <p className="text-xs font-semibold tracking-[0.12em] text-zinc-400">バズったアイドルがここに集結！</p>
           <div className="flex flex-wrap items-center justify-between gap-4">
