@@ -395,9 +395,12 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Link href="/imakite" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
-            イマキテランキング
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link href="/imakite" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
+              イマキテランキング
+            </Link>
+            <span className="text-xs text-[var(--ui-text-subtle)]">毎日発表！</span>
+          </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-lg font-semibold">デイリーランキング</h2>
             <Link href="/imakite" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
@@ -476,9 +479,12 @@ export default async function Home() {
       <div className="mb-6 break-inside-avoid">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
-              イマキテランキング
-            </Link>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
+                イマキテランキング
+              </Link>
+              <span className="text-xs text-[var(--ui-text-subtle)]">毎週火曜日発表！</span>
+            </div>
             <div className="mt-2 flex items-baseline gap-3">
               <h2 className="font-mincho-jp text-lg font-semibold">週間ランキング</h2>
               <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
@@ -597,9 +603,12 @@ export default async function Home() {
     <div className="mb-6 break-inside-avoid">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <Link href="/buzzttara" className="text-xs font-semibold tracking-[0.08em] text-cyan-500 underline">
-            バズッタラ
-          </Link>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link href="/buzzttara" className="text-xs font-semibold tracking-[0.08em] text-cyan-500 underline">
+              バズッタラ
+            </Link>
+            <span className="text-xs text-[var(--ui-text-subtle)]">100万view以上のポストをアーカイブ</span>
+          </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-lg font-semibold">最新の投稿</h2>
             <Link href="/buzzttara" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
