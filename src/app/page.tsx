@@ -392,7 +392,7 @@ export default async function Home() {
   }, null);
 
   const imakiteDailyCard = (
-    <div className="mb-6 break-inside-avoid">
+    <div className="mb-10 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -402,7 +402,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">毎日発表！</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-lg font-semibold">デイリーランキング</h2>
+            <h2 className="font-mincho-jp text-xl font-semibold">デイリーランキング</h2>
             <Link href="/imakite" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -476,7 +476,7 @@ export default async function Home() {
 
   const imakiteWeeklyCard =
     summaries.imakite.weeklyPlaylistEmbedUrl ? (
-      <div className="mb-6 break-inside-avoid">
+      <div className="mb-10 break-inside-avoid">
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -486,7 +486,7 @@ export default async function Home() {
               <span className="text-xs text-[var(--ui-text-subtle)]">毎週火曜日発表！</span>
             </div>
             <div className="mt-2 flex items-baseline gap-3">
-              <h2 className="font-mincho-jp text-lg font-semibold">週間ランキング</h2>
+              <h2 className="font-mincho-jp text-xl font-semibold">週間ランキング</h2>
               <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
                 more...
               </Link>
@@ -510,7 +510,7 @@ export default async function Home() {
     ) : null;
 
   const nandatteVoteCard = (
-    <div className="mb-6 break-inside-avoid">
+    <div className="mb-10 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -520,7 +520,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-lg font-semibold">投票ランキング</h2>
+            <h2 className="font-mincho-jp text-xl font-semibold">投票ランキング</h2>
             <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -555,7 +555,7 @@ export default async function Home() {
   );
 
   const nandatteRecentCard = (
-    <div className="mb-6 break-inside-avoid">
+    <div className="mb-10 break-inside-avoid">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -565,7 +565,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-lg font-semibold">最新アップデート</h2>
+            <h2 className="font-mincho-jp text-xl font-semibold">最新アップデート</h2>
             <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
@@ -600,7 +600,7 @@ export default async function Home() {
   );
 
   const buzzCard = (
-    <div className="mb-6 break-inside-avoid">
+    <div className="mb-10 break-inside-avoid">
       <div className="flex items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -610,7 +610,7 @@ export default async function Home() {
             <span className="text-xs text-[var(--ui-text-subtle)]">100万view以上のポストをアーカイブ</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-lg font-semibold">最新の投稿</h2>
+            <h2 className="font-mincho-jp text-xl font-semibold">最新の投稿</h2>
             <Link href="/buzzttara" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
