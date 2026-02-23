@@ -392,20 +392,19 @@ export default async function Home() {
   }, null);
 
   const imakiteDailyCard = (
-    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div className="mb-6 break-inside-avoid">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <Link href="/imakite" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
             イマキテランキング
           </Link>
-          <h2 className="mt-2 text-lg font-semibold">デイリーランキング</h2>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h2 className="font-mincho-jp text-lg font-semibold">デイリーランキング</h2>
+            <Link href="/imakite" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+              more...
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/imakite"
-          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-        >
-          more...
-        </Link>
       </div>
       {summaries.imakite.latestDate && (
         <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.latestDate} 時点</p>
@@ -474,20 +473,19 @@ export default async function Home() {
 
   const imakiteWeeklyCard =
     summaries.imakite.weeklyPlaylistEmbedUrl ? (
-      <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+      <div className="mb-6 break-inside-avoid">
         <div className="flex items-center justify-between gap-3">
           <div>
             <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
               イマキテランキング
             </Link>
-            <h2 className="mt-2 text-lg font-semibold">週間ランキング</h2>
+            <div className="mt-2 flex items-baseline gap-3">
+              <h2 className="font-mincho-jp text-lg font-semibold">週間ランキング</h2>
+              <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+                more...
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/imakite/weekly"
-            className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-          >
-            more...
-          </Link>
         </div>
         {summaries.imakite.weeklyPlaylistDate && (
           <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.weeklyPlaylistDate} 時点</p>
@@ -506,20 +504,22 @@ export default async function Home() {
     ) : null;
 
   const nandatteVoteCard = (
-    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div className="mb-6 break-inside-avoid">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
-            ナンダッテ
-          </Link>
-          <h2 className="mt-2 text-lg font-semibold">投票ランキング</h2>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
+              ナンダッテ
+            </Link>
+            <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
+          </div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h2 className="font-mincho-jp text-lg font-semibold">投票ランキング</h2>
+            <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+              more...
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/nandatte"
-          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-        >
-          more...
-        </Link>
       </div>
       <ol className="mt-4 space-y-2 text-sm">
         {summaries.nandatte.voteTop.length > 0 ? (
@@ -549,20 +549,22 @@ export default async function Home() {
   );
 
   const nandatteRecentCard = (
-    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <div className="mb-6 break-inside-avoid">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
-            ナンダッテ
-          </Link>
-          <h2 className="mt-2 text-lg font-semibold">最新アップデート</h2>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
+              ナンダッテ
+            </Link>
+            <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
+          </div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h2 className="font-mincho-jp text-lg font-semibold">最新アップデート</h2>
+            <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+              more...
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/nandatte"
-          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-        >
-          more...
-        </Link>
       </div>
       <ol className="mt-4 space-y-2 text-sm">
         {summaries.nandatte.recentTop.length > 0 ? (
@@ -592,20 +594,19 @@ export default async function Home() {
   );
 
   const buzzCard = (
-    <div className="mb-6 break-inside-avoid rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 shadow-sm">
+    <div className="mb-6 break-inside-avoid">
       <div className="flex items-center justify-between gap-3">
         <div>
           <Link href="/buzzttara" className="text-xs font-semibold tracking-[0.08em] text-cyan-500 underline">
             バズッタラ
           </Link>
-          <h2 className="mt-2 text-lg font-semibold">最新の投稿</h2>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h2 className="font-mincho-jp text-lg font-semibold">最新の投稿</h2>
+            <Link href="/buzzttara" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+              more...
+            </Link>
+          </div>
         </div>
-        <Link
-          href="/buzzttara"
-          className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text-muted)] hover:bg-[var(--ui-panel-soft)]"
-        >
-          more...
-        </Link>
       </div>
       <div className="mt-4 text-sm">
         {summaries.buzz.items.length > 0 ? (
