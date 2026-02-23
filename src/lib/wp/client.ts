@@ -7,6 +7,13 @@ type WpFeaturedMedia = {
   alt_text?: string;
 };
 
+type WpTermApiItem = {
+  id?: number;
+  taxonomy?: string;
+  name?: string;
+  slug?: string;
+};
+
 type WpPostApiItem = {
   id: number;
   date?: string;
@@ -17,7 +24,14 @@ type WpPostApiItem = {
   content?: WpRenderedField;
   _embedded?: {
     "wp:featuredmedia"?: WpFeaturedMedia[];
+    "wp:term"?: WpTermApiItem[][];
   };
+};
+
+export type WpTerm = {
+  id: number;
+  name: string;
+  slug: string | null;
 };
 
 export type WpLatestPost = {
@@ -30,6 +44,8 @@ export type WpLatestPost = {
   contentHtml: string;
   featuredImageUrl: string | null;
   featuredImageAlt: string | null;
+  categories: WpTerm[];
+  tags: WpTerm[];
 };
 
 function normalizeBaseUrl(value: string) {
@@ -38,6 +54,36 @@ function normalizeBaseUrl(value: string) {
 
 function readString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
+}
+
+function readNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): WpTerm[] {
+  const groups = post._embedded?.["wp:term"] ?? [];
+  const seen = new Set<number>();
+  const terms: WpTerm[] = [];
+
+  for (const group of groups) {
+    for (const item of group) {
+      if (item.taxonomy !== taxonomy) continue;
+
+      const id = readNumber(item.id);
+      const name = readString(item.name);
+      if (id === null || !name) continue;
+      if (seen.has(id)) continue;
+
+      seen.add(id);
+      terms.push({
+        id,
+        name,
+        slug: readString(item.slug),
+      });
+    }
+  }
+
+  return terms;
 }
 
 export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
@@ -70,5 +116,7 @@ export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
     contentHtml: readString(post.content?.rendered) ?? "",
     featuredImageUrl: readString(featuredMedia?.source_url),
     featuredImageAlt: readString(featuredMedia?.alt_text),
+    categories: extractTerms(post, "category"),
+    tags: extractTerms(post, "post_tag"),
   };
 }

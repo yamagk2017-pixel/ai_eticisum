@@ -12,6 +12,33 @@ function formatDate(value: string | null) {
   }).format(new Date(time));
 }
 
+function TermPills({
+  label,
+  items,
+}: {
+  label: string;
+  items: Array<{ id: number; name: string; slug: string | null }>;
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-3">
+      <p className="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{label}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={`${label}-${item.id}`}
+            className="rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200"
+            title={item.slug ?? undefined}
+          >
+            {item.name}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function WpMvpPage() {
   const hasBaseUrl = Boolean(process.env.WP_API_BASE_URL?.trim());
 
@@ -89,6 +116,9 @@ export default async function WpMvpPage() {
                 </a>
               </p>
             ) : null}
+
+            <TermPills label="Categories" items={post.categories} />
+            <TermPills label="Tags" items={post.tags} />
 
             {post.excerptHtml ? (
               <div
