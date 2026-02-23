@@ -713,7 +713,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
-      <main className="mx-auto w-full max-w-6xl px-6 py-10 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
+      <main className="mx-auto w-full max-w-6xl px-10 py-10 sm:px-12 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
         <section className="columns-1 gap-6 lg:columns-3">
           {summaryCards.map((card) => (
             <div key={card.key}>{card.node}</div>
