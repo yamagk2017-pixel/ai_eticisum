@@ -851,7 +851,7 @@ export function GroupDetail({ slug }: Props) {
         <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-10">
             <section>
-              <div className="px-5">
+              <div className="px-0 sm:px-5">
                 <div className="flex flex-col gap-2">
                   <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                     {displayName}ってこんなグループ「ナンダッテ」
@@ -860,9 +860,9 @@ export function GroupDetail({ slug }: Props) {
                     上位5件をハイライト / ログインで6位以下も表示
                   </span>
                 </div>
-                <div className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">
+                <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-6">
                   {sortedCounts.length === 0 && (
-                    <p className="text-sm text-zinc-400 md:col-span-2">まだ投票がありません。</p>
+                    <p className="text-sm text-zinc-400 col-span-2">まだ投票がありません。</p>
                   )}
                   {visibleCounts.map((item, index) => {
                     const width = maxCount
@@ -889,7 +889,7 @@ export function GroupDetail({ slug }: Props) {
                     );
                   })}
                   {!isLoggedIn && hiddenCount > 0 && (
-                    <div className="px-1 py-2 text-sm text-zinc-400 md:col-span-2">
+                    <div className="px-1 py-2 text-sm text-zinc-400 col-span-2">
                       その他 {hiddenCount} 件
                     </div>
                   )}
