@@ -116,7 +116,7 @@ export default async function WpMvpPage() {
 
           <div className="pt-6">
             <div
-              className="mt-6 space-y-4 text-[16px] leading-7 text-[var(--ui-text)] [overflow-wrap:anywhere] [&_a]:underline [&_a]:underline-offset-2 [&_a]:break-all [&_a]:whitespace-normal [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:[font-family:var(--font-shippori-mincho),serif] sm:[&_h2]:text-3xl [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-[var(--ui-text)] [&_li]:text-[var(--ui-text)] [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
+              className="mt-6 space-y-4 text-[16px] leading-7 text-[var(--ui-text)] [overflow-wrap:anywhere] [&_.well3]:my-6 [&_.well3]:rounded-xl [&_.well3]:border [&_.well3]:border-[var(--ui-border)] [&_.well3]:bg-[var(--ui-panel-soft)] [&_.well3]:px-4 [&_.well3]:py-3 [&_.well3]:text-[15px] [&_.well3]:leading-7 [&_.well3]:text-[var(--ui-text)] [&_.well3_p]:my-0 [&_.well3_*]:text-inherit [&_a]:underline [&_a]:underline-offset-2 [&_a]:break-all [&_a]:whitespace-normal [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:[font-family:var(--font-shippori-mincho),serif] sm:[&_h2]:text-3xl [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-[var(--ui-text)] [&_li]:text-[var(--ui-text)] [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
             />
           </div>
