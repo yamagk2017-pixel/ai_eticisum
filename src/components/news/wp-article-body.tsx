@@ -22,12 +22,10 @@ export function WpArticleBody({ html }: { html: string }) {
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-
     if (modalImage) {
       if (!dialog.open) dialog.showModal();
       return;
     }
-
     if (dialog.open) dialog.close();
   }, [modalImage]);
 
@@ -43,10 +41,7 @@ export function WpArticleBody({ html }: { html: string }) {
     if (!isImageHref(anchor.href)) return;
 
     event.preventDefault();
-    setModalImage({
-      src: anchor.href,
-      alt: image.alt || "",
-    });
+    setModalImage({ src: anchor.href, alt: image.alt || "" });
   };
 
   const closeModal = () => setModalImage(null);
@@ -54,7 +49,6 @@ export function WpArticleBody({ html }: { html: string }) {
   return (
     <>
       <div className={BODY_CLASSNAME} onClick={handleBodyClick} dangerouslySetInnerHTML={{ __html: html }} />
-
       <dialog
         ref={dialogRef}
         onClose={closeModal}
@@ -85,3 +79,4 @@ export function WpArticleBody({ html }: { html: string }) {
     </>
   );
 }
+

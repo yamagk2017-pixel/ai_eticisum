@@ -159,3 +159,12 @@ export async function fetchWpPostBySlug(slug: string): Promise<WpPost | null> {
   const posts = await fetchWpPostsFromEndpoint(endpoint);
   return posts[0] ?? null;
 }
+
+export async function fetchWpPostsList(limit = 10): Promise<WpPost[]> {
+  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  if (!baseUrl) return [];
+
+  const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 100) : 10;
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?per_page=${safeLimit}&_embed`;
+  return fetchWpPostsFromEndpoint(endpoint);
+}

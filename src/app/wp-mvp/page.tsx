@@ -1,5 +1,5 @@
 import { fetchLatestWpPost, fetchWpPostById, fetchWpPostBySlug } from "@/lib/wp/client";
-import { WpArticleBody } from "./wp-article-body";
+import { WpArticleBody } from "@/components/news/wp-article-body";
 
 export const dynamic = "force-dynamic";
 
