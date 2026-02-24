@@ -44,7 +44,7 @@ export default async function WpMvpPage() {
 
   if (!hasBaseUrl) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <div className="rounded-2xl border border-zinc-300/80 bg-white/80 p-6 dark:border-zinc-800 dark:bg-zinc-900/60">
           <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
           <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
@@ -66,7 +66,7 @@ export default async function WpMvpPage() {
 
     if (!post) {
       return (
-        <main className="mx-auto max-w-3xl px-6 py-12">
+        <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
           <div className="rounded-2xl border border-zinc-300/80 bg-white/80 p-6 dark:border-zinc-800 dark:bg-zinc-900/60">
             <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
@@ -78,51 +78,55 @@ export default async function WpMvpPage() {
     }
 
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <div className="mb-6 rounded-2xl border border-emerald-300/60 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-700/60 dark:bg-emerald-950/40 dark:text-emerald-200">
-          SupabaseなしのMVPです。Next.jsサーバー側からWP REST APIを読んで表示しています。
-        </div>
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+        <article>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+            <div>
+              <h1
+                className="font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
+                dangerouslySetInnerHTML={{ __html: post.titleHtml }}
+              />
 
-        <article className="overflow-hidden rounded-2xl border border-zinc-300/80 bg-white/90 dark:border-zinc-800 dark:bg-zinc-900/70">
-          {post.featuredImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={post.featuredImageUrl}
-              alt={post.featuredImageAlt ?? ""}
-              className="h-auto max-h-[420px] w-full object-cover"
-            />
-          ) : null}
+              <div className="mt-4">
+                <p className="text-xs tracking-wide text-zinc-500 dark:text-zinc-400">
+                  WP Post ID: {post.id} / {formatDate(post.date)}
+                </p>
 
-          <div className="p-6">
-            <p className="text-xs tracking-wide text-zinc-500 dark:text-zinc-400">
-              WP Post ID: {post.id} / {formatDate(post.date)}
-            </p>
+                {post.url ? (
+                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    Source:{" "}
+                    <a
+                      href={post.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-2"
+                    >
+                      {post.url}
+                    </a>
+                  </p>
+                ) : null}
 
-            <h1
-              className="mt-2 text-2xl font-semibold leading-tight"
-              dangerouslySetInnerHTML={{ __html: post.titleHtml }}
-            />
+                <TermPills label="Categories" items={post.categories} />
+                <TermPills label="Tags" items={post.tags} />
+              </div>
+            </div>
 
-            {post.url ? (
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                Source:{" "}
-                <a
-                  href={post.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline underline-offset-2"
-                >
-                  {post.url}
-                </a>
-              </p>
+            {post.featuredImageUrl ? (
+              <div className="lg:pl-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.featuredImageUrl}
+                  alt={post.featuredImageAlt ?? ""}
+                  className="h-auto max-h-[420px] w-full object-cover"
+                />
+              </div>
             ) : null}
+          </div>
 
-            <TermPills label="Categories" items={post.categories} />
-            <TermPills label="Tags" items={post.tags} />
-
+          <div className="pt-6">
             {post.excerptHtml ? (
               <div
-                className="mt-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300"
+                className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300"
                 dangerouslySetInnerHTML={{ __html: post.excerptHtml }}
               />
             ) : null}
@@ -139,7 +143,7 @@ export default async function WpMvpPage() {
     const message = error instanceof Error ? error.message : "Unknown error";
 
     return (
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <div className="rounded-2xl border border-rose-300/70 bg-rose-50 p-6 dark:border-rose-800/60 dark:bg-rose-950/30">
           <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
           <p className="mt-3 text-sm text-rose-900 dark:text-rose-200">取得に失敗しました。</p>
