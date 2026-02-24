@@ -46,8 +46,10 @@ export const relatedGroupsField = defineField({
           name: "imdGroupId",
           title: "imd.groups ID",
           type: "number",
-          description: "内部保存用キー。表示は groupNameJa を使用。",
-          validation: (rule) => rule.required().integer().positive(),
+          description:
+            "暫定: custom input 実装まで非表示運用。将来は候補選択時に自動保存される内部キー。",
+          validation: (rule) => rule.integer().positive(),
+          hidden: true,
         }),
         defineField({
           name: "displayOrder",
@@ -65,7 +67,7 @@ export const relatedGroupsField = defineField({
         prepare({title, subtitle}) {
           return {
             title: title ?? "(no group name)",
-            subtitle: subtitle ? `imdGroupId: ${subtitle}` : "imdGroupId: -",
+            subtitle: subtitle ? `imdGroupId: ${subtitle}` : "imdGroupId: (pending)",
           };
         },
       },
