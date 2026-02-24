@@ -97,7 +97,7 @@ export async function generateMetadata({
       type: "article",
       title: articleTitle,
       description,
-      publishedTime: article.date ?? undefined,
+      publishedTime: article.publishedAt ?? undefined,
       images: [{ url: article.featuredImageUrl! }],
     },
     twitter: {
@@ -192,7 +192,7 @@ export default async function WpNewsArticlePage({
 
           <div className={article.featuredImageUrl ? "md:order-1" : undefined}>
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
-                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.date)}</p>
+                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
                 <div className="mt-0">
                   <TermPills items={article.categories} kind="category" variant="plain" />
                 </div>

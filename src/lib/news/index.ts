@@ -11,7 +11,6 @@ export async function getNewsList(options: GetNewsListOptions = {}): Promise<New
   const { limit = 10, categoryId, tagId } = options;
 
   // Phase 1: /news is backed by WP only.
-  // Sanity sources will be merged here later and sorted by published date.
+  // Sanity sources will be merged here later and sorted by publishedAt (desc).
   return getWpNewsList(limit, { categoryId, tagId });
 }
-

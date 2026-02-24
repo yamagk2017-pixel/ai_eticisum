@@ -13,7 +13,7 @@ function toNewsArticle(post: WpPost): NewsArticle {
     id: post.id,
     slug: post.slug,
     url: post.url,
-    date: post.date,
+    publishedAt: post.date,
     titleHtml: post.titleHtml,
     excerptHtml: post.excerptHtml,
     contentHtml: post.contentHtml,

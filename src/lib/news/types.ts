@@ -15,7 +15,7 @@ export type NewsArticle = {
   id: number;
   slug: string;
   url: string | null;
-  date: string | null;
+  publishedAt: string | null;
   titleHtml: string;
   excerptHtml: string;
   contentHtml: string;

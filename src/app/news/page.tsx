@@ -116,7 +116,7 @@ export default async function NewsIndexPage({
 
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
-                  <span>{formatDate(article.date)}</span>
+                  <span>{formatDate(article.publishedAt)}</span>
                   {article.categories.slice(0, 2).map((category) => (
                     <Link
                       key={category.id}
