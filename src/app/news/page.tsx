@@ -3,6 +3,15 @@ import { getWpNewsList } from "@/lib/news/wp";
 
 export const dynamic = "force-dynamic";
 
+type SearchParams =
+  | Record<string, string | string[] | undefined>
+  | Promise<Record<string, string | string[] | undefined>>;
+
+function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
 function formatDate(value: string | null) {
   if (!value) return "-";
   const time = Date.parse(value);
@@ -13,8 +22,18 @@ function formatDate(value: string | null) {
   }).format(new Date(time));
 }
 
-export default async function NewsIndexPage() {
-  const articles = await getWpNewsList(10);
+export default async function NewsIndexPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const categoryParam = firstParam(resolvedSearchParams.category);
+  const tagParam = firstParam(resolvedSearchParams.tag);
+  const categoryId = categoryParam && /^\d+$/.test(categoryParam) ? Number(categoryParam) : undefined;
+  const tagId = tagParam && /^\d+$/.test(tagParam) ? Number(tagParam) : undefined;
+
+  const articles = await getWpNewsList(10, { categoryId, tagId });
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
@@ -23,6 +42,24 @@ export default async function NewsIndexPage() {
         <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
           WordPress記事の本番ルート（フェーズ1）。最新10件を表示しています。
         </p>
+        {(categoryId || tagId) && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
+            <span>Filter:</span>
+            {categoryId ? (
+              <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
+                category={categoryId}
+              </span>
+            ) : null}
+            {tagId ? (
+              <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
+                tag={tagId}
+              </span>
+            ) : null}
+            <Link href="/news" className="underline underline-offset-2">
+              Clear
+            </Link>
+          </div>
+        )}
       </div>
 
       {articles.length === 0 ? (
@@ -55,7 +92,13 @@ export default async function NewsIndexPage() {
                 <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
                   <span>{formatDate(article.date)}</span>
                   {article.categories.slice(0, 2).map((category) => (
-                    <span key={category.id}>{category.name}</span>
+                    <Link
+                      key={category.id}
+                      href={`/news?category=${category.id}`}
+                      className="underline underline-offset-2"
+                    >
+                      {category.name}
+                    </Link>
                   ))}
                 </div>
 
@@ -69,12 +112,13 @@ export default async function NewsIndexPage() {
                 {article.tags.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {article.tags.slice(0, 4).map((tag) => (
-                      <span
+                      <Link
                         key={tag.id}
+                        href={`/news?tag=${tag.id}`}
                         className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
                       >
                         {tag.name}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 ) : null}
@@ -86,4 +130,3 @@ export default async function NewsIndexPage() {
     </main>
   );
 }
-

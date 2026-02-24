@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WpArticleBody } from "@/components/news/wp-article-body";
 import { getWpNewsById } from "@/lib/news/wp";
@@ -25,9 +26,11 @@ function stripHtml(html: string) {
 
 function TermPills({
   items,
+  kind,
   variant = "default",
 }: {
   items: Array<{ id: number; name: string; slug: string | null }>;
+  kind: "category" | "tag";
   variant?: "default" | "plain";
 }) {
   if (items.length === 0) return null;
@@ -35,17 +38,18 @@ function TermPills({
   return (
     <div className="flex flex-wrap gap-2">
       {items.map((item) => (
-        <span
+        <Link
           key={item.id}
+          href={kind === "category" ? `/news?category=${item.id}` : `/news?tag=${item.id}`}
           className={
             variant === "plain"
-              ? "text-xs text-[var(--ui-text)]"
+              ? "text-xs text-[var(--ui-text)] underline underline-offset-2"
               : "rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
           }
           title={item.slug ?? undefined}
         >
           {item.name}
-        </span>
+        </Link>
       ))}
     </div>
   );
@@ -110,6 +114,27 @@ export default async function WpNewsArticlePage({
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <article>
+        <div className="mb-6 space-y-3">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
+            <Link href="/" className="underline underline-offset-2">Home</Link>
+            <span>&gt;</span>
+            <Link href="/news" className="underline underline-offset-2">News</Link>
+            {article.categories[0] ? (
+              <>
+                <span>&gt;</span>
+                <Link
+                  href={`/news?category=${article.categories[0].id}`}
+                  className="underline underline-offset-2"
+                >
+                  {article.categories[0].name}
+                </Link>
+              </>
+            ) : null}
+            <span>&gt;</span>
+            <span className="max-w-full truncate text-[var(--ui-text)]">{stripHtml(article.titleHtml)}</span>
+          </nav>
+        </div>
+
         <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
           {article.featuredImageUrl ? (
             <div className="md:order-2">
@@ -124,22 +149,22 @@ export default async function WpNewsArticlePage({
 
           <div className={article.featuredImageUrl ? "md:order-1" : undefined}>
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
-              <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.date)}</p>
-              <div className="mt-0">
-                <TermPills items={article.categories} variant="plain" />
+                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.date)}</p>
+                <div className="mt-0">
+                  <TermPills items={article.categories} kind="category" variant="plain" />
+                </div>
               </div>
-            </div>
 
             <h1
               className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
               dangerouslySetInnerHTML={{ __html: article.titleHtml }}
             />
 
-            <div className="mt-4">
-              <TermPills items={article.tags} />
+              <div className="mt-4">
+                <TermPills items={article.tags} kind="tag" />
+              </div>
             </div>
           </div>
-        </div>
 
         <div className="pt-6">
           <WpArticleBody html={article.contentHtml} />

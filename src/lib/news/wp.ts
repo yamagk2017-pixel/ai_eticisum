@@ -22,8 +22,11 @@ function toNewsArticle(post: WpPost): NewsArticle {
   };
 }
 
-export async function getWpNewsList(limit = 10): Promise<NewsArticle[]> {
-  const posts = await fetchWpPostsList(limit);
+export async function getWpNewsList(
+  limit = 10,
+  filters?: { categoryId?: number; tagId?: number }
+): Promise<NewsArticle[]> {
+  const posts = await fetchWpPostsList(limit, filters);
   return posts.map(toNewsArticle);
 }
 
@@ -31,4 +34,3 @@ export async function getWpNewsById(id: number): Promise<NewsArticle | null> {
   const post = await fetchWpPostById(id);
   return post ? toNewsArticle(post) : null;
 }
-
