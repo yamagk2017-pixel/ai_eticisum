@@ -109,10 +109,9 @@ export default async function WpMvpPage() {
             <div className="mt-0">
               <TermPills items={post.categories} variant="plain" />
             </div>
-          </div>
-
-          <div className="mt-4">
-            <TermPills label="Tags" items={post.tags} />
+            <div className="mt-0">
+              <TermPills items={post.tags} />
+            </div>
           </div>
 
           <div className="pt-6">
