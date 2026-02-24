@@ -26,7 +26,7 @@ function TermPills({
   return (
     <div className={label ? "mt-3" : ""}>
       {label ? (
-        <p className="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{label}</p>
+        <p className="text-xs font-medium tracking-wide text-[var(--ui-text-subtle)]">{label}</p>
       ) : null}
       <div className={`${label ? "mt-2" : ""} flex flex-wrap gap-2`}>
         {items.map((item) => (
@@ -34,8 +34,8 @@ function TermPills({
             key={`${label ?? "term"}-${item.id}`}
             className={
               variant === "plain"
-                ? "text-xs text-zinc-700 dark:text-zinc-200"
-                : "rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200"
+                ? "text-xs text-[var(--ui-text)]"
+                : "rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
             }
             title={item.slug ?? undefined}
           >
@@ -94,7 +94,7 @@ export default async function WpMvpPage() {
                 <div className="mt-0">
                   <TermPills items={post.categories} variant="plain" />
                 </div>
-                <p className="text-xs tracking-wide text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">
                   {formatDate(post.date)}
                 </p>
               </div>
@@ -123,7 +123,7 @@ export default async function WpMvpPage() {
 
           <div className="pt-6">
             <div
-              className="mt-6 space-y-4 text-[15px] leading-7 text-zinc-800 dark:text-white [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-zinc-800 dark:[&_p]:text-white [&_li]:text-zinc-800 dark:[&_li]:text-white [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
+              className="mt-6 space-y-4 text-[15px] leading-7 text-[var(--ui-text)] [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-[var(--ui-text)] [&_li]:text-[var(--ui-text)] [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
             />
           </div>
