@@ -60,6 +60,21 @@ function readNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function sanitizeWpHtml(html: string): string {
+  return html
+    .replace(/style=(['"])(.*?)\1/gi, (_full, quote: string, styleValue: string) => {
+      const kept = styleValue
+        .split(";")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .filter((part) => !/^(color|background-color)\s*:/i.test(part));
+
+      if (kept.length === 0) return "";
+      return `style=${quote}${kept.join("; ")}${quote}`;
+    })
+    .replace(/\scolor=(['"]).*?\1/gi, "");
+}
+
 function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): WpTerm[] {
   const groups = post._embedded?.["wp:term"] ?? [];
   const seen = new Set<number>();
@@ -112,8 +127,8 @@ export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
     url: readString(post.link),
     date: readString(post.date),
     titleHtml: readString(post.title?.rendered) ?? "(no title)",
-    excerptHtml: readString(post.excerpt?.rendered) ?? "",
-    contentHtml: readString(post.content?.rendered) ?? "",
+    excerptHtml: sanitizeWpHtml(readString(post.excerpt?.rendered) ?? ""),
+    contentHtml: sanitizeWpHtml(readString(post.content?.rendered) ?? ""),
     featuredImageUrl: readString(featuredMedia?.source_url),
     featuredImageAlt: readString(featuredMedia?.alt_text),
     categories: extractTerms(post, "category"),
