@@ -36,3 +36,5 @@ export async function getWpNewsById(id: number): Promise<NewsArticle | null> {
   const post = await fetchWpPostById(id);
   return post ? toNewsArticle(post) : null;
 }
+
+export { toNewsArticle as mapWpPostToNewsArticle };

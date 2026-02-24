@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getWpNewsList } from "@/lib/news/wp";
+import { getNewsList } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
@@ -35,12 +35,12 @@ export default async function NewsIndexPage({
   const tagId = tagParam && /^\d+$/.test(tagParam) ? Number(tagParam) : undefined;
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
 
-  let articles = [] as Awaited<ReturnType<typeof getWpNewsList>>;
+  let articles = [] as Awaited<ReturnType<typeof getNewsList>>;
   let fetchError: string | null = null;
 
   if (hasWpBaseUrl) {
     try {
-      articles = await getWpNewsList(10, { categoryId, tagId });
+      articles = await getNewsList({ limit: 10, categoryId, tagId });
     } catch (error) {
       if (error instanceof WpClientError) {
         fetchError =
