@@ -234,6 +234,12 @@ WP_API_BASE_URL=https://your-wordpress-site.example.com
 - 301移行のタイミング
 - 既存記事をどの単位で新サイト公開するか（全件/カテゴリ単位/段階的）
 
+### 追記メモ（運用方針）
+
+- `excerpt`（抜粋）の重要度は低い
+- SEOや一覧要約のテキストは `本文の冒頭` を基本に使う前提でよい
+- `excerpt` はあれば利用するが、必須前提にはしない
+
 ## 決定事項（現時点）
 
 - 段階移行で進める
@@ -268,4 +274,3 @@ WP_API_BASE_URL=https://your-wordpress-site.example.com
 
 5. `SEO方針メモを別紙で作る`
 - canonical/301/公開移行ルールを先に決める
-
