@@ -100,7 +100,7 @@ export default async function WpMvpPage() {
           ) : null}
 
           <h1
-            className="mt-6 font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
+            className="mt-6 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
             dangerouslySetInnerHTML={{ __html: post.titleHtml }}
           />
 
