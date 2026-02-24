@@ -15,20 +15,28 @@ function formatDate(value: string | null) {
 function TermPills({
   label,
   items,
+  variant = "default",
 }: {
-  label: string;
+  label?: string;
   items: Array<{ id: number; name: string; slug: string | null }>;
+  variant?: "default" | "plain";
 }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="mt-3">
-      <p className="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{label}</p>
-      <div className="mt-2 flex flex-wrap gap-2">
+    <div className={label ? "mt-3" : ""}>
+      {label ? (
+        <p className="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{label}</p>
+      ) : null}
+      <div className={`${label ? "mt-2" : ""} flex flex-wrap gap-2`}>
         {items.map((item) => (
           <span
-            key={`${label}-${item.id}`}
-            className="rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200"
+            key={`${label ?? "term"}-${item.id}`}
+            className={
+              variant === "plain"
+                ? "text-xs text-zinc-700 dark:text-zinc-200"
+                : "rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-xs text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-200"
+            }
             title={item.slug ?? undefined}
           >
             {item.name}
@@ -82,31 +90,21 @@ export default async function WpMvpPage() {
         <article>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
             <div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <div className="mt-0">
+                  <TermPills items={post.categories} variant="plain" />
+                </div>
+                <p className="text-xs tracking-wide text-zinc-500 dark:text-zinc-400">
+                  {formatDate(post.date)}
+                </p>
+              </div>
+
               <h1
-                className="font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
+                className="mt-4 font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
                 dangerouslySetInnerHTML={{ __html: post.titleHtml }}
               />
 
               <div className="mt-4">
-                <p className="text-xs tracking-wide text-zinc-500 dark:text-zinc-400">
-                  WP Post ID: {post.id} / {formatDate(post.date)}
-                </p>
-
-                {post.url ? (
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    Source:{" "}
-                    <a
-                      href={post.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline underline-offset-2"
-                    >
-                      {post.url}
-                    </a>
-                  </p>
-                ) : null}
-
-                <TermPills label="Categories" items={post.categories} />
                 <TermPills label="Tags" items={post.tags} />
               </div>
             </div>
@@ -124,13 +122,6 @@ export default async function WpMvpPage() {
           </div>
 
           <div className="pt-6">
-            {post.excerptHtml ? (
-              <div
-                className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300"
-                dangerouslySetInnerHTML={{ __html: post.excerptHtml }}
-              />
-            ) : null}
-
             <div
               className="mt-6 space-y-4 text-[15px] leading-7 text-zinc-800 dark:text-zinc-200 [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
