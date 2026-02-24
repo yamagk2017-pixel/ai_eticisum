@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getWpNewsList } from "@/lib/news/wp";
+import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +33,25 @@ export default async function NewsIndexPage({
   const tagParam = firstParam(resolvedSearchParams.tag);
   const categoryId = categoryParam && /^\d+$/.test(categoryParam) ? Number(categoryParam) : undefined;
   const tagId = tagParam && /^\d+$/.test(tagParam) ? Number(tagParam) : undefined;
+  const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
 
-  const articles = await getWpNewsList(10, { categoryId, tagId });
+  let articles = [] as Awaited<ReturnType<typeof getWpNewsList>>;
+  let fetchError: string | null = null;
+
+  if (hasWpBaseUrl) {
+    try {
+      articles = await getWpNewsList(10, { categoryId, tagId });
+    } catch (error) {
+      if (error instanceof WpClientError) {
+        fetchError =
+          error.kind === "timeout"
+            ? "WordPress APIの応答がタイムアウトしました。時間をおいて再試行してください。"
+            : "WordPress APIから記事を取得できませんでした。";
+      } else {
+        fetchError = "記事取得中に予期しないエラーが発生しました。";
+      }
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
@@ -62,7 +80,15 @@ export default async function NewsIndexPage({
         )}
       </div>
 
-      {articles.length === 0 ? (
+      {!hasWpBaseUrl ? (
+        <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-5 text-sm text-[var(--ui-text-subtle)]">
+          `WP_API_BASE_URL` が未設定です。WP記事一覧を取得できません。
+        </div>
+      ) : fetchError ? (
+        <div className="rounded-xl border border-rose-300/70 bg-rose-50 p-5 text-sm text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-200">
+          {fetchError}
+        </div>
+      ) : articles.length === 0 ? (
         <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-5 text-sm text-[var(--ui-text-subtle)]">
           記事が取得できませんでした。
         </div>

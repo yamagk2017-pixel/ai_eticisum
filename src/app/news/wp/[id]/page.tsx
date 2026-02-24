@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WpArticleBody } from "@/components/news/wp-article-body";
 import { getWpNewsById } from "@/lib/news/wp";
+import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,14 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const resolved = await params;
-  const article = await loadArticle(resolved.id);
+  let article = null;
+  try {
+    article = await loadArticle(resolved.id);
+  } catch {
+    return {
+      title: "News",
+    };
+  }
   if (!article) {
     return {
       title: "News",
@@ -107,7 +115,42 @@ export default async function WpNewsArticlePage({
   params: Params;
 }) {
   const resolved = await params;
-  const article = await loadArticle(resolved.id);
+  const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
+  let article = null;
+  let fetchErrorMessage: string | null = null;
+
+  if (!hasWpBaseUrl) {
+    fetchErrorMessage = "`WP_API_BASE_URL` が未設定です。";
+  } else {
+    try {
+      article = await loadArticle(resolved.id);
+    } catch (error) {
+      if (error instanceof WpClientError) {
+        fetchErrorMessage =
+          error.kind === "timeout"
+            ? "WordPress APIの応答がタイムアウトしました。時間をおいて再試行してください。"
+            : "WordPress APIから記事を取得できませんでした。";
+      } else {
+        fetchErrorMessage = "記事取得中に予期しないエラーが発生しました。";
+      }
+    }
+  }
+
+  if (fetchErrorMessage) {
+    return (
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+        <div className="rounded-2xl border border-rose-300/70 bg-rose-50 p-6 dark:border-rose-800/60 dark:bg-rose-950/30">
+          <p className="text-sm text-rose-900 dark:text-rose-200">{fetchErrorMessage}</p>
+          <p className="mt-2 text-xs text-rose-800/80 dark:text-rose-300/80">対象記事ID: {resolved.id}</p>
+          <div className="mt-4">
+            <Link href="/news" className="text-sm underline underline-offset-2">
+              News一覧へ
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!article) notFound();
 

@@ -50,8 +50,35 @@ export type WpLatestPost = {
 
 export type WpPost = WpLatestPost;
 
+export type WpClientErrorKind = "config" | "timeout" | "http" | "network";
+
+export class WpClientError extends Error {
+  kind: WpClientErrorKind;
+  endpoint?: string;
+  status?: number;
+
+  constructor(
+    message: string,
+    options: { kind: WpClientErrorKind; endpoint?: string; status?: number }
+  ) {
+    super(message);
+    this.name = "WpClientError";
+    this.kind = options.kind;
+    this.endpoint = options.endpoint;
+    this.status = options.status;
+  }
+}
+
 function normalizeBaseUrl(value: string) {
   return value.replace(/\/+$/, "");
+}
+
+function getWpBaseUrlOrNull() {
+  return readString(process.env.WP_API_BASE_URL);
+}
+
+export function hasWpApiBaseUrlConfigured() {
+  return Boolean(getWpBaseUrlOrNull());
 }
 
 function readString(value: unknown): string | null {
@@ -118,23 +145,54 @@ function mapWpPost(post: WpPostApiItem): WpPost {
 }
 
 async function fetchWpPostsFromEndpoint(endpoint: string): Promise<WpPost[]> {
-  const response = await fetch(endpoint, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: 60 },
-  });
+  const controller = new AbortController();
+  const timeoutMs = 8000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!response.ok) {
-    throw new Error(`WP API request failed: ${response.status} ${response.statusText}`);
+  try {
+    const response = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 60 },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new WpClientError(`WP API request failed: ${response.status} ${response.statusText}`, {
+        kind: "http",
+        endpoint,
+        status: response.status,
+      });
+    }
+
+    const json = (await response.json()) as unknown;
+    if (!Array.isArray(json)) return [];
+
+    return json.map((item) => mapWpPost(item as WpPostApiItem));
+  } catch (error) {
+    if (error instanceof WpClientError) {
+      console.error("[wp-client]", error.kind, { endpoint: error.endpoint, status: error.status });
+      throw error;
+    }
+
+    if (error instanceof Error && error.name === "AbortError") {
+      const wrapped = new WpClientError(`WP API request timed out after ${timeoutMs}ms`, {
+        kind: "timeout",
+        endpoint,
+      });
+      console.error("[wp-client]", wrapped.kind, { endpoint: wrapped.endpoint });
+      throw wrapped;
+    }
+
+    const wrapped = new WpClientError("WP API network error", { kind: "network", endpoint });
+    console.error("[wp-client]", wrapped.kind, { endpoint: wrapped.endpoint, cause: error });
+    throw wrapped;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const json = (await response.json()) as unknown;
-  if (!Array.isArray(json)) return [];
-
-  return json.map((item) => mapWpPost(item as WpPostApiItem));
 }
 
 export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
-  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  const baseUrl = getWpBaseUrlOrNull();
   if (!baseUrl) return null;
 
   const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?per_page=1&_embed`;
@@ -143,7 +201,7 @@ export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
 }
 
 export async function fetchWpPostById(postId: number): Promise<WpPost | null> {
-  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  const baseUrl = getWpBaseUrlOrNull();
   if (!baseUrl) return null;
 
   const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?include=${encodeURIComponent(String(postId))}&_embed`;
@@ -152,7 +210,7 @@ export async function fetchWpPostById(postId: number): Promise<WpPost | null> {
 }
 
 export async function fetchWpPostBySlug(slug: string): Promise<WpPost | null> {
-  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  const baseUrl = getWpBaseUrlOrNull();
   if (!baseUrl) return null;
 
   const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed`;
@@ -164,7 +222,7 @@ export async function fetchWpPostsList(
   limit = 10,
   options?: { categoryId?: number; tagId?: number }
 ): Promise<WpPost[]> {
-  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  const baseUrl = getWpBaseUrlOrNull();
   if (!baseUrl) return [];
 
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 100) : 10;
