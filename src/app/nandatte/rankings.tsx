@@ -40,6 +40,13 @@ function formatShortDate(value: string | null) {
   return date.toLocaleDateString("ja-JP");
 }
 
+function formatCompactDate(value: string | null) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(date);
+}
+
 export function Rankings({
   showMoreLinks = false,
   moreHrefBase = "/nandatte/ranking",
@@ -181,8 +188,15 @@ export function Rankings({
                   )}
                 </span>
               </div>
-              <span className="text-xs text-zinc-400">
-                {section.key === "vote" ? `${item.vote_count}票` : formatShortDate(item.last_vote_at)}
+              <span className="shrink-0 text-xs text-zinc-400">
+                {section.key === "vote" ? (
+                  `${item.vote_count}票`
+                ) : (
+                  <>
+                    <span className="sm:hidden">{formatCompactDate(item.last_vote_at)}</span>
+                    <span className="hidden sm:inline">{formatShortDate(item.last_vote_at)}</span>
+                  </>
+                )}
               </span>
             </div>
           </li>
