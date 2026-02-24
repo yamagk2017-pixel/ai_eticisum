@@ -88,37 +88,31 @@ export default async function WpMvpPage() {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <article>
-          <div className="grid grid-cols-[minmax(0,1fr)_38%] items-start gap-4 sm:gap-6 md:grid-cols-[minmax(0,1fr)_420px] md:gap-8">
+          {post.featuredImageUrl ? (
             <div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-                <div className="mt-0">
-                  <TermPills items={post.categories} variant="plain" />
-                </div>
-                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">
-                  {formatDate(post.date)}
-                </p>
-              </div>
-
-              <h1
-                className="mt-4 font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
-                dangerouslySetInnerHTML={{ __html: post.titleHtml }}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.featuredImageUrl}
+                alt={post.featuredImageAlt ?? ""}
+                className="h-auto w-full object-contain"
               />
-
-              <div className="mt-4">
-                <TermPills label="Tags" items={post.tags} />
-              </div>
             </div>
+          ) : null}
 
-            {post.featuredImageUrl ? (
-              <div className="pl-1 sm:pl-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.featuredImageUrl}
-                  alt={post.featuredImageAlt ?? ""}
-                  className="h-auto max-h-[420px] w-full object-cover"
-                />
-              </div>
-            ) : null}
+          <h1
+            className="mt-6 font-mincho-jp text-3xl font-semibold leading-tight sm:text-4xl"
+            dangerouslySetInnerHTML={{ __html: post.titleHtml }}
+          />
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(post.date)}</p>
+            <div className="mt-0">
+              <TermPills items={post.categories} variant="plain" />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <TermPills label="Tags" items={post.tags} />
           </div>
 
           <div className="pt-6">
