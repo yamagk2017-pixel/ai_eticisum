@@ -24,6 +24,15 @@ type RankItem = RankingRow & {
   imageUrl: string | null;
 };
 
+type RankingsProps = {
+  showMoreLinks?: boolean;
+  moreHrefBase?: string;
+  prioritize?: "vote" | "recent";
+  splitListColumns?: boolean;
+  limit?: number;
+  layout?: "side-by-side" | "stacked";
+};
+
 function formatShortDate(value: string | null) {
   if (!value) return "-";
   const date = new Date(value);
@@ -31,7 +40,14 @@ function formatShortDate(value: string | null) {
   return date.toLocaleDateString("ja-JP");
 }
 
-export function Rankings() {
+export function Rankings({
+  showMoreLinks = false,
+  moreHrefBase = "/nandatte/ranking",
+  prioritize = "vote",
+  splitListColumns = false,
+  limit = 5,
+  layout = "side-by-side",
+}: RankingsProps = {}) {
   const [voteTop, setVoteTop] = useState<RankItem[]>([]);
   const [recentTop, setRecentTop] = useState<RankItem[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -91,8 +107,89 @@ export function Rankings() {
     });
   }, []);
 
-  const voteList = useMemo(() => voteTop.slice(0, 5), [voteTop]);
-  const recentList = useMemo(() => recentTop.slice(0, 5), [recentTop]);
+  const voteList = useMemo(() => voteTop.slice(0, limit), [limit, voteTop]);
+  const recentList = useMemo(() => recentTop.slice(0, limit), [limit, recentTop]);
+
+  const sections =
+    prioritize === "recent"
+      ? ([
+          { key: "recent", title: "最新アップデート", items: recentList },
+          { key: "vote", title: "投票ランキング", items: voteList },
+        ] as const)
+      : ([
+          { key: "vote", title: "投票ランキング", items: voteList },
+          { key: "recent", title: "最新アップデート", items: recentList },
+        ] as const);
+
+  const [firstSection, secondSection] = sections;
+
+  const renderSection = (section: (typeof sections)[number]) => (
+    <div>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-mincho-jp text-2xl font-semibold">{section.title}</h2>
+        {showMoreLinks && (
+          <Link
+            className="text-sm text-zinc-400 underline decoration-zinc-600 underline-offset-4 hover:text-zinc-200"
+            href={`${moreHrefBase}?focus=${section.key}`}
+          >
+            more...
+          </Link>
+        )}
+      </div>
+      {status === "loading" && (
+        <p className="mt-4 text-sm text-zinc-400">読み込み中...</p>
+      )}
+      {status === "idle" && section.items.length === 0 && (
+        <p className="mt-4 text-sm text-zinc-400">
+          {section.key === "vote" ? "まだ投票がありません。" : "まだ更新がありません。"}
+        </p>
+      )}
+      <ol
+        className={[
+          "mt-4 text-base text-zinc-200",
+          splitListColumns ? "grid grid-cols-2 gap-x-5 gap-y-1" : "flex flex-col gap-1",
+        ].join(" ")}
+      >
+        {section.items.map((item, index) => (
+          <li key={`${section.key}-${item.group_id}-${index}`} className="min-w-0 p-0">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-zinc-700 bg-zinc-800/60">
+                  <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-zinc-700 to-zinc-800 text-[10px] text-zinc-300">
+                    {item.name.slice(0, 1)}
+                  </div>
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="relative h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : null}
+                </div>
+                <span className="min-w-0 truncate font-medium">
+                  <span className="mr-2 text-sm text-zinc-400">{index + 1}.</span>
+                  {item.slug ? (
+                    <Link
+                      className="underline decoration-zinc-500 underline-offset-2 hover:text-white"
+                      href={`/nandatte/${item.slug}`}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    item.name
+                  )}
+                </span>
+              </div>
+              <span className="text-xs text-zinc-400">
+                {section.key === "vote" ? `${item.vote_count}票` : formatShortDate(item.last_vote_at)}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 
   if (status === "error") {
     return (
@@ -102,109 +199,21 @@ export function Rankings() {
     );
   }
 
+  if (layout === "stacked") {
+    return (
+      <section className="flex w-full max-w-5xl flex-col gap-10">
+        {renderSection(firstSection)}
+        <div className="h-px w-full bg-zinc-800/80" aria-hidden="true" />
+        {renderSection(secondSection)}
+      </section>
+    );
+  }
+
   return (
     <section className="grid w-full max-w-5xl gap-6 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] md:gap-8">
-      <div>
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
-        </div>
-        {status === "loading" && (
-          <p className="mt-4 text-sm text-zinc-400">読み込み中...</p>
-        )}
-        {status === "idle" && voteList.length === 0 && (
-          <p className="mt-4 text-sm text-zinc-400">まだ投票がありません。</p>
-        )}
-        <ol className="mt-4 flex flex-col gap-1 text-base text-zinc-200">
-          {voteList.map((item, index) => (
-            <li key={`${item.group_id}-${index}`} className="p-0">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-zinc-700 bg-zinc-800/60">
-                    <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-zinc-700 to-zinc-800 text-[10px] text-zinc-300">
-                      {item.name.slice(0, 1)}
-                    </div>
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="relative h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : null}
-                  </div>
-                  <span className="min-w-0 truncate font-medium">
-                    <span className="mr-2 text-sm text-zinc-400">{index + 1}.</span>
-                    {item.slug ? (
-                      <Link
-                        className="underline decoration-zinc-500 underline-offset-2 hover:text-white"
-                        href={`/nandatte/${item.slug}`}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      item.name
-                    )}
-                  </span>
-                </div>
-                <span className="text-xs text-zinc-400">{item.vote_count}票</span>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-
+      {renderSection(firstSection)}
       <div className="hidden bg-zinc-800/80 md:block" aria-hidden="true" />
-
-      <div>
-        <div className="flex items-baseline justify-between">
-          <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
-        </div>
-        {status === "loading" && (
-          <p className="mt-4 text-sm text-zinc-400">読み込み中...</p>
-        )}
-        {status === "idle" && recentList.length === 0 && (
-          <p className="mt-4 text-sm text-zinc-400">まだ更新がありません。</p>
-        )}
-        <ol className="mt-4 flex flex-col gap-1 text-base text-zinc-200">
-          {recentList.map((item, index) => (
-            <li key={`${item.group_id}-${index}`} className="p-0">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-zinc-700 bg-zinc-800/60">
-                    <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-zinc-700 to-zinc-800 text-[10px] text-zinc-300">
-                      {item.name.slice(0, 1)}
-                    </div>
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="relative h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : null}
-                  </div>
-                  <span className="min-w-0 truncate font-medium">
-                    <span className="mr-2 text-sm text-zinc-400">{index + 1}.</span>
-                    {item.slug ? (
-                      <Link
-                        className="underline decoration-zinc-500 underline-offset-2 hover:text-white"
-                        href={`/nandatte/${item.slug}`}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      item.name
-                    )}
-                  </span>
-                </div>
-                <span className="text-xs text-zinc-400">
-                  {formatShortDate(item.last_vote_at)}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
+      {renderSection(secondSection)}
     </section>
   );
 }

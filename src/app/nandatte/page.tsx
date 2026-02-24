@@ -21,7 +21,7 @@ export default function NandattePage() {
 
         <GroupsList />
 
-        <Rankings />
+        <Rankings showMoreLinks />
       </main>
     </div>
   );
