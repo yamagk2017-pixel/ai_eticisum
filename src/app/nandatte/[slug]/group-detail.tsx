@@ -851,47 +851,49 @@ export function GroupDetail({ slug }: Props) {
         <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-10">
             <section>
-              <div className="flex flex-col gap-2">
-                <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
-                  {displayName}ってこんなグループ「ナンダッテ」
-                </h2>
-                <span className="text-xs text-zinc-400">
-                  上位5件をハイライト / ログインで6位以下も表示
-                </span>
-              </div>
-              <div className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">
-                {sortedCounts.length === 0 && (
-                  <p className="text-sm text-zinc-400 md:col-span-2">まだ投票がありません。</p>
-                )}
-                {visibleCounts.map((item, index) => {
-                  const width = maxCount
-                    ? Math.round((item.count / maxCount) * 100)
-                    : 0;
-                  const isTopFive = index < 5;
-                  return (
-                    <div key={`${item.label}-${index}`} className="px-1 py-2">
-                      <div className="flex items-center justify-between gap-4 text-sm">
-                        <span className="font-medium">
-                          {index + 1}. {item.label}
-                        </span>
-                        <span className="text-zinc-300">{item.count}</span>
+              <div className="px-5">
+                <div className="flex flex-col gap-2">
+                  <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
+                    {displayName}ってこんなグループ「ナンダッテ」
+                  </h2>
+                  <span className="text-xs text-zinc-400">
+                    上位5件をハイライト / ログインで6位以下も表示
+                  </span>
+                </div>
+                <div className="mt-6 grid gap-x-6 gap-y-2 md:grid-cols-2">
+                  {sortedCounts.length === 0 && (
+                    <p className="text-sm text-zinc-400 md:col-span-2">まだ投票がありません。</p>
+                  )}
+                  {visibleCounts.map((item, index) => {
+                    const width = maxCount
+                      ? Math.round((item.count / maxCount) * 100)
+                      : 0;
+                    const isTopFive = index < 5;
+                    return (
+                      <div key={`${item.label}-${index}`} className="px-1 py-2">
+                        <div className="flex items-center justify-between gap-4 text-sm">
+                          <span className="font-medium">
+                            {index + 1}. {item.label}
+                          </span>
+                          <span className="text-zinc-300">{item.count}</span>
+                        </div>
+                        <div className="mt-2 h-4 w-full bg-zinc-800">
+                          <div
+                            className={`h-4 ${
+                              isTopFive ? "bg-zinc-400" : "bg-zinc-600"
+                            }`}
+                            style={{ width: `${width}%` }}
+                          />
+                        </div>
                       </div>
-                      <div className="mt-2 h-4 w-full bg-zinc-800">
-                        <div
-                          className={`h-4 ${
-                            isTopFive ? "bg-zinc-400" : "bg-zinc-600"
-                          }`}
-                          style={{ width: `${width}%` }}
-                        />
-                      </div>
+                    );
+                  })}
+                  {!isLoggedIn && hiddenCount > 0 && (
+                    <div className="px-1 py-2 text-sm text-zinc-400 md:col-span-2">
+                      その他 {hiddenCount} 件
                     </div>
-                  );
-                })}
-                {!isLoggedIn && hiddenCount > 0 && (
-                  <div className="px-1 py-2 text-sm text-zinc-400 md:col-span-2">
-                    その他 {hiddenCount} 件
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </section>
 
