@@ -48,6 +48,8 @@ export type WpLatestPost = {
   tags: WpTerm[];
 };
 
+export type WpPost = WpLatestPost;
+
 function normalizeBaseUrl(value: string) {
   return value.replace(/\/+$/, "");
 }
@@ -97,24 +99,7 @@ function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): W
   return terms;
 }
 
-export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
-  const baseUrl = readString(process.env.WP_API_BASE_URL);
-  if (!baseUrl) return null;
-
-  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?per_page=1&_embed`;
-  const response = await fetch(endpoint, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: 60 },
-  });
-
-  if (!response.ok) {
-    throw new Error(`WP API request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const json = (await response.json()) as unknown;
-  if (!Array.isArray(json) || json.length === 0) return null;
-
-  const post = json[0] as WpPostApiItem;
+function mapWpPost(post: WpPostApiItem): WpPost {
   const featuredMedia = post._embedded?.["wp:featuredmedia"]?.[0];
 
   return {
@@ -130,4 +115,47 @@ export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
     categories: extractTerms(post, "category"),
     tags: extractTerms(post, "post_tag"),
   };
+}
+
+async function fetchWpPostsFromEndpoint(endpoint: string): Promise<WpPost[]> {
+  const response = await fetch(endpoint, {
+    headers: { Accept: "application/json" },
+    next: { revalidate: 60 },
+  });
+
+  if (!response.ok) {
+    throw new Error(`WP API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const json = (await response.json()) as unknown;
+  if (!Array.isArray(json)) return [];
+
+  return json.map((item) => mapWpPost(item as WpPostApiItem));
+}
+
+export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
+  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  if (!baseUrl) return null;
+
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?per_page=1&_embed`;
+  const posts = await fetchWpPostsFromEndpoint(endpoint);
+  return posts[0] ?? null;
+}
+
+export async function fetchWpPostById(postId: number): Promise<WpPost | null> {
+  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  if (!baseUrl) return null;
+
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?include=${encodeURIComponent(String(postId))}&_embed`;
+  const posts = await fetchWpPostsFromEndpoint(endpoint);
+  return posts[0] ?? null;
+}
+
+export async function fetchWpPostBySlug(slug: string): Promise<WpPost | null> {
+  const baseUrl = readString(process.env.WP_API_BASE_URL);
+  if (!baseUrl) return null;
+
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?slug=${encodeURIComponent(slug)}&_embed`;
+  const posts = await fetchWpPostsFromEndpoint(endpoint);
+  return posts[0] ?? null;
 }

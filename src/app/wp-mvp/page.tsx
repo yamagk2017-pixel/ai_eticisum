@@ -1,4 +1,4 @@
-import { fetchLatestWpPost } from "@/lib/wp/client";
+import { fetchLatestWpPost, fetchWpPostById, fetchWpPostBySlug } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
 
@@ -47,8 +47,24 @@ function TermPills({
   );
 }
 
-export default async function WpMvpPage() {
+type SearchParams =
+  | Record<string, string | string[] | undefined>
+  | Promise<Record<string, string | string[] | undefined>>;
+
+function firstParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+export default async function WpMvpPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}) {
   const hasBaseUrl = Boolean(process.env.WP_API_BASE_URL?.trim());
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const rawId = firstParam(resolvedSearchParams.id);
+  const rawSlug = firstParam(resolvedSearchParams.slug);
 
   if (!hasBaseUrl) {
     return (
@@ -70,7 +86,15 @@ export default async function WpMvpPage() {
   }
 
   try {
-    const post = await fetchLatestWpPost();
+    let post = null;
+
+    if (rawId && /^\d+$/.test(rawId)) {
+      post = await fetchWpPostById(Number(rawId));
+    } else if (rawSlug) {
+      post = await fetchWpPostBySlug(rawSlug);
+    } else {
+      post = await fetchLatestWpPost();
+    }
 
     if (!post) {
       return (
@@ -80,6 +104,11 @@ export default async function WpMvpPage() {
             <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
               記事が取得できませんでした（0件）。
             </p>
+            {(rawId || rawSlug) && (
+              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                指定値: {rawId ? `id=${rawId}` : `slug=${rawSlug}`}
+              </p>
+            )}
           </div>
         </main>
       );
@@ -88,29 +117,34 @@ export default async function WpMvpPage() {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <article>
-          {post.featuredImageUrl ? (
-            <div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.featuredImageUrl}
-                alt={post.featuredImageAlt ?? ""}
-                className="h-auto w-full object-contain"
+          <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
+            {post.featuredImageUrl ? (
+              <div className="md:order-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.featuredImageUrl}
+                  alt={post.featuredImageAlt ?? ""}
+                  className="h-auto w-full rounded-2xl object-contain"
+                />
+              </div>
+            ) : null}
+
+            <div className={post.featuredImageUrl ? "md:order-1" : undefined}>
+              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
+                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(post.date)}</p>
+                <div className="mt-0">
+                  <TermPills items={post.categories} variant="plain" />
+                </div>
+              </div>
+
+              <h1
+                className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
+                dangerouslySetInnerHTML={{ __html: post.titleHtml }}
               />
-            </div>
-          ) : null}
 
-          <h1
-            className="mt-6 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
-            dangerouslySetInnerHTML={{ __html: post.titleHtml }}
-          />
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(post.date)}</p>
-            <div className="mt-0">
-              <TermPills items={post.categories} variant="plain" />
-            </div>
-            <div className="mt-0">
-              <TermPills items={post.tags} />
+              <div className="mt-4">
+                <TermPills items={post.tags} />
+              </div>
             </div>
           </div>
 
