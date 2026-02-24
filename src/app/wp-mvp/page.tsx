@@ -124,7 +124,7 @@ export default async function WpMvpPage({
                 <img
                   src={post.featuredImageUrl}
                   alt={post.featuredImageAlt ?? ""}
-                  className="h-auto w-full rounded-2xl object-contain"
+                  className="h-auto w-full rounded-xl object-contain"
                 />
               </div>
             ) : null}
