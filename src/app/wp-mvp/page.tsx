@@ -116,7 +116,7 @@ export default async function WpMvpPage() {
 
           <div className="pt-6">
             <div
-              className="mt-6 space-y-4 text-[15px] leading-7 text-[var(--ui-text)] [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-[var(--ui-text)] [&_li]:text-[var(--ui-text)] [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
+              className="mt-6 space-y-4 text-[16px] leading-7 text-[var(--ui-text)] [&_a]:underline [&_a]:underline-offset-2 [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:leading-tight [&_h2]:[font-family:var(--font-shippori-mincho),serif] sm:[&_h2]:text-3xl [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_p]:text-[var(--ui-text)] [&_li]:text-[var(--ui-text)] [&_span]:text-inherit [&_strong]:text-inherit [&_em]:text-inherit [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
             />
           </div>
