@@ -62,17 +62,13 @@ function readNumber(value: unknown): number | null {
 
 function sanitizeWpHtml(html: string): string {
   return html
-    .replace(/style=(['"])(.*?)\1/gi, (_full, quote: string, styleValue: string) => {
-      const kept = styleValue
-        .split(";")
-        .map((part) => part.trim())
-        .filter(Boolean)
-        .filter((part) => !/^(color|background-color)\s*:/i.test(part));
-
-      if (kept.length === 0) return "";
-      return `style=${quote}${kept.join("; ")}${quote}`;
-    })
-    .replace(/\scolor=(['"]).*?\1/gi, "");
+    // Remove embedded CSS blocks from post body to avoid WP/theme color overrides.
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+    // Remove all inline styles (MVP prioritizes visual consistency over preserving WP styling).
+    .replace(/\sstyle\s*=\s*(['"])[\s\S]*?\1/gi, "")
+    .replace(/\sdata-mce-style\s*=\s*(['"])[\s\S]*?\1/gi, "")
+    .replace(/\scolor\s*=\s*(['"]).*?\1/gi, "")
+    .replace(/\sbgcolor\s*=\s*(['"]).*?\1/gi, "");
 }
 
 function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): WpTerm[] {
