@@ -88,7 +88,7 @@ export default async function WpMvpPage() {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <article>
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
+          <div className="grid grid-cols-[minmax(0,1fr)_38%] items-start gap-4 sm:gap-6 md:grid-cols-[minmax(0,1fr)_420px] md:gap-8">
             <div>
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <div className="mt-0">
@@ -110,7 +110,7 @@ export default async function WpMvpPage() {
             </div>
 
             {post.featuredImageUrl ? (
-              <div className="lg:pl-2">
+              <div className="pl-1 sm:pl-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={post.featuredImageUrl}
