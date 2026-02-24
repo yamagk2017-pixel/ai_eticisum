@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WpArticleBody } from "@/components/news/wp-article-body";
+import { buildArticleMetadata, stripHtmlForText } from "@/lib/news/seo";
 import { getWpNewsById } from "@/lib/news/wp";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
@@ -19,10 +20,6 @@ function formatDate(value: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(time));
-}
-
-function stripHtml(html: string) {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function TermPills({
@@ -71,42 +68,12 @@ export async function generateMetadata({
   try {
     article = await loadArticle(resolved.id);
   } catch {
-    return {
-      title: "News",
-    };
+    return buildArticleMetadata(null, { fallbackTitle: "News" });
   }
-  if (!article) {
-    return {
-      title: "News",
-    };
-  }
-
-  const descriptionSource = article.excerptHtml || article.contentHtml;
-  const description = stripHtml(descriptionSource).slice(0, 140);
-  const fallbackCanonicalPath = `/news/wp/${article.id}`;
-  const canonicalUrl = article.url ?? fallbackCanonicalPath;
-  const articleTitle = stripHtml(article.titleHtml);
-
-  return {
-    title: articleTitle,
-    description,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    openGraph: {
-      type: "article",
-      title: articleTitle,
-      description,
-      publishedTime: article.publishedAt ?? undefined,
-      images: [{ url: article.featuredImageUrl! }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: articleTitle,
-      description,
-      images: [article.featuredImageUrl!],
-    },
-  };
+  return buildArticleMetadata(article, {
+    fallbackTitle: "News",
+    canonicalStrategy: "source-url",
+  });
 }
 
 export default async function WpNewsArticlePage({
@@ -174,7 +141,7 @@ export default async function WpNewsArticlePage({
               </>
             ) : null}
             <span>&gt;</span>
-            <span className="max-w-full truncate text-[var(--ui-text)]">{stripHtml(article.titleHtml)}</span>
+            <span className="max-w-full truncate text-[var(--ui-text)]">{stripHtmlForText(article.titleHtml)}</span>
           </nav>
         </div>
 
