@@ -4,19 +4,22 @@ type SanityEnvValues = {
   apiVersion: string;
 };
 
-function readEnv(name: string): string | null {
-  const value = process.env[name];
+function readEnvValue(value: string | undefined): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 export function hasSanityStudioEnv() {
-  return Boolean(readEnv("NEXT_PUBLIC_SANITY_PROJECT_ID") && readEnv("NEXT_PUBLIC_SANITY_DATASET"));
+  return Boolean(
+    readEnvValue(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) &&
+      readEnvValue(process.env.NEXT_PUBLIC_SANITY_DATASET)
+  );
 }
 
 export function getSanityConfigValues(): SanityEnvValues {
   return {
-    projectId: readEnv("NEXT_PUBLIC_SANITY_PROJECT_ID") ?? "MISSING_SANITY_PROJECT_ID",
-    dataset: readEnv("NEXT_PUBLIC_SANITY_DATASET") ?? "production",
-    apiVersion: readEnv("NEXT_PUBLIC_SANITY_API_VERSION") ?? "2026-02-24",
+    projectId:
+      readEnvValue(process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) ?? "missing-sanity-project-id",
+    dataset: readEnvValue(process.env.NEXT_PUBLIC_SANITY_DATASET) ?? "production",
+    apiVersion: readEnvValue(process.env.NEXT_PUBLIC_SANITY_API_VERSION) ?? "2026-02-24",
   };
 }

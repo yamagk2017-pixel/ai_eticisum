@@ -1,6 +1,5 @@
-import {NextStudio} from "next-sanity/studio";
-import config from "../../../../sanity.config";
 import {hasSanityStudioEnv} from "@/sanity/env";
+import {StudioClient} from "./studio-client";
 
 export const dynamic = "force-static";
 
@@ -32,5 +31,5 @@ NEXT_PUBLIC_SANITY_API_VERSION=2026-02-24`}
     );
   }
 
-  return <NextStudio config={config} />;
+  return <StudioClient />;
 }
