@@ -8,6 +8,8 @@ import type { NewsArticle } from "./types";
 function toNewsArticle(post: WpPost): NewsArticle {
   return {
     source: "wp",
+    routeType: "wp-id",
+    path: `/news/wp/${post.id}`,
     id: post.id,
     slug: post.slug,
     url: post.url,

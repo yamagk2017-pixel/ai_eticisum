@@ -4,8 +4,14 @@ export type NewsTag = {
   slug: string | null;
 };
 
+export type NewsArticleSource = "wp" | "sanity" | "sanity_wp_import";
+
+export type NewsRouteType = "wp-id" | "sanity-slug";
+
 export type NewsArticle = {
-  source: "wp";
+  source: NewsArticleSource;
+  routeType: NewsRouteType;
+  path: string;
   id: number;
   slug: string;
   url: string | null;
@@ -18,4 +24,3 @@ export type NewsArticle = {
   categories: NewsTag[];
   tags: NewsTag[];
 };
-

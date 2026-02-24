@@ -99,7 +99,7 @@ export default async function NewsIndexPage({
               key={article.id}
               className="grid gap-4 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 sm:grid-cols-[180px_minmax(0,1fr)]"
             >
-              <Link href={`/news/wp/${article.id}`} className="block">
+              <Link href={article.path} className="block">
                 {article.featuredImageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -128,7 +128,7 @@ export default async function NewsIndexPage({
                   ))}
                 </div>
 
-                <Link href={`/news/wp/${article.id}`} className="block">
+                <Link href={article.path} className="block">
                   <h2
                     className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)]"
                     dangerouslySetInnerHTML={{ __html: article.titleHtml }}
