@@ -123,7 +123,7 @@ export default async function WpMvpPage() {
 
           <div className="pt-6">
             <div
-              className="mt-6 space-y-4 text-[15px] leading-7 text-zinc-800 dark:text-zinc-200 [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
+              className="mt-6 space-y-4 text-[15px] leading-7 text-zinc-800 dark:text-white [&_a]:underline [&_a]:underline-offset-2 [&_img]:h-auto [&_img]:max-w-full [&_p]:my-4 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
               dangerouslySetInnerHTML={{ __html: post.contentHtml }}
             />
           </div>
