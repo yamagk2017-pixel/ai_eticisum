@@ -91,7 +91,7 @@ export function NandatteRelatedChart({groups}: Props) {
   if (!active) return null;
 
   return (
-    <section className="mt-10 border-b border-t border-[var(--ui-border)] px-4 pb-8 pt-8 sm:px-5">
+    <section className="mt-10 border-b border-t border-[var(--ui-border)] px-4 pb-10 pt-8 sm:px-5 sm:pb-8">
       <div className="flex flex-col gap-2">
         <h2 className="font-mincho-jp text-xl font-medium leading-tight text-[var(--ui-text)] sm:text-2xl">
           {active.groupNameJa}ってこんなグループ「ナンダッテ」
