@@ -44,6 +44,13 @@ export async function GET(request: Request) {
         .maybeSingle(),
     ]);
 
+    if (countsRes.error) {
+      throw new Error(`get_group_metric_counts failed: ${countsRes.error.message}`);
+    }
+    if (totalRes.error) {
+      throw new Error(`get_group_vote_total failed: ${totalRes.error.message}`);
+    }
+
     const counts = ((countsRes.data ?? []) as ChartRow[])
       .map((row) => ({
         label: (row.label ?? "").trim(),
@@ -57,11 +64,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json<ChartApiResponse>({
       items: counts,
-      totalVotes: totalRes.error ? 0 : Number(totalRes.data ?? 0),
+      totalVotes: Number(totalRes.data ?? 0),
       voteRank: voteRankRes.error ? null : Number(voteRankRes.data ?? null),
       rank: rankRes.error ? null : (rankRes.data?.rank ?? null),
     });
   } catch (error) {
+    console.error("[news/nandatte-chart]", {groupId, error});
     return NextResponse.json<ChartApiResponse>(
       {
         items: [],
