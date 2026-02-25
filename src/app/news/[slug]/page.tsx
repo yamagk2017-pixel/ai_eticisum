@@ -1,7 +1,9 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
+import {RelatedGroupsSidebar} from "@/components/news/related-groups-sidebar";
 import {SanityArticleBody} from "@/components/news/sanity-article-body";
+import {getNewsRelatedGroupsInfo} from "@/lib/news/related-groups";
 import {buildArticleMetadata, stripHtmlForText} from "@/lib/news/seo";
 import {getSanityNewsBySlug} from "@/lib/news/sanity";
 import type {NewsArticle} from "@/lib/news/types";
@@ -71,6 +73,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
 
   const article = await getSanityNewsBySlug(resolved.slug);
   if (!article) notFound();
+  const relatedGroupPanels = await getNewsRelatedGroupsInfo(article.relatedGroups);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
@@ -129,27 +132,13 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
           </div>
         </div>
 
-        {article.relatedGroups.length > 0 ? (
-          <section className="mt-8 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-            <h2 className="text-sm font-semibold text-[var(--ui-text)]">Related Groups</h2>
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {article.relatedGroups.map((group, index) => (
-                <li
-                  key={`${group.groupNameJa}-${index}`}
-                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-3 py-1 text-xs text-[var(--ui-text)]"
-                >
-                  {group.groupNameJa}
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-
-        <div className="pt-6">
-          <SanityArticleBody value={article.body} />
+        <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
+          <div>
+            <SanityArticleBody value={article.body} />
+          </div>
+          {relatedGroupPanels.length > 0 ? <RelatedGroupsSidebar groups={relatedGroupPanels} /> : null}
         </div>
       </article>
     </main>
   );
 }
-
