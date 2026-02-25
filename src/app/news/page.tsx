@@ -63,24 +63,6 @@ export default async function NewsIndexPage({
         <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
           WordPress記事とSanity新規記事の一覧（段階統合）。最新10件を表示しています。
         </p>
-        {(categorySlug || tagSlug) && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
-            <span>Filter:</span>
-            {categorySlug ? (
-              <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
-                category={categorySlug}
-              </span>
-            ) : null}
-            {tagSlug ? (
-              <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
-                tag={tagSlug}
-              </span>
-            ) : null}
-            <Link href="/news" className="underline underline-offset-2">
-              Clear
-            </Link>
-          </div>
-        )}
       </div>
 
       {!hasAnyNewsSource ? (
@@ -137,7 +119,7 @@ export default async function NewsIndexPage({
 
                 <Link href={article.path} className="block">
                   <h2
-                    className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)]"
+                    className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
                     dangerouslySetInnerHTML={{ __html: article.titleHtml }}
                   />
                 </Link>
