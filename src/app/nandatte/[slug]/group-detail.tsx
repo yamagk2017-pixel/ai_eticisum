@@ -384,6 +384,7 @@ export function GroupDetail({ slug }: Props) {
 
   const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
   const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
+  const websiteUrl = serviceMap.get("website")?.url ?? null;
   const youtubeUrl = serviceMap.get("youtube_channel")?.url ?? null;
   const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
 
@@ -1033,6 +1034,68 @@ export function GroupDetail({ slug }: Props) {
 
           <aside className="space-y-8">
             <section>
+              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                公式サイト
+              </h2>
+              {websiteUrl ? (
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+                >
+                  {websiteUrl}
+                </a>
+              ) : (
+                <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
+              )}
+            </section>
+
+            <section>
+              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                最新ニュース
+              </h2>
+              <a
+                href={`/buzzttara?tag=${encodeURIComponent(displayName)}`}
+                className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+              >
+                {displayName}の最新ニュースを見る
+              </a>
+            </section>
+
+            <section>
+              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
+                直近のイベント情報
+              </h2>
+              {latestEvent ? (
+                <div className="mt-3 space-y-2 text-sm text-zinc-200">
+                  <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
+                  <a
+                    href={
+                      latestEvent.event_url
+                        ? latestEvent.event_url.startsWith("http")
+                          ? latestEvent.event_url
+                          : `https://ticketdive.com/event/${latestEvent.event_url}`
+                        : "#"
+                    }
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
+                      latestEvent.event_url
+                        ? "text-cyan-200 hover:text-cyan-100"
+                        : "pointer-events-none text-zinc-500"
+                    }`}
+                  >
+                    {latestEvent.event_name ?? "イベント詳細"}
+                  </a>
+                  <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
+              )}
+            </section>
+
+            <section>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
                   Spotify
@@ -1099,38 +1162,6 @@ export function GroupDetail({ slug }: Props) {
                     YouTubeの最新動画が取得できませんでした。
                   </p>
                 )
-              )}
-            </section>
-
-            <section>
-              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                直近のイベント情報
-              </h2>
-              {latestEvent ? (
-                <div className="mt-3 space-y-2 text-sm text-zinc-200">
-                  <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
-                  <a
-                    href={
-                      latestEvent.event_url
-                        ? latestEvent.event_url.startsWith("http")
-                          ? latestEvent.event_url
-                          : `https://ticketdive.com/event/${latestEvent.event_url}`
-                        : "#"
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
-                      latestEvent.event_url
-                        ? "text-cyan-200 hover:text-cyan-100"
-                        : "pointer-events-none text-zinc-500"
-                    }`}
-                  >
-                    {latestEvent.event_name ?? "イベント詳細"}
-                  </a>
-                  <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
-                </div>
-              ) : (
-                <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
               )}
             </section>
           </aside>
