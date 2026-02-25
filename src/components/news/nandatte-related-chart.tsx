@@ -91,7 +91,7 @@ export function NandatteRelatedChart({groups}: Props) {
   if (!active) return null;
 
   return (
-    <section className="mt-10 border-t border-[var(--ui-border)] px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
+    <section className="mt-10 border-b border-t border-[var(--ui-border)] px-4 pb-8 pt-8 sm:px-5">
       <div className="flex flex-col gap-2">
         <h2 className="font-mincho-jp text-xl font-medium leading-tight text-[var(--ui-text)] sm:text-2xl">
           {active.groupNameJa}ってこんなグループ「ナンダッテ」
@@ -100,16 +100,16 @@ export function NandatteRelatedChart({groups}: Props) {
       </div>
 
       {groups.length > 1 ? (
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2">
           {groups.map((group, index) => (
             <button
               key={`${group.imdGroupId ?? group.groupNameJa}-${index}`}
               type="button"
               onClick={() => setActiveIndex(index)}
-              className={`rounded-full border px-3 py-1 text-xs ${
+              className={`text-sm underline-offset-4 transition ${
                 index === activeIndex
-                  ? "border-[var(--ui-border)] bg-zinc-300 text-zinc-900 dark:bg-zinc-400 dark:text-zinc-900"
-                  : "border-[var(--ui-border)] bg-transparent text-[var(--ui-text)]"
+                  ? "font-medium text-[var(--ui-text)] underline decoration-zinc-400 dark:decoration-zinc-500"
+                  : "text-[var(--ui-text-subtle)] hover:text-[var(--ui-text)]"
               }`}
             >
               {group.groupNameJa}

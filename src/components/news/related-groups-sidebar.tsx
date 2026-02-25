@@ -106,11 +106,10 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   if (!active) return null;
 
   return (
-    <aside className="space-y-8 lg:sticky lg:top-20">
-      <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-        <h2 className="text-sm font-semibold text-[var(--ui-text)]">Related Groups</h2>
+    <aside className="space-y-6 lg:sticky lg:top-20">
+      <section>
         {groups.length > 1 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {groups.map((group, index) => (
               <button
                 key={`${group.imdGroupId ?? group.groupNameJa}-${index}`}
