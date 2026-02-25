@@ -387,7 +387,7 @@ export default function BuzzttaraTweetDetailPage() {
                   最新ニュース
                 </h2>
                 <a
-                  href={`/news?tag=${encodeURIComponent(group?.name_ja ?? "グループ")}`}
+                  href={`/news?tag=${encodeURIComponent(group?.slug ?? "group")}`}
                   className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
                 >
                   {(group?.name_ja ?? "グループ")}の最新ニュースを見る
