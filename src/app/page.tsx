@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
+import { getNewsList } from "@/lib/news";
+import type { NewsArticle } from "@/lib/news/types";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +54,12 @@ type BuzzSummaryItem = {
   }>;
 };
 
+type NewsSummary = {
+  i4c: NewsArticle | null;
+  col: NewsArticle | null;
+  others: NewsArticle | null;
+};
+
 function asRecord(value: unknown): RowRecord {
   return value && typeof value === "object" ? (value as RowRecord) : {};
 }
@@ -90,6 +98,17 @@ function formatShortDate(value: string | null) {
   return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(new Date(ts));
 }
 
+function formatMonthDayUpdateLabel(value: string | null) {
+  if (!value) return "最新1件";
+  const ts = Date.parse(value);
+  if (Number.isNaN(ts)) return "最新1件";
+  const formatted = new Intl.DateTimeFormat("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ts));
+  return `${formatted} 更新`;
+}
+
 function formatCount(value: number | null) {
   if (value === null) return "-";
   return new Intl.NumberFormat("ja-JP").format(value);
@@ -110,6 +129,7 @@ async function getHomeSummaries() {
     } satisfies ImakiteSummary,
     nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
     buzz: { items: [] as BuzzSummaryItem[] },
+    news: { i4c: null, col: null, others: null } satisfies NewsSummary,
   };
   const errors: string[] = [];
 
@@ -358,13 +378,30 @@ async function getHomeSummaries() {
       }
     })();
 
-    const [imakite, nandatte, buzz] = await Promise.all([imakitePromise, nandattePromise, buzzPromise]);
+    const newsPromise = (async () => {
+      try {
+        const items = await getNewsList({ limit: 20 });
+        const hasCategory = (article: NewsArticle, slug: string) =>
+          article.categories.some((category) => category.slug === slug);
+        const i4c = items.find((article) => hasCategory(article, "i4c")) ?? null;
+        const col = items.find((article) => hasCategory(article, "col")) ?? null;
+        const others =
+          items.find((article) => !hasCategory(article, "i4c") && !hasCategory(article, "col")) ?? null;
+        return { i4c, col, others };
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : "News summary error");
+        return fallback.news;
+      }
+    })();
+
+    const [imakite, nandatte, buzz, news] = await Promise.all([imakitePromise, nandattePromise, buzzPromise, newsPromise]);
 
     return {
       ok: errors.length === 0,
       imakite,
       nandatte,
       buzz,
+      news,
       error: errors.length ? errors.join(" | ") : null,
     };
   } catch (error) {
@@ -678,6 +715,127 @@ export default async function Home() {
     </div>
   );
 
+  const renderNewsLatestCard = ({
+    key,
+    title,
+    subtitle,
+    article,
+    inlineArticleTitle = false,
+    hideHeading = false,
+    label = "News",
+    labelClassName = "text-fuchsia-500",
+    labelHref = "/news",
+  }: {
+    key: string;
+    title: string;
+    subtitle: string;
+    article: NewsArticle | null;
+    inlineArticleTitle?: boolean;
+    hideHeading?: boolean;
+    label?: string;
+    labelClassName?: string;
+    labelHref?: string;
+  }) => (
+    <div key={key} className="mb-12 break-inside-avoid">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link
+              href={labelHref}
+              className={`text-xs font-semibold tracking-[0.08em] underline ${labelClassName}`}
+            >
+              {label}
+            </Link>
+            <span className="text-xs text-[var(--ui-text-subtle)]">{subtitle}</span>
+          </div>
+          {!hideHeading ? (
+            <div className="mt-2 flex items-baseline gap-3">
+              <h2 className="font-mincho-jp text-2xl font-semibold">{title}</h2>
+              {inlineArticleTitle && article ? (
+                <Link
+                  href={article.path}
+                  className="min-w-0 text-xs text-[var(--ui-text-muted)]"
+                  dangerouslySetInnerHTML={{ __html: article.titleHtml }}
+                />
+              ) : (
+                <Link href="/news" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+                  more...
+                </Link>
+              )}
+            </div>
+          ) : inlineArticleTitle && article ? (
+            <div className="mt-2">
+              <Link
+                href={article.path}
+                className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text-subtle)] !no-underline hover:!underline"
+                dangerouslySetInnerHTML={{ __html: article.titleHtml }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {article ? (
+        <article className="mt-4">
+          {article.featuredImageUrl ? (
+            <Link href={article.path} className="mb-3 block overflow-hidden rounded-lg">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={article.featuredImageUrl}
+                alt={article.featuredImageAlt ?? ""}
+                className="h-auto w-full object-cover"
+                loading="lazy"
+              />
+            </Link>
+          ) : null}
+          {!inlineArticleTitle ? (
+            <Link href={article.path} className="block">
+              <h3
+                className="font-mincho-jp text-lg font-semibold leading-snug"
+                dangerouslySetInnerHTML={{ __html: article.titleHtml }}
+              />
+            </Link>
+          ) : null}
+        </article>
+      ) : (
+        <div className="mt-4 text-xs text-[var(--ui-text-muted)]">データを取得できませんでした。</div>
+      )}
+    </div>
+  );
+
+  const newsI4cCard = renderNewsLatestCard({
+    key: "news-i4c",
+    title: "アイドル第四会議室",
+    subtitle: formatMonthDayUpdateLabel(summaries.news.i4c?.publishedAt ?? null),
+    article: summaries.news.i4c,
+    inlineArticleTitle: true,
+    hideHeading: true,
+    label: "アイドル第四会議室",
+    labelClassName: "text-sky-500",
+    labelHref: "/news?category=i4c",
+  });
+  const newsColCard = renderNewsLatestCard({
+    key: "news-col",
+    title: "アイドル第四編集室",
+    subtitle: formatMonthDayUpdateLabel(summaries.news.col?.publishedAt ?? null),
+    article: summaries.news.col,
+    inlineArticleTitle: true,
+    hideHeading: true,
+    label: "アイドル第四編集室",
+    labelClassName: "text-teal-500",
+    labelHref: "/news?category=col",
+  });
+  const newsOtherCard = renderNewsLatestCard({
+    key: "news-others",
+    title: "アイドルニュース",
+    subtitle: formatMonthDayUpdateLabel(summaries.news.others?.publishedAt ?? null),
+    article: summaries.news.others,
+    inlineArticleTitle: true,
+    hideHeading: true,
+    label: "アイドルニュース",
+    labelClassName: "text-fuchsia-500",
+  });
+
   const summaryCards = [
     { key: "imakite-daily", sortValue: toSortValue(summaries.imakite.latestDate), tiePriority: 0, node: imakiteDailyCard },
     {
@@ -698,6 +856,24 @@ export default async function Home() {
       sortValue: toSortValue(summaries.buzz.items[0]?.createdAt ?? null),
       tiePriority: 0,
       node: buzzCard,
+    },
+    {
+      key: "news-i4c",
+      sortValue: toSortValue(summaries.news.i4c?.publishedAt ?? null),
+      tiePriority: 0,
+      node: newsI4cCard,
+    },
+    {
+      key: "news-col",
+      sortValue: toSortValue(summaries.news.col?.publishedAt ?? null),
+      tiePriority: 0,
+      node: newsColCard,
+    },
+    {
+      key: "news-others",
+      sortValue: toSortValue(summaries.news.others?.publishedAt ?? null),
+      tiePriority: 0,
+      node: newsOtherCard,
     },
   ]
     .filter(

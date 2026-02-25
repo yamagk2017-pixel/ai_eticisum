@@ -45,6 +45,8 @@ const listQuery = groq`
   *[
     _type == "newsArticle" &&
     defined(slug.current) &&
+    !(_id in path("drafts.**")) &&
+    !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
     (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
   ]
@@ -72,6 +74,8 @@ const countQuery = groq`
   count(*[
     _type == "newsArticle" &&
     defined(slug.current) &&
+    !(_id in path("drafts.**")) &&
+    !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
     (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
   ])

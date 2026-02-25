@@ -13,6 +13,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/", label: "ホーム", match: (pathname) => pathname === "/" },
+  { href: "/news", label: "アイドルニュース", match: (pathname) => pathname.startsWith("/news") },
   {
     href: "/imakite",
     label: "イマキテランキング",
