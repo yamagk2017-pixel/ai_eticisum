@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getNewsList } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
+import { hasSanityStudioEnv } from "@/sanity/env";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +35,13 @@ export default async function NewsIndexPage({
   const categoryId = categoryParam && /^\d+$/.test(categoryParam) ? Number(categoryParam) : undefined;
   const tagId = tagParam && /^\d+$/.test(tagParam) ? Number(tagParam) : undefined;
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
+  const hasSanity = hasSanityStudioEnv();
+  const hasAnyNewsSource = hasWpBaseUrl || hasSanity;
 
   let articles = [] as Awaited<ReturnType<typeof getNewsList>>;
   let fetchError: string | null = null;
 
-  if (hasWpBaseUrl) {
+  if (hasAnyNewsSource) {
     try {
       articles = await getNewsList({ limit: 10, categoryId, tagId });
     } catch (error) {
@@ -58,7 +61,7 @@ export default async function NewsIndexPage({
       <div className="mb-8">
         <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">News</h1>
         <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
-          WordPress記事の本番ルート（フェーズ1）。最新10件を表示しています。
+          WordPress記事とSanity新規記事の一覧（段階統合）。最新10件を表示しています。
         </p>
         {(categoryId || tagId) && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
@@ -80,9 +83,9 @@ export default async function NewsIndexPage({
         )}
       </div>
 
-      {!hasWpBaseUrl ? (
+      {!hasAnyNewsSource ? (
         <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-5 text-sm text-[var(--ui-text-subtle)]">
-          `WP_API_BASE_URL` が未設定です。WP記事一覧を取得できません。
+          `WP_API_BASE_URL` と Sanity環境変数が未設定です。記事一覧を取得できません。
         </div>
       ) : fetchError ? (
         <div className="rounded-xl border border-rose-300/70 bg-rose-50 p-5 text-sm text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-200">
@@ -96,7 +99,7 @@ export default async function NewsIndexPage({
         <div className="grid gap-4">
           {articles.map((article) => (
             <article
-              key={article.id}
+              key={article.path}
               className="grid gap-4 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 sm:grid-cols-[180px_minmax(0,1fr)]"
             >
               <Link href={article.path} className="block">
@@ -117,15 +120,19 @@ export default async function NewsIndexPage({
               <div className="min-w-0">
                 <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
                   <span>{formatDate(article.publishedAt)}</span>
-                  {article.categories.slice(0, 2).map((category) => (
-                    <Link
-                      key={category.id}
-                      href={`/news?category=${category.id}`}
-                      className="underline underline-offset-2"
-                    >
-                      {category.name}
-                    </Link>
-                  ))}
+                  {article.categories.slice(0, 2).map((category) =>
+                    article.source === "wp" ? (
+                      <Link
+                        key={category.id}
+                        href={`/news?category=${category.id}`}
+                        className="underline underline-offset-2"
+                      >
+                        {category.name}
+                      </Link>
+                    ) : (
+                      <span key={category.id}>{category.name}</span>
+                    )
+                  )}
                 </div>
 
                 <Link href={article.path} className="block">
@@ -137,15 +144,24 @@ export default async function NewsIndexPage({
 
                 {article.tags.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {article.tags.slice(0, 4).map((tag) => (
-                      <Link
-                        key={tag.id}
-                        href={`/news?tag=${tag.id}`}
-                        className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
-                      >
-                        {tag.name}
-                      </Link>
-                    ))}
+                    {article.tags.slice(0, 4).map((tag) =>
+                      article.source === "wp" ? (
+                        <Link
+                          key={tag.id}
+                          href={`/news?tag=${tag.id}`}
+                          className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                        >
+                          {tag.name}
+                        </Link>
+                      ) : (
+                        <span
+                          key={tag.id}
+                          className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                        >
+                          {tag.name}
+                        </span>
+                      )
+                    )}
                   </div>
                 ) : null}
               </div>
