@@ -42,8 +42,13 @@ export type SanityNewsArticleDetail = {
 };
 
 const listQuery = groq`
-  *[_type == "newsArticle" && defined(slug.current)]
-  | order(publishedAt desc)[0...$limit]{
+  *[
+    _type == "newsArticle" &&
+    defined(slug.current) &&
+    (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
+    (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
+  ]
+  | order(publishedAt desc)[$start...$end]{
     _id,
     title,
     slug,
@@ -61,6 +66,15 @@ const listQuery = groq`
       slug
     }
   }
+`;
+
+const countQuery = groq`
+  count(*[
+    _type == "newsArticle" &&
+    defined(slug.current) &&
+    (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
+    (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
+  ])
 `;
 
 const bySlugQuery = groq`
@@ -138,8 +152,38 @@ function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | n
 
 export async function getSanityNewsList(limit = 10): Promise<NewsArticle[]> {
   if (!hasSanityStudioEnv()) return [];
-  const docs = await sanityClient.fetch<SanityNewsArticleListDoc[]>(listQuery, {limit});
+  const docs = await sanityClient.fetch<SanityNewsArticleListDoc[]>(listQuery, {
+    start: 0,
+    end: limit,
+    categorySlug: null,
+    tagSlug: null,
+  });
   return docs.map(mapListDocToNewsArticle).filter((item): item is NewsArticle => Boolean(item));
+}
+
+export async function getSanityNewsPage(options: {
+  page: number;
+  pageSize: number;
+  categorySlug?: string;
+  tagSlug?: string;
+}): Promise<{items: NewsArticle[]; total: number}> {
+  if (!hasSanityStudioEnv()) return {items: [], total: 0};
+  const page = Math.max(1, Math.trunc(options.page || 1));
+  const pageSize = Math.max(1, Math.min(100, Math.trunc(options.pageSize || 20)));
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  const categorySlug = options.categorySlug?.trim() || null;
+  const tagSlug = options.tagSlug?.trim() || null;
+
+  const [docs, total] = await Promise.all([
+    sanityClient.fetch<SanityNewsArticleListDoc[]>(listQuery, {start, end, categorySlug, tagSlug}),
+    sanityClient.fetch<number>(countQuery, {categorySlug, tagSlug}),
+  ]);
+
+  return {
+    items: docs.map(mapListDocToNewsArticle).filter((item): item is NewsArticle => Boolean(item)),
+    total: Number(total ?? 0),
+  };
 }
 
 export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArticleDetail | null> {

@@ -49,6 +49,11 @@ export type WpLatestPost = {
 };
 
 export type WpPost = WpLatestPost;
+export type WpPostsPageResult = {
+  posts: WpPost[];
+  total: number;
+  totalPages: number;
+};
 
 export type WpClientErrorKind = "config" | "timeout" | "http" | "network";
 
@@ -191,6 +196,57 @@ async function fetchWpPostsFromEndpoint(endpoint: string): Promise<WpPost[]> {
   }
 }
 
+async function fetchWpPostsPageFromEndpoint(endpoint: string): Promise<WpPostsPageResult> {
+  const controller = new AbortController();
+  const timeoutMs = 8000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: {Accept: "application/json"},
+      next: {revalidate: 60},
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new WpClientError(`WP API request failed: ${response.status} ${response.statusText}`, {
+        kind: "http",
+        endpoint,
+        status: response.status,
+      });
+    }
+
+    const json = (await response.json()) as unknown;
+    const posts = Array.isArray(json) ? json.map((item) => mapWpPost(item as WpPostApiItem)) : [];
+    const total = Number(response.headers.get("x-wp-total") ?? 0);
+    const totalPages = Number(response.headers.get("x-wp-totalpages") ?? 0);
+
+    return {
+      posts,
+      total: Number.isFinite(total) ? total : 0,
+      totalPages: Number.isFinite(totalPages) ? totalPages : 0,
+    };
+  } catch (error) {
+    if (error instanceof WpClientError) {
+      console.error("[wp-client]", error.kind, {endpoint: error.endpoint, status: error.status});
+      throw error;
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      const wrapped = new WpClientError(`WP API request timed out after ${timeoutMs}ms`, {
+        kind: "timeout",
+        endpoint,
+      });
+      console.error("[wp-client]", wrapped.kind, {endpoint: wrapped.endpoint});
+      throw wrapped;
+    }
+    const wrapped = new WpClientError("WP API network error", {kind: "network", endpoint});
+    console.error("[wp-client]", wrapped.kind, {endpoint: wrapped.endpoint, cause: error});
+    throw wrapped;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function fetchLatestWpPost(): Promise<WpLatestPost | null> {
   const baseUrl = getWpBaseUrlOrNull();
   if (!baseUrl) return null;
@@ -222,17 +278,58 @@ export async function fetchWpPostsList(
   limit = 10,
   options?: { categoryId?: number; tagId?: number }
 ): Promise<WpPost[]> {
+  const result = await fetchWpPostsListPage(limit, 1, options);
+  return result.posts;
+}
+
+export async function fetchWpPostsListPage(
+  limit = 10,
+  page = 1,
+  options?: { categoryId?: number; tagId?: number }
+): Promise<WpPostsPageResult> {
   const baseUrl = getWpBaseUrlOrNull();
-  if (!baseUrl) return [];
+  if (!baseUrl) return {posts: [], total: 0, totalPages: 0};
 
   const safeLimit = Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), 100) : 10;
+  const safePage = Number.isFinite(page) ? Math.max(Math.trunc(page), 1) : 1;
   const params = new URLSearchParams({
     per_page: String(safeLimit),
+    page: String(safePage),
     _embed: "",
   });
   if (options?.categoryId) params.set("categories", String(options.categoryId));
   if (options?.tagId) params.set("tags", String(options.tagId));
 
   const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?${params.toString()}`;
-  return fetchWpPostsFromEndpoint(endpoint);
+  return fetchWpPostsPageFromEndpoint(endpoint);
+}
+
+export async function fetchWpTermIdBySlug(
+  taxonomy: "categories" | "tags",
+  slug: string
+): Promise<number | null> {
+  const baseUrl = getWpBaseUrlOrNull();
+  if (!baseUrl) return null;
+  const trimmed = slug.trim();
+  if (!trimmed) return null;
+
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/${taxonomy}?slug=${encodeURIComponent(trimmed)}&per_page=1`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(endpoint, {
+      headers: {Accept: "application/json"},
+      next: {revalidate: 300},
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const json = (await response.json()) as Array<{id?: number}> | unknown;
+    if (!Array.isArray(json)) return null;
+    const id = json[0]?.id;
+    return typeof id === "number" && Number.isFinite(id) ? id : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getNewsList } from "@/lib/news";
+import { getNewsPage } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 import { hasSanityStudioEnv } from "@/sanity/env";
 
@@ -12,6 +12,22 @@ type SearchParams =
 function firstParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return typeof value === "string" && value.trim() ? value : null;
+}
+
+function parsePageParam(value: string | null): number {
+  if (!value) return 1;
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 1;
+  return Math.max(1, Math.trunc(num));
+}
+
+function buildNewsHref(params: { page?: number; category?: string; tag?: string }) {
+  const search = new URLSearchParams();
+  if (params.page && params.page > 1) search.set("page", String(params.page));
+  if (params.category) search.set("category", params.category);
+  if (params.tag) search.set("tag", params.tag);
+  const query = search.toString();
+  return query ? `/news?${query}` : "/news";
 }
 
 function formatDate(value: string | null) {
@@ -32,18 +48,20 @@ export default async function NewsIndexPage({
   const resolvedSearchParams = (await searchParams) ?? {};
   const categoryParam = firstParam(resolvedSearchParams.category);
   const tagParam = firstParam(resolvedSearchParams.tag);
+  const pageParam = firstParam(resolvedSearchParams.page);
   const categorySlug = categoryParam?.trim() || undefined;
   const tagSlug = tagParam?.trim() || undefined;
+  const currentPage = parsePageParam(pageParam);
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
   const hasSanity = hasSanityStudioEnv();
   const hasAnyNewsSource = hasWpBaseUrl || hasSanity;
 
-  let articles = [] as Awaited<ReturnType<typeof getNewsList>>;
+  let pageResult = { items: [], total: 0, page: currentPage, pageSize: 20, totalPages: 1 } as Awaited<ReturnType<typeof getNewsPage>>;
   let fetchError: string | null = null;
 
   if (hasAnyNewsSource) {
     try {
-      articles = await getNewsList({limit: 10, categorySlug, tagSlug});
+      pageResult = await getNewsPage({ page: currentPage, pageSize: 20, categorySlug, tagSlug });
     } catch (error) {
       if (error instanceof WpClientError) {
         fetchError =
@@ -60,9 +78,6 @@ export default async function NewsIndexPage({
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <div className="mb-8">
         <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">News</h1>
-        <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
-          WordPress記事とSanity新規記事の一覧（段階統合）。最新10件を表示しています。
-        </p>
       </div>
 
       {!hasAnyNewsSource ? (
@@ -73,83 +88,117 @@ export default async function NewsIndexPage({
         <div className="rounded-xl border border-rose-300/70 bg-rose-50 p-5 text-sm text-rose-900 dark:border-rose-800/60 dark:bg-rose-950/30 dark:text-rose-200">
           {fetchError}
         </div>
-      ) : articles.length === 0 ? (
+      ) : pageResult.items.length === 0 ? (
         <div className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-5 text-sm text-[var(--ui-text-subtle)]">
           記事が取得できませんでした。
         </div>
       ) : (
-        <div className="grid gap-4">
-          {articles.map((article) => (
-            <article
-              key={article.path}
-              className="grid gap-4 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 sm:grid-cols-[180px_minmax(0,1fr)]"
-            >
-              <Link href={article.path} className="block">
-                {article.featuredImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={article.featuredImageUrl}
-                    alt={article.featuredImageAlt ?? ""}
-                    className="h-28 w-full rounded-lg object-cover sm:h-full"
-                  />
-                ) : (
-                  <div className="flex h-28 items-center justify-center rounded-lg bg-[var(--ui-panel-soft)] text-xs text-[var(--ui-text-subtle)] sm:h-full">
-                    No Image
-                  </div>
-                )}
-              </Link>
-
-              <div className="min-w-0">
-                <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
-                  <span>{formatDate(article.publishedAt)}</span>
-                  {article.categories.slice(0, 2).map((category) =>
-                    category.slug ? (
-                      <Link
-                        key={category.id}
-                        href={`/news?category=${category.slug}`}
-                        className="underline underline-offset-2"
-                      >
-                        {category.name}
-                      </Link>
-                    ) : (
-                      <span key={category.id}>{category.name}</span>
-                    )
-                  )}
-                </div>
-
+        <>
+          <div className="divide-y divide-[var(--ui-border)]">
+            {pageResult.items.map((article) => (
+              <article
+                key={article.path}
+                className="grid gap-4 py-5 sm:grid-cols-[180px_minmax(0,1fr)]"
+              >
                 <Link href={article.path} className="block">
-                  <h2
-                    className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
-                    dangerouslySetInnerHTML={{ __html: article.titleHtml }}
-                  />
+                  {article.featuredImageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={article.featuredImageUrl}
+                      alt={article.featuredImageAlt ?? ""}
+                      className="h-28 w-full rounded-lg object-cover sm:h-full"
+                    />
+                  ) : (
+                    <div className="flex h-28 items-center justify-center rounded-lg bg-[var(--ui-panel-soft)] text-xs text-[var(--ui-text-subtle)] sm:h-full">
+                      No Image
+                    </div>
+                  )}
                 </Link>
 
-                {article.tags.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {article.tags.slice(0, 4).map((tag) =>
-                      tag.slug ? (
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
+                    <span>{formatDate(article.publishedAt)}</span>
+                    {article.categories.slice(0, 2).map((category) =>
+                      category.slug ? (
                         <Link
-                          key={tag.id}
-                          href={`/news?tag=${tag.slug}`}
-                          className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                          key={category.id}
+                          href={buildNewsHref({ category: category.slug, tag: tagSlug })}
+                          className="underline underline-offset-2"
                         >
-                          {tag.name}
+                          {category.name}
                         </Link>
                       ) : (
-                        <span
-                          key={tag.id}
-                          className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
-                        >
-                          {tag.name}
-                        </span>
+                        <span key={category.id}>{category.name}</span>
                       )
                     )}
                   </div>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+
+                  <Link href={article.path} className="block">
+                    <h2
+                      className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
+                      dangerouslySetInnerHTML={{ __html: article.titleHtml }}
+                    />
+                  </Link>
+
+                  {article.tags.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {article.tags.slice(0, 4).map((tag) =>
+                        tag.slug ? (
+                          <Link
+                            key={tag.id}
+                            href={buildNewsHref({ tag: tag.slug, category: categorySlug })}
+                            className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                          >
+                            {tag.name}
+                          </Link>
+                        ) : (
+                          <span
+                            key={tag.id}
+                            className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                          >
+                            {tag.name}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
+            {pageResult.page > 1 ? (
+              <Link
+                href={buildNewsHref({ page: pageResult.page - 1, category: categorySlug, tag: tagSlug })}
+                className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
+              >
+                前へ
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
+                前へ
+              </span>
+            )}
+
+            <span className="px-2 text-[var(--ui-text-subtle)]">
+              {pageResult.page} / {pageResult.totalPages}
+            </span>
+
+            {pageResult.page < pageResult.totalPages ? (
+              <Link
+                href={buildNewsHref({ page: pageResult.page + 1, category: categorySlug, tag: tagSlug })}
+                className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
+              >
+                次へ
+              </Link>
+            ) : (
+              <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
+                次へ
+              </span>
+            )}
+          </nav>
+        </>
       )}
     </main>
   );
