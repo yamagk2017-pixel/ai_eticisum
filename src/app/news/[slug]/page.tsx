@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import Link from "next/link";
 import {notFound} from "next/navigation";
+import {NandatteRelatedChart} from "@/components/news/nandatte-related-chart";
 import {RelatedGroupsSidebar} from "@/components/news/related-groups-sidebar";
 import {SanityArticleBody} from "@/components/news/sanity-article-body";
 import {getNewsRelatedGroupsInfo} from "@/lib/news/related-groups";
@@ -135,6 +136,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
             <SanityArticleBody value={article.body} />
+            {relatedGroupPanels.length > 0 ? <NandatteRelatedChart groups={relatedGroupPanels} /> : null}
           </div>
           {relatedGroupPanels.length > 0 ? <RelatedGroupsSidebar groups={relatedGroupPanels} /> : null}
         </div>

@@ -117,8 +117,8 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
                 onClick={() => setActiveIndex(index)}
                 className={`rounded-full border px-3 py-1 text-xs ${
                   index === activeIndex
-                    ? "border-[var(--ui-text)] bg-[var(--ui-text)] text-[var(--ui-bg)]"
-                    : "border-[var(--ui-border)] bg-[var(--ui-panel-soft)] text-[var(--ui-text)]"
+                    ? "border-[var(--ui-border)] bg-zinc-300 text-zinc-900 dark:bg-zinc-400 dark:text-zinc-900"
+                    : "border-[var(--ui-border)] bg-transparent text-[var(--ui-text)]"
                 }`}
               >
                 {group.groupNameJa}
@@ -126,9 +126,6 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
             ))}
           </div>
         ) : null}
-        <p className="mt-3 text-xs text-[var(--ui-text-subtle)]">
-          現在表示中: <span className="text-[var(--ui-text)]">{active.groupNameJa}</span>
-        </p>
       </section>
 
       <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
@@ -219,4 +216,3 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
     </aside>
   );
 }
-
