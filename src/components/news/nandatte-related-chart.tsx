@@ -131,7 +131,7 @@ export function NandatteRelatedChart({groups}: Props) {
       ) : (data?.items.length ?? 0) === 0 ? (
         <p className="mt-6 text-sm text-[var(--ui-text-subtle)]">まだ投票がありません。</p>
       ) : (
-        <div className="mt-5 grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2">
+        <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-5">
           {data!.items.slice(0, 5).map((item, index) => {
             const width = maxCount ? Math.max(4, Math.round((item.count / maxCount) * 100)) : 0;
             const isTopFive = index < 5;
