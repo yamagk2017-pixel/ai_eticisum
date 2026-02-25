@@ -140,12 +140,22 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
             {article.tags.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {article.tags.map((tag) => (
-                  <span
-                    key={`${article.id}-${tag.name}`}
-                    className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
-                  >
-                    {tag.name}
-                  </span>
+                  tag.slug ? (
+                    <Link
+                      key={`${article.id}-${tag.name}`}
+                      href={`/news?tag=${tag.slug}`}
+                      className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
+                    >
+                      {tag.name}
+                    </Link>
+                  ) : (
+                    <span
+                      key={`${article.id}-${tag.name}`}
+                      className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
+                    >
+                      {tag.name}
+                    </span>
+                  )
                 ))}
               </div>
             ) : null}

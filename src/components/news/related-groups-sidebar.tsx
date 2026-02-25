@@ -59,6 +59,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   );
   const youtubeUrl = normalizeUrl(active?.youtubeUrl ?? null);
   const youtubeExternalId = active?.youtubeExternalId ?? null;
+  const latestNewsPath = active?.slug ? `/news?tag=${encodeURIComponent(active.slug)}` : null;
 
   useEffect(() => {
     let ignore = false;
@@ -105,7 +106,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   if (!active) return null;
 
   return (
-    <aside className="space-y-4 lg:sticky lg:top-20">
+    <aside className="space-y-8 lg:sticky lg:top-20">
       <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
         <h2 className="text-sm font-semibold text-[var(--ui-text)]">Related Groups</h2>
         {groups.length > 1 ? (
@@ -128,67 +129,41 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--ui-text)]">公式サイト</h3>
+      <section>
+        <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">公式サイト</h2>
         {websiteUrl ? (
           <a
             href={websiteUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex break-all text-sm underline underline-offset-2"
+            className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
           >
             {websiteUrl}
           </a>
         ) : (
-          <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">公式サイトURLが未登録です。</p>
+          <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
         )}
       </section>
 
-      <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--ui-text)]">Spotify</h3>
-        {spotifyEmbedUrl ? (
-          <iframe
-            className="mt-3 block w-full"
-            src={spotifyEmbedUrl}
-            height="352"
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-            title={`Spotify preview - ${active.groupNameJa}`}
-          />
+      <section>
+        <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">最新ニュース</h2>
+        {latestNewsPath ? (
+          <a
+            href={latestNewsPath}
+            className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+          >
+            {active.groupNameJa}の最新ニュースを見る
+          </a>
         ) : (
-          <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">Spotify情報が未登録です。</p>
+          <p className="mt-3 text-sm text-zinc-400">最新ニュースへのリンクを作成できません。</p>
         )}
       </section>
 
-      <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--ui-text)]">おすすめ動画</h3>
-        {youtubeStatus === "loading" && (
-          <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">動画を読み込み中...</p>
-        )}
-        {youtubeStatus !== "loading" && youtubeVideoId ? (
-          <iframe
-            className="mt-3 w-full rounded-xl border border-[var(--ui-border)]"
-            src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-            height="220"
-            loading="lazy"
-            title={`YouTube preview - ${active.groupNameJa}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          youtubeStatus !== "loading" && (
-            <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
-              おすすめ動画を取得できませんでした。{youtubeError ? `(${youtubeError})` : ""}
-            </p>
-          )
-        )}
-      </section>
-
-      <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--ui-text)]">直近のイベント情報</h3>
+      <section>
+        <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">直近のイベント情報</h2>
         {active.latestEvent ? (
-          <div className="mt-3 space-y-2 text-sm text-[var(--ui-text)]">
-            <p className="text-[var(--ui-text-subtle)]">{active.latestEvent.eventDate ?? "日程未定"}</p>
+          <div className="mt-3 space-y-2 text-sm text-zinc-200">
+            <p className="text-zinc-300">{active.latestEvent.eventDate ?? "日程未定"}</p>
             <a
               href={
                 active.latestEvent.eventUrl
@@ -199,18 +174,82 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
               }
               target="_blank"
               rel="noreferrer"
-              className={`inline-flex underline underline-offset-2 ${
+              className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
                 active.latestEvent.eventUrl
-                  ? "text-[var(--ui-text)]"
-                  : "pointer-events-none text-[var(--ui-text-subtle)]"
+                  ? "text-cyan-200 hover:text-cyan-100"
+                  : "pointer-events-none text-zinc-500"
               }`}
             >
               {active.latestEvent.eventName ?? "イベント詳細"}
             </a>
-            <p className="text-[var(--ui-text-subtle)]">{active.latestEvent.venueName ?? "-"}</p>
+            <p className="text-zinc-400">{active.latestEvent.venueName ?? "-"}</p>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">直近のイベント情報はありません。</p>
+          <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
+        )}
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">Spotify</h2>
+          {spotifyUrl ? (
+            <a
+              href={spotifyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+            >
+              Spotifyで開く
+            </a>
+          ) : null}
+        </div>
+        {spotifyEmbedUrl ? (
+          <iframe
+            className="mt-3 block w-full"
+            src={spotifyEmbedUrl}
+            height="352"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            title={`Spotify preview - ${active.groupNameJa}`}
+          />
+        ) : (
+          <p className="mt-3 text-sm text-zinc-400">Spotify情報が未登録です。</p>
+        )}
+      </section>
+
+      <section>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">YouTube</h2>
+          {youtubeUrl ? (
+            <a
+              href={youtubeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+            >
+              YouTubeで開く
+            </a>
+          ) : null}
+        </div>
+        {youtubeStatus === "loading" && (
+          <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
+        )}
+        {youtubeStatus !== "loading" && youtubeVideoId ? (
+          <iframe
+            className="mt-3 w-full rounded-xl border border-zinc-700"
+            src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+            height="220"
+            loading="lazy"
+            title={`YouTube preview - ${active.groupNameJa}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          youtubeStatus !== "loading" && (
+            <p className="mt-3 text-sm text-zinc-400">
+              YouTubeの最新動画が取得できませんでした。{youtubeError ? `(${youtubeError})` : ""}
+            </p>
+          )
         )}
       </section>
     </aside>
