@@ -22,7 +22,7 @@ type SanityNewsArticleListDoc = {
 
 export type SanityRelatedGroup = {
   groupNameJa: string;
-  imdGroupId?: number | null;
+  imdGroupId?: string | null;
   displayOrder?: number | null;
 };
 
@@ -183,4 +183,3 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     ),
   };
 }
-

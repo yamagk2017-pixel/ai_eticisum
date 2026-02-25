@@ -5,11 +5,10 @@
 // relatedGroups autocomplete implementation.
 
 export type RelatedGroupSuggestion = {
-  imdGroupId: number;
+  imdGroupId: string;
   groupNameJa: string;
 };
 
 export function RelatedGroupsNameInputPlaceholder() {
   return null;
 }
-

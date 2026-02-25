@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField} from "sanity";
+import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 
 export const categoryReferencesField = defineField({
   name: "categories",
@@ -34,6 +35,9 @@ export const relatedGroupsField = defineField({
     defineArrayMember({
       type: "object",
       name: "relatedGroup",
+      components: {
+        input: RelatedGroupObjectInput,
+      },
       fields: [
         defineField({
           name: "groupNameJa",
@@ -45,10 +49,14 @@ export const relatedGroupsField = defineField({
         defineField({
           name: "imdGroupId",
           title: "imd.groups ID",
-          type: "number",
+          type: "string",
           description:
             "暫定: custom input 実装まで非表示運用。将来は候補選択時に自動保存される内部キー。",
-          validation: (rule) => rule.integer().positive(),
+          validation: (rule) => rule.custom((value) => {
+            if (!value) return true;
+            if (typeof value !== "string") return "imd.groups ID must be a string (uuid)";
+            return true;
+          }),
           hidden: true,
         }),
         defineField({
