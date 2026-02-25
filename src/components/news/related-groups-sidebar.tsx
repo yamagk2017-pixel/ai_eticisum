@@ -107,7 +107,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
 
   return (
     <aside className="space-y-6 lg:sticky lg:top-20">
-      <section className="pt-3 sm:pt-0">
+      <section className="pt-6 sm:pt-0">
         {groups.length > 1 ? (
           <div className="flex flex-wrap gap-2">
             {groups.map((group, index) => (
