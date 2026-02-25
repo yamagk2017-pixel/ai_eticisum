@@ -1056,7 +1056,7 @@ export function GroupDetail({ slug }: Props) {
                 最新ニュース
               </h2>
               <a
-                href={`/buzzttara?tag=${encodeURIComponent(displayName)}`}
+                href={`/news?tag=${encodeURIComponent(displayName)}`}
                 className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
               >
                 {displayName}の最新ニュースを見る
