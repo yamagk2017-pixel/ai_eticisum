@@ -4,24 +4,27 @@ import { getWpNewsList } from "./wp";
 
 export type GetNewsListOptions = {
   limit?: number;
-  categoryId?: number;
-  tagId?: number;
+  categorySlug?: string;
+  tagSlug?: string;
 };
 
 export async function getNewsList(options: GetNewsListOptions = {}): Promise<NewsArticle[]> {
-  const { limit = 10, categoryId, tagId } = options;
-
-  // Until taxonomy IDs are unified across WP/Sanity, category/tag filter queries apply to WP only.
-  if (categoryId || tagId) {
-    return getWpNewsList(limit, { categoryId, tagId });
-  }
+  const {limit = 10, categorySlug, tagSlug} = options;
 
   const [wpArticles, sanityArticles] = await Promise.all([
     getWpNewsList(limit),
     getSanityNewsList(limit),
   ]);
 
-  return [...wpArticles, ...sanityArticles]
+  const filtered = [...wpArticles, ...sanityArticles].filter((article) => {
+    const categoryMatch = categorySlug
+      ? article.categories.some((category) => category.slug === categorySlug)
+      : true;
+    const tagMatch = tagSlug ? article.tags.some((tag) => tag.slug === tagSlug) : true;
+    return categoryMatch && tagMatch;
+  });
+
+  return filtered
     .sort((a, b) => {
       const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
       const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;

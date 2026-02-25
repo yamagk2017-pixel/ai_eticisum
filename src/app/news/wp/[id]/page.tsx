@@ -38,7 +38,15 @@ function TermPills({
       {items.map((item) => (
         <Link
           key={item.id}
-          href={kind === "category" ? `/news?category=${item.id}` : `/news?tag=${item.id}`}
+          href={
+            kind === "category"
+              ? item.slug
+                ? `/news?category=${item.slug}`
+                : "/news"
+              : item.slug
+              ? `/news?tag=${item.slug}`
+              : "/news"
+          }
           className={
             variant === "plain"
               ? "text-xs text-[var(--ui-text)] underline underline-offset-2"
@@ -133,7 +141,11 @@ export default async function WpNewsArticlePage({
               <>
                 <span>&gt;</span>
                 <Link
-                  href={`/news?category=${article.categories[0].id}`}
+                  href={
+                    article.categories[0].slug
+                      ? `/news?category=${article.categories[0].slug}`
+                      : "/news"
+                  }
                   className="underline underline-offset-2"
                 >
                   {article.categories[0].name}

@@ -32,8 +32,8 @@ export default async function NewsIndexPage({
   const resolvedSearchParams = (await searchParams) ?? {};
   const categoryParam = firstParam(resolvedSearchParams.category);
   const tagParam = firstParam(resolvedSearchParams.tag);
-  const categoryId = categoryParam && /^\d+$/.test(categoryParam) ? Number(categoryParam) : undefined;
-  const tagId = tagParam && /^\d+$/.test(tagParam) ? Number(tagParam) : undefined;
+  const categorySlug = categoryParam?.trim() || undefined;
+  const tagSlug = tagParam?.trim() || undefined;
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
   const hasSanity = hasSanityStudioEnv();
   const hasAnyNewsSource = hasWpBaseUrl || hasSanity;
@@ -43,7 +43,7 @@ export default async function NewsIndexPage({
 
   if (hasAnyNewsSource) {
     try {
-      articles = await getNewsList({ limit: 10, categoryId, tagId });
+      articles = await getNewsList({limit: 10, categorySlug, tagSlug});
     } catch (error) {
       if (error instanceof WpClientError) {
         fetchError =
@@ -63,17 +63,17 @@ export default async function NewsIndexPage({
         <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
           WordPress記事とSanity新規記事の一覧（段階統合）。最新10件を表示しています。
         </p>
-        {(categoryId || tagId) && (
+        {(categorySlug || tagSlug) && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
             <span>Filter:</span>
-            {categoryId ? (
+            {categorySlug ? (
               <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
-                category={categoryId}
+                category={categorySlug}
               </span>
             ) : null}
-            {tagId ? (
+            {tagSlug ? (
               <span className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1">
-                tag={tagId}
+                tag={tagSlug}
               </span>
             ) : null}
             <Link href="/news" className="underline underline-offset-2">
@@ -121,10 +121,10 @@ export default async function NewsIndexPage({
                 <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
                   <span>{formatDate(article.publishedAt)}</span>
                   {article.categories.slice(0, 2).map((category) =>
-                    article.source === "wp" ? (
+                    category.slug ? (
                       <Link
                         key={category.id}
-                        href={`/news?category=${category.id}`}
+                        href={`/news?category=${category.slug}`}
                         className="underline underline-offset-2"
                       >
                         {category.name}
@@ -145,10 +145,10 @@ export default async function NewsIndexPage({
                 {article.tags.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {article.tags.slice(0, 4).map((tag) =>
-                      article.source === "wp" ? (
+                      tag.slug ? (
                         <Link
                           key={tag.id}
-                          href={`/news?tag=${tag.id}`}
+                          href={`/news?tag=${tag.slug}`}
                           className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
                         >
                           {tag.name}

@@ -87,7 +87,16 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
             {article.categories[0] ? (
               <>
                 <span>&gt;</span>
-                <span>{article.categories[0].name}</span>
+                {article.categories[0].slug ? (
+                  <Link
+                    href={`/news?category=${article.categories[0].slug}`}
+                    className="underline underline-offset-2"
+                  >
+                    {article.categories[0].name}
+                  </Link>
+                ) : (
+                  <span>{article.categories[0].name}</span>
+                )}
               </>
             ) : null}
             <span>&gt;</span>
@@ -107,9 +116,19 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
             <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
               <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
               {article.categories.map((category) => (
-                <span key={`${article.id}-${category.name}`} className="text-xs underline underline-offset-2">
-                  {category.name}
-                </span>
+                category.slug ? (
+                  <Link
+                    key={`${article.id}-${category.name}`}
+                    href={`/news?category=${category.slug}`}
+                    className="text-xs underline underline-offset-2"
+                  >
+                    {category.name}
+                  </Link>
+                ) : (
+                  <span key={`${article.id}-${category.name}`} className="text-xs underline underline-offset-2">
+                    {category.name}
+                  </span>
+                )
               ))}
             </div>
 
