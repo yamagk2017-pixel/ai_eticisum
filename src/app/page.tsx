@@ -705,7 +705,6 @@ export default async function Home() {
                   compact
                 />
               </div>
-              <p className="mt-2 text-right text-xs text-zinc-500">{formatShortDate(item.createdAt)}</p>
             </article>
           ))
         ) : (
