@@ -888,7 +888,17 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
-      <main className="mx-auto w-full max-w-6xl px-10 py-10 sm:px-12 sm:py-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
+      <main className="mx-auto w-full max-w-6xl px-10 pt-4 pb-10 sm:px-12 sm:pt-6 sm:pb-14 [&_a]:underline [&_a]:decoration-current/60 [&_a]:underline-offset-2">
+        <div className="mb-10 flex flex-wrap items-end gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/idol-crossing-logo.png"
+            alt="IDOL CROSSING"
+            className="h-auto w-full max-w-[250px]"
+            loading="lazy"
+          />
+          <p className="pb-1 text-xs tracking-[0.08em] text-[var(--ui-text-subtle)]">powerd by musicite</p>
+        </div>
         <section className="columns-1 gap-6 lg:columns-3">
           {summaryCards.map((card) => (
             <div key={card.key}>{card.node}</div>

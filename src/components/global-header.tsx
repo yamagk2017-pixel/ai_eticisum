@@ -122,7 +122,7 @@ export function GlobalHeader() {
     <header className="sticky top-0 z-40 border-b border-[var(--ui-border)] bg-[color-mix(in_oklab,var(--ui-panel)_88%,transparent)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.18em]">
-          TEKITO
+          IDOL CROSSING
         </Link>
 
         <nav className="min-w-0 flex-1 overflow-x-auto">
