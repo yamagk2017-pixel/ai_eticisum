@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { NandatteRelatedChart } from "@/components/news/nandatte-related-chart";
+import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import { WpArticleBody } from "@/components/news/wp-article-body";
+import { getNewsRelatedGroupsInfo } from "@/lib/news/related-groups";
 import { getSanityWpImportedNewsByWpPostId } from "@/lib/news/sanity";
 import { buildArticleMetadata, stripHtmlForText } from "@/lib/news/seo";
 import { getWpNewsById } from "@/lib/news/wp";
@@ -150,10 +153,19 @@ export default async function WpNewsArticlePage({
   }
 
   if (!article) notFound();
+  const relatedGroups =
+    article.source === "sanity_wp_import" && Array.isArray(article.relatedGroups)
+      ? article.relatedGroups
+      : [];
+  const relatedGroupPanels =
+    relatedGroups.length > 0 ? await getNewsRelatedGroupsInfo(relatedGroups) : [];
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <article>
+        <div className="mb-3 text-xs text-[var(--ui-text-subtle)]">
+          source: {article.source} / relatedGroups: {Array.isArray(article.relatedGroups) ? article.relatedGroups.length : 0}
+        </div>
         <div className="mb-6 space-y-3">
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
             <Link href="/" className="underline underline-offset-2">Home</Link>
@@ -210,8 +222,12 @@ export default async function WpNewsArticlePage({
             </div>
           </div>
 
-        <div className="pt-6">
-          <WpArticleBody html={article.contentHtml} />
+        <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
+          <div>
+            <WpArticleBody html={article.contentHtml} />
+            {relatedGroupPanels.length > 0 ? <NandatteRelatedChart groups={relatedGroupPanels} /> : null}
+          </div>
+          {relatedGroupPanels.length > 0 ? <RelatedGroupsSidebar groups={relatedGroupPanels} /> : null}
         </div>
       </article>
     </main>

@@ -1,7 +1,7 @@
 import {groq} from "next-sanity";
 import {sanityClient} from "@/lib/sanity/client";
 import {hasSanityStudioEnv} from "@/sanity/env";
-import type {NewsArticle, NewsTag} from "./types";
+import type {NewsArticle, NewsRelatedGroupRef, NewsTag} from "./types";
 
 type SanityRefTag = {
   _id: string;
@@ -20,11 +20,7 @@ type SanityNewsArticleListDoc = {
   tags?: SanityRefTag[] | null;
 };
 
-export type SanityRelatedGroup = {
-  groupNameJa: string;
-  imdGroupId?: string | null;
-  displayOrder?: number | null;
-};
+export type SanityRelatedGroup = NewsRelatedGroupRef;
 
 export type SanityNewsArticleDetail = {
   id: string;
@@ -66,6 +62,11 @@ const listQuery = groq`
       _id,
       title,
       slug
+    },
+    "relatedGroups": relatedGroups[]{
+      groupNameJa,
+      imdGroupId,
+      displayOrder
     }
   }
 `;
@@ -127,6 +128,11 @@ const wpImportedByPostIdQuery = groq`
       _id,
       title,
       slug
+    },
+    "relatedGroups": relatedGroups[]{
+      groupNameJa,
+      imdGroupId,
+      displayOrder
     }
   }
 `;
@@ -270,6 +276,7 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     heroImageUrl?: string | null;
     categories?: SanityRefTag[] | null;
     tags?: SanityRefTag[] | null;
+    relatedGroups?: SanityRelatedGroup[] | null;
   } | null>(wpImportedByPostIdQuery, {wpPostId});
 
   if (!doc || !Number.isFinite(doc.wpPostId)) return null;
@@ -290,5 +297,8 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     featuredImageAlt: null,
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
+    relatedGroups: (doc.relatedGroups ?? []).filter(
+      (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
+    ),
   };
 }

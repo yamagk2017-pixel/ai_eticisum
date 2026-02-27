@@ -4,6 +4,12 @@ export type NewsTag = {
   slug: string | null;
 };
 
+export type NewsRelatedGroupRef = {
+  groupNameJa: string;
+  imdGroupId?: string | null;
+  displayOrder?: number | null;
+};
+
 export type NewsArticleSource = "wp" | "sanity" | "sanity_wp_import";
 
 export type NewsRouteType = "wp-id" | "sanity-slug";
@@ -23,4 +29,5 @@ export type NewsArticle = {
   featuredImageAlt: string | null;
   categories: NewsTag[];
   tags: NewsTag[];
+  relatedGroups?: NewsRelatedGroupRef[];
 };
