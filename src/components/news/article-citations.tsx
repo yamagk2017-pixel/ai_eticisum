@@ -113,7 +113,7 @@ export function ArticleCitations({
   if (sourceItems.length === 0 && citedBy.length === 0) return null;
 
   return (
-    <section className="mt-10 border-t border-dashed border-white/50 pt-0">
+    <section className="mt-10 border-t border-dashed border-white/50 px-2 pt-0 sm:px-3">
       <CitationBlock heading="この記事の引用元" items={sourceItems} />
       <CitationBlock heading="この記事を引用している記事" items={citedBy} />
     </section>
