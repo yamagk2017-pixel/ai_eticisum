@@ -23,6 +23,23 @@ export type NewsPageResult = {
   totalPages: number;
 };
 
+function sourcePriority(source: NewsArticle["source"]) {
+  if (source === "sanity_wp_import") return 3;
+  if (source === "sanity") return 2;
+  return 1;
+}
+
+function dedupeByPathPreferSource(items: NewsArticle[]): NewsArticle[] {
+  const map = new Map<string, NewsArticle>();
+  for (const item of items) {
+    const existing = map.get(item.path);
+    if (!existing || sourcePriority(item.source) > sourcePriority(existing.source)) {
+      map.set(item.path, item);
+    }
+  }
+  return Array.from(map.values());
+}
+
 export async function getNewsList(options: GetNewsListOptions = {}): Promise<NewsArticle[]> {
   const {limit = 10, categorySlug, tagSlug} = options;
 
@@ -31,7 +48,7 @@ export async function getNewsList(options: GetNewsListOptions = {}): Promise<New
     getSanityNewsList(limit),
   ]);
 
-  const filtered = [...wpArticles, ...sanityArticles].filter((article) => {
+  const filtered = dedupeByPathPreferSource([...wpArticles, ...sanityArticles]).filter((article) => {
     const categoryMatch = categorySlug
       ? article.categories.some((category) => category.slug === categorySlug)
       : true;
@@ -56,18 +73,31 @@ export async function getNewsPage(options: GetNewsPageOptions = {}): Promise<New
 
   const prefetchLimit = page * pageSize;
 
-  const [wpPage, sanityPage] = await Promise.all([
+  const [wpResult, sanityResult] = await Promise.allSettled([
     getWpNewsPage({page: 1, pageSize: prefetchLimit, categorySlug, tagSlug}),
     getSanityNewsPage({page: 1, pageSize: prefetchLimit, categorySlug, tagSlug}),
   ]);
 
-  const merged = [...wpPage.items, ...sanityPage.items].sort((a, b) => {
+  const wpPage = wpResult.status === "fulfilled" ? wpResult.value : {items: [], total: 0};
+  const sanityPage = sanityResult.status === "fulfilled" ? sanityResult.value : {items: [], total: 0};
+
+  if (wpResult.status === "rejected" && sanityResult.status === "rejected") {
+    throw wpResult.reason instanceof Error
+      ? wpResult.reason
+      : sanityResult.reason instanceof Error
+        ? sanityResult.reason
+        : new Error("Failed to fetch both WP and Sanity news sources");
+  }
+
+  const merged = dedupeByPathPreferSource([...wpPage.items, ...sanityPage.items]).sort((a, b) => {
     const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
     const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;
     return bTime - aTime;
   });
 
-  const total = wpPage.total + sanityPage.total;
+  // When WP and Sanity overlap (migrated wpImportedArticle), exact global unique count is expensive to compute.
+  // Use the larger source total so pagination stays stable and avoids over-counting by simple sum.
+  const total = Math.max(wpPage.total, sanityPage.total);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const safePage = Math.min(page, totalPages);
   const start = (safePage - 1) * pageSize;

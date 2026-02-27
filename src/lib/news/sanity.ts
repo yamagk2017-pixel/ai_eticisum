@@ -10,9 +10,12 @@ type SanityRefTag = {
 };
 
 type SanityNewsArticleListDoc = {
+  _type?: "newsArticle" | "wpImportedArticle";
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
+  wpPostId?: number | null;
+  originalWpUrl?: string | null;
   publishedAt?: string | null;
   excerpt?: string | null;
   heroImageUrl?: string | null;
@@ -39,20 +42,26 @@ export type SanityNewsArticleDetail = {
 
 const listQuery = groq`
   *[
-    _type == "newsArticle" &&
-    defined(slug.current) &&
+    _type in ["newsArticle", "wpImportedArticle"] &&
+    (
+      (_type == "newsArticle" && defined(slug.current)) ||
+      (_type == "wpImportedArticle" && defined(wpPostId))
+    ) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
     (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
   ]
   | order(publishedAt desc)[$start...$end]{
+    _type,
     _id,
     title,
     slug,
+    wpPostId,
+    originalWpUrl,
     publishedAt,
     excerpt,
-    "heroImageUrl": heroImage.asset->url,
+    "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
     "categories": categories[]->{
       _id,
       title,
@@ -73,8 +82,11 @@ const listQuery = groq`
 
 const countQuery = groq`
   count(*[
-    _type == "newsArticle" &&
-    defined(slug.current) &&
+    _type in ["newsArticle", "wpImportedArticle"] &&
+    (
+      (_type == "newsArticle" && defined(slug.current)) ||
+      (_type == "wpImportedArticle" && defined(wpPostId))
+    ) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
@@ -160,9 +172,31 @@ function mapRefTags(items: SanityRefTag[] | null | undefined): NewsTag[] {
 }
 
 function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | null {
+  const title = (doc.title ?? "").trim() || "(untitled)";
+
+  if (doc._type === "wpImportedArticle") {
+    if (!Number.isFinite(doc.wpPostId)) return null;
+    const wpPostId = Number(doc.wpPostId);
+    return {
+      source: "sanity_wp_import",
+      routeType: "wp-id",
+      path: `/news/wp/${wpPostId}`,
+      id: wpPostId,
+      slug: String(wpPostId),
+      url: doc.originalWpUrl ?? null,
+      publishedAt: doc.publishedAt ?? null,
+      titleHtml: escapeHtml(title),
+      excerptHtml: escapeHtml((doc.excerpt ?? "").trim()),
+      contentHtml: "",
+      featuredImageUrl: doc.heroImageUrl ?? null,
+      featuredImageAlt: null,
+      categories: mapRefTags(doc.categories),
+      tags: mapRefTags(doc.tags),
+    };
+  }
+
   const slug = doc.slug?.current?.trim();
   if (!slug) return null;
-  const title = (doc.title ?? "").trim() || "(untitled)";
 
   return {
     source: "sanity",
