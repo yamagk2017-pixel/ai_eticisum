@@ -40,6 +40,59 @@ function formatDate(value: string | null) {
   }).format(new Date(time));
 }
 
+function PaginationNav({
+  page,
+  totalPages,
+  categorySlug,
+  tagSlug,
+  align = "center",
+}: {
+  page: number;
+  totalPages: number;
+  categorySlug?: string;
+  tagSlug?: string;
+  align?: "center" | "right";
+}) {
+  const justifyClass = align === "right" ? "justify-end" : "justify-center";
+
+  return (
+    <nav
+      aria-label={align === "right" ? "Pagination Top" : "Pagination Bottom"}
+      className={`flex flex-wrap items-center ${justifyClass} gap-2 text-sm`}
+    >
+      {page > 1 ? (
+        <Link
+          href={buildNewsHref({ page: page - 1, category: categorySlug, tag: tagSlug })}
+          className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
+        >
+          前へ
+        </Link>
+      ) : (
+        <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
+          前へ
+        </span>
+      )}
+
+      <span className="px-2 text-[var(--ui-text-subtle)]">
+        {page} / {totalPages}
+      </span>
+
+      {page < totalPages ? (
+        <Link
+          href={buildNewsHref({ page: page + 1, category: categorySlug, tag: tagSlug })}
+          className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
+        >
+          次へ
+        </Link>
+      ) : (
+        <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
+          次へ
+        </span>
+      )}
+    </nav>
+  );
+}
+
 export default async function NewsIndexPage({
   searchParams,
 }: {
@@ -74,10 +127,16 @@ export default async function NewsIndexPage({
     }
   }
 
+  const rangeStart = pageResult.items.length > 0 ? (pageResult.page - 1) * pageResult.pageSize + 1 : 0;
+  const rangeEnd = pageResult.items.length > 0 ? rangeStart + pageResult.items.length - 1 : 0;
+
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <div className="mb-8">
-        <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">News</h1>
+        <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">アイドルニュース</h1>
+        <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
+          公開順：{rangeStart}〜{rangeEnd}（{pageResult.page}／{pageResult.totalPages}）
+        </p>
       </div>
 
       {!hasAnyNewsSource ? (
@@ -94,6 +153,16 @@ export default async function NewsIndexPage({
         </div>
       ) : (
         <>
+          <div className="mb-4">
+            <PaginationNav
+              page={pageResult.page}
+              totalPages={pageResult.totalPages}
+              categorySlug={categorySlug}
+              tagSlug={tagSlug}
+              align="right"
+            />
+          </div>
+
           <div className="divide-y divide-[var(--ui-border)]">
             {pageResult.items.map((article) => (
               <article
@@ -167,37 +236,15 @@ export default async function NewsIndexPage({
             ))}
           </div>
 
-          <nav aria-label="Pagination" className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm">
-            {pageResult.page > 1 ? (
-              <Link
-                href={buildNewsHref({ page: pageResult.page - 1, category: categorySlug, tag: tagSlug })}
-                className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
-              >
-                前へ
-              </Link>
-            ) : (
-              <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
-                前へ
-              </span>
-            )}
-
-            <span className="px-2 text-[var(--ui-text-subtle)]">
-              {pageResult.page} / {pageResult.totalPages}
-            </span>
-
-            {pageResult.page < pageResult.totalPages ? (
-              <Link
-                href={buildNewsHref({ page: pageResult.page + 1, category: categorySlug, tag: tagSlug })}
-                className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text)]"
-              >
-                次へ
-              </Link>
-            ) : (
-              <span className="rounded-lg border border-[var(--ui-border)] px-3 py-2 text-[var(--ui-text-subtle)]">
-                次へ
-              </span>
-            )}
-          </nav>
+          <div className="mt-8">
+            <PaginationNav
+              page={pageResult.page}
+              totalPages={pageResult.totalPages}
+              categorySlug={categorySlug}
+              tagSlug={tagSlug}
+              align="center"
+            />
+          </div>
         </>
       )}
     </main>
