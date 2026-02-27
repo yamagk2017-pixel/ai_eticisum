@@ -10,6 +10,12 @@ export type NewsRelatedGroupRef = {
   displayOrder?: number | null;
 };
 
+export type NewsRelatedArticleRef = {
+  title: string;
+  path: string;
+  publishedAt: string | null;
+};
+
 export type NewsArticleSource = "wp" | "sanity" | "sanity_wp_import";
 
 export type NewsRouteType = "wp-id" | "sanity-slug";
@@ -30,4 +36,6 @@ export type NewsArticle = {
   categories: NewsTag[];
   tags: NewsTag[];
   relatedGroups?: NewsRelatedGroupRef[];
+  citationSourceArticle?: NewsRelatedArticleRef | null;
+  citedByArticles?: NewsRelatedArticleRef[];
 };

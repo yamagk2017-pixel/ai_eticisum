@@ -1,12 +1,21 @@
 import {groq} from "next-sanity";
 import {sanityClient} from "@/lib/sanity/client";
 import {hasSanityStudioEnv} from "@/sanity/env";
-import type {NewsArticle, NewsRelatedGroupRef, NewsTag} from "./types";
+import type {NewsArticle, NewsRelatedArticleRef, NewsRelatedGroupRef, NewsTag} from "./types";
 
 type SanityRefTag = {
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
+};
+
+type SanityRelatedArticleDoc = {
+  _type?: "newsArticle" | "wpImportedArticle";
+  _id: string;
+  title?: string | null;
+  slug?: {current?: string | null} | null;
+  wpPostId?: number | null;
+  publishedAt?: string | null;
 };
 
 type SanityNewsArticleListDoc = {
@@ -38,6 +47,8 @@ export type SanityNewsArticleDetail = {
   tags: NewsTag[];
   body: unknown;
   relatedGroups: SanityRelatedGroup[];
+  citationSourceArticle: NewsRelatedArticleRef | null;
+  citedByArticles: NewsRelatedArticleRef[];
 };
 
 const listQuery = groq`
@@ -117,6 +128,28 @@ const bySlugQuery = groq`
       groupNameJa,
       imdGroupId,
       displayOrder
+    },
+    "citationSourceArticle": citationSourceArticle->{
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt
+    },
+    "citedByArticles": *[
+      _type in ["newsArticle", "wpImportedArticle"] &&
+      references(^._id) &&
+      _id != ^._id &&
+      !(_id in path("drafts.**")) &&
+      !defined(*[_id == ("drafts." + ^._id)][0]._id)
+    ] | order(publishedAt desc){
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt
     }
   }
 `;
@@ -145,6 +178,28 @@ const wpImportedByPostIdQuery = groq`
       groupNameJa,
       imdGroupId,
       displayOrder
+    },
+    "citationSourceArticle": citationSourceArticle->{
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt
+    },
+    "citedByArticles": *[
+      _type in ["newsArticle", "wpImportedArticle"] &&
+      references(^._id) &&
+      _id != ^._id &&
+      !(_id in path("drafts.**")) &&
+      !defined(*[_id == ("drafts." + ^._id)][0]._id)
+    ] | order(publishedAt desc){
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt
     }
   }
 `;
@@ -169,6 +224,32 @@ function mapRefTags(items: SanityRefTag[] | null | undefined): NewsTag[] {
       name: item.title ?? "(untitled)",
       slug: item.slug?.current ?? null,
     }));
+}
+
+function toNewsPath(doc: SanityRelatedArticleDoc): string | null {
+  if (doc._type === "wpImportedArticle") {
+    if (!Number.isFinite(doc.wpPostId)) return null;
+    return `/news/wp/${Number(doc.wpPostId)}`;
+  }
+
+  const slug = doc.slug?.current?.trim();
+  if (!slug) return null;
+  return `/news/${slug}`;
+}
+
+function mapRelatedArticle(doc: SanityRelatedArticleDoc | null | undefined): NewsRelatedArticleRef | null {
+  if (!doc?._id) return null;
+  const path = toNewsPath(doc);
+  if (!path) return null;
+  return {
+    title: (doc.title ?? "").trim() || "(untitled)",
+    path,
+    publishedAt: doc.publishedAt ?? null,
+  };
+}
+
+function mapRelatedArticles(items: SanityRelatedArticleDoc[] | null | undefined): NewsRelatedArticleRef[] {
+  return (items ?? []).map(mapRelatedArticle).filter((item): item is NewsRelatedArticleRef => Boolean(item));
 }
 
 function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | null {
@@ -269,6 +350,8 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     categories?: SanityRefTag[] | null;
     tags?: SanityRefTag[] | null;
     relatedGroups?: SanityRelatedGroup[] | null;
+    citationSourceArticle?: SanityRelatedArticleDoc | null;
+    citedByArticles?: SanityRelatedArticleDoc[] | null;
   } | null>(bySlugQuery, {slug: trimmed});
 
   if (!doc) return null;
@@ -292,6 +375,8 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     relatedGroups: (doc.relatedGroups ?? []).filter(
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),
+    citationSourceArticle: mapRelatedArticle(doc.citationSourceArticle),
+    citedByArticles: mapRelatedArticles(doc.citedByArticles),
   };
 }
 
@@ -311,6 +396,8 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     categories?: SanityRefTag[] | null;
     tags?: SanityRefTag[] | null;
     relatedGroups?: SanityRelatedGroup[] | null;
+    citationSourceArticle?: SanityRelatedArticleDoc | null;
+    citedByArticles?: SanityRelatedArticleDoc[] | null;
   } | null>(wpImportedByPostIdQuery, {wpPostId});
 
   if (!doc || !Number.isFinite(doc.wpPostId)) return null;
@@ -334,5 +421,7 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     relatedGroups: (doc.relatedGroups ?? []).filter(
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),
+    citationSourceArticle: mapRelatedArticle(doc.citationSourceArticle),
+    citedByArticles: mapRelatedArticles(doc.citedByArticles),
   };
 }

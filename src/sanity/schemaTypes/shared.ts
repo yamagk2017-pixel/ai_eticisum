@@ -83,6 +83,17 @@ export const relatedGroupsField = defineField({
   ],
 });
 
+export const citationSourceArticleField = defineField({
+  name: "citationSourceArticle",
+  title: "Citation Source Article",
+  type: "reference",
+  to: [{type: "newsArticle"}, {type: "wpImportedArticle"}],
+  options: {
+    disableNew: true,
+  },
+  description: "この記事が引用・参照した元記事を紐付けます（任意）。",
+});
+
 export const seoFields = [
   defineField({
     name: "seoTitle",

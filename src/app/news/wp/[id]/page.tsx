@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArticleCitations } from "@/components/news/article-citations";
 import { NandatteRelatedChart } from "@/components/news/nandatte-related-chart";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import { WpArticleBody } from "@/components/news/wp-article-body";
@@ -223,6 +224,10 @@ export default async function WpNewsArticlePage({
           <div>
             <WpArticleBody html={article.contentHtml} />
             {relatedGroupPanels.length > 0 ? <NandatteRelatedChart groups={relatedGroupPanels} /> : null}
+            <ArticleCitations
+              citationSourceArticle={article.citationSourceArticle}
+              citedByArticles={article.citedByArticles}
+            />
           </div>
           {relatedGroupPanels.length > 0 ? <RelatedGroupsSidebar groups={relatedGroupPanels} /> : null}
         </div>

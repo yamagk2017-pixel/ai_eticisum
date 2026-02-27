@@ -1,5 +1,6 @@
 import {defineField, defineType} from "sanity";
 import {
+  citationSourceArticleField,
   categoryReferencesField,
   relatedGroupsField,
   seoFields,
@@ -47,6 +48,7 @@ export const wpImportedArticleType = defineType({
       validation: (rule) => rule.required(),
       description: "WP移行記事の本文HTML。初期はPortable Text変換を行わず保持する。",
     }),
+    citationSourceArticleField,
     defineField({
       name: "wpPostId",
       title: "WP Post ID",

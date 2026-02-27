@@ -1,5 +1,6 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
 import {
+  citationSourceArticleField,
   categoryReferencesField,
   relatedGroupsField,
   seoFields,
@@ -53,6 +54,7 @@ export const newsArticleType = defineType({
       ],
       validation: (rule) => rule.required(),
     }),
+    citationSourceArticleField,
     defineField({
       name: "excerpt",
       title: "Excerpt",
