@@ -12,6 +12,7 @@ function parseArgs(argv) {
     page: 1,
     output: null,
     includeIds: [],
+    includeOnly: false,
     apply: false,
   };
 
@@ -39,6 +40,10 @@ function parseArgs(argv) {
         .filter((n) => Number.isFinite(n) && n > 0)
         .map((n) => Math.trunc(n));
       args.includeIds = Array.from(new Set([...args.includeIds, ...ids]));
+      continue;
+    }
+    if (arg === "--include-only") {
+      args.includeOnly = true;
       continue;
     }
     if (arg === "--apply") {
@@ -536,9 +541,12 @@ async function main() {
   const supabaseUrl = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const supabaseKey = optionalEnv("SUPABASE_SERVICE_ROLE_KEY") || optionalEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
   if (!supabaseKey) throw new Error("Missing Supabase key: SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+  if (args.includeOnly && args.includeIds.length === 0) {
+    throw new Error("`--include-only` requires `--include-ids`.");
+  }
 
   const [wpPosts, imdGroupBySlug, sanityLookups] = await Promise.all([
-    fetchWpPosts({baseUrl: wpApiBaseUrl, limit: args.limit, page: args.page}),
+    args.includeOnly ? Promise.resolve([]) : fetchWpPosts({baseUrl: wpApiBaseUrl, limit: args.limit, page: args.page}),
     fetchImdGroups({supabaseUrl, supabaseKey}),
     fetchSanityLookups({
       projectId: sanityProjectId,
