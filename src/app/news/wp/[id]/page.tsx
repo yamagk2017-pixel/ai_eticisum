@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WpArticleBody } from "@/components/news/wp-article-body";
+import { getSanityWpImportedNewsByWpPostId } from "@/lib/news/sanity";
 import { buildArticleMetadata, stripHtmlForText } from "@/lib/news/seo";
 import { getWpNewsById } from "@/lib/news/wp";
+import { hasSanityStudioEnv } from "@/sanity/env";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +65,12 @@ function TermPills({
 
 async function loadArticle(idParam: string) {
   if (!/^\d+$/.test(idParam)) return null;
-  return getWpNewsById(Number(idParam));
+  const id = Number(idParam);
+  if (hasSanityStudioEnv()) {
+    const migrated = await getSanityWpImportedNewsByWpPostId(id);
+    if (migrated) return migrated;
+  }
+  return getWpNewsById(id);
 }
 
 export async function generateMetadata({
@@ -91,23 +98,20 @@ export default async function WpNewsArticlePage({
 }) {
   const resolved = await params;
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
+  const hasSanity = hasSanityStudioEnv();
   let article = null;
   let fetchErrorMessage: string | null = null;
 
-  if (!hasWpBaseUrl) {
-    fetchErrorMessage = "`WP_API_BASE_URL` が未設定です。";
-  } else {
-    try {
-      article = await loadArticle(resolved.id);
-    } catch (error) {
-      if (error instanceof WpClientError) {
-        fetchErrorMessage =
-          error.kind === "timeout"
-            ? "WordPress APIの応答がタイムアウトしました。時間をおいて再試行してください。"
-            : "WordPress APIから記事を取得できませんでした。";
-      } else {
-        fetchErrorMessage = "記事取得中に予期しないエラーが発生しました。";
-      }
+  try {
+    article = await loadArticle(resolved.id);
+  } catch (error) {
+    if (error instanceof WpClientError) {
+      fetchErrorMessage =
+        error.kind === "timeout"
+          ? "WordPress APIの応答がタイムアウトしました。時間をおいて再試行してください。"
+          : "WordPress APIから記事を取得できませんでした。";
+    } else {
+      fetchErrorMessage = "記事取得中に予期しないエラーが発生しました。";
     }
   }
 
@@ -116,6 +120,24 @@ export default async function WpNewsArticlePage({
       <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <div className="rounded-2xl border border-rose-300/70 bg-rose-50 p-6 dark:border-rose-800/60 dark:bg-rose-950/30">
           <p className="text-sm text-rose-900 dark:text-rose-200">{fetchErrorMessage}</p>
+          <p className="mt-2 text-xs text-rose-800/80 dark:text-rose-300/80">対象記事ID: {resolved.id}</p>
+          <div className="mt-4">
+            <Link href="/news" className="text-sm underline underline-offset-2">
+              News一覧へ
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!article && !hasWpBaseUrl && !hasSanity) {
+    return (
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+        <div className="rounded-2xl border border-rose-300/70 bg-rose-50 p-6 dark:border-rose-800/60 dark:bg-rose-950/30">
+          <p className="text-sm text-rose-900 dark:text-rose-200">
+            `WP_API_BASE_URL` と Sanity環境変数が未設定です。
+          </p>
           <p className="mt-2 text-xs text-rose-800/80 dark:text-rose-300/80">対象記事ID: {resolved.id}</p>
           <div className="mt-4">
             <Link href="/news" className="text-sm underline underline-offset-2">

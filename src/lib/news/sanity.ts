@@ -108,6 +108,29 @@ const bySlugQuery = groq`
   }
 `;
 
+const wpImportedByPostIdQuery = groq`
+  *[_type == "wpImportedArticle" && wpPostId == $wpPostId][0]{
+    _id,
+    title,
+    publishedAt,
+    excerpt,
+    legacyBodyHtml,
+    originalWpUrl,
+    wpPostId,
+    "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+    "categories": categories[]->{
+      _id,
+      title,
+      slug
+    },
+    "tags": tags[]->{
+      _id,
+      title,
+      slug
+    }
+  }
+`;
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -229,5 +252,43 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     relatedGroups: (doc.relatedGroups ?? []).filter(
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),
+  };
+}
+
+export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promise<NewsArticle | null> {
+  if (!hasSanityStudioEnv()) return null;
+  if (!Number.isFinite(wpPostId) || wpPostId <= 0) return null;
+
+  const doc = await sanityClient.fetch<{
+    _id: string;
+    title?: string | null;
+    publishedAt?: string | null;
+    excerpt?: string | null;
+    legacyBodyHtml?: string | null;
+    originalWpUrl?: string | null;
+    wpPostId?: number | null;
+    heroImageUrl?: string | null;
+    categories?: SanityRefTag[] | null;
+    tags?: SanityRefTag[] | null;
+  } | null>(wpImportedByPostIdQuery, {wpPostId});
+
+  if (!doc || !Number.isFinite(doc.wpPostId)) return null;
+  const title = (doc.title ?? "").trim() || "(untitled)";
+
+  return {
+    source: "sanity_wp_import",
+    routeType: "wp-id",
+    path: `/news/wp/${doc.wpPostId}`,
+    id: Number(doc.wpPostId),
+    slug: String(doc.wpPostId),
+    url: doc.originalWpUrl ?? null,
+    publishedAt: doc.publishedAt ?? null,
+    titleHtml: escapeHtml(title),
+    excerptHtml: escapeHtml((doc.excerpt ?? "").trim()),
+    contentHtml: doc.legacyBodyHtml ?? "",
+    featuredImageUrl: doc.heroImageUrl ?? null,
+    featuredImageAlt: null,
+    categories: mapRefTags(doc.categories),
+    tags: mapRefTags(doc.tags),
   };
 }

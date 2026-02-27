@@ -39,9 +39,13 @@ dry-runログ（2026-02-27）:
 
 ### 2) 記事移行スクリプト（保存あり）
 
-- [ ] `wpImportedArticle` への create/update 実装（`--apply`）
+- [◯] `wpImportedArticle` への create/update 実装（`--apply`）
 - [ ] 失敗記事のみ再実行オプション（`--only-ids` など）
 - [ ] 実行ログ（成功/失敗/スキップ）を `reports/` に出力
+
+実行コマンド:
+- dry-run: `npm run poc:wp-to-sanity:dry-run`
+- apply: `npm run poc:wp-to-sanity:apply`
 
 ### 3) 品質確認（PoC 10件）
 

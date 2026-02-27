@@ -30,6 +30,12 @@ export const wpImportedArticleType = defineType({
       options: {hotspot: true},
       description: "任意。WP APIで取得不可のケースがあるため、移行時は空を許容する。",
     }),
+    defineField({
+      name: "heroImageExternalUrl",
+      title: "Hero Image External URL",
+      type: "url",
+      description: "画像アセット移行前の暫定表示用URL（WP由来）。",
+    }),
     categoryReferencesField,
     tagReferencesField,
     relatedGroupsField,

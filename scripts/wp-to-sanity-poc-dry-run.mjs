@@ -12,6 +12,7 @@ function parseArgs(argv) {
     page: 1,
     output: null,
     includeIds: [],
+    apply: false,
   };
 
   for (const arg of argv) {
@@ -38,6 +39,10 @@ function parseArgs(argv) {
         .filter((n) => Number.isFinite(n) && n > 0)
         .map((n) => Math.trunc(n));
       args.includeIds = Array.from(new Set([...args.includeIds, ...ids]));
+      continue;
+    }
+    if (arg === "--apply") {
+      args.apply = true;
     }
   }
 
@@ -97,6 +102,15 @@ function formatStamp(date = new Date()) {
   const mm = String(date.getMinutes()).padStart(2, "0");
   const ss = String(date.getSeconds()).padStart(2, "0");
   return `${y}${m}${d}-${hh}${mm}${ss}`;
+}
+
+function createArrayKey(prefix, seed, index) {
+  const base = String(seed ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `${prefix}-${index}-${base || "item"}`;
 }
 
 async function fetchWpPosts({baseUrl, limit, page}) {
@@ -240,7 +254,7 @@ async function fetchSanityLookups({projectId, dataset, apiVersion, token}) {
     apiVersion,
     token: token ?? undefined,
     useCdn: false,
-    perspective: token ? "previewDrafts" : "published",
+    perspective: token ? "drafts" : "published",
   });
 
   const [categories, tags] = await Promise.all([
@@ -288,7 +302,11 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
     if (!category.slug) continue;
     const refId = categoryBySlug.get(category.slug);
     if (refId) {
-      categoryRefs.push({_type: "reference", _ref: refId});
+      categoryRefs.push({
+        _type: "reference",
+        _ref: refId,
+        _key: createArrayKey("cat", refId, categoryRefs.length),
+      });
     } else {
       missingCategorySlugs.push(category.slug);
     }
@@ -304,7 +322,11 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
 
     const tagRefId = tagBySlug.get(tag.slug);
     if (tagRefId) {
-      tagRefs.push({_type: "reference", _ref: tagRefId});
+      tagRefs.push({
+        _type: "reference",
+        _ref: tagRefId,
+        _key: createArrayKey("tag", tagRefId, tagRefs.length),
+      });
     } else {
       missingTagSlugs.push(tag.slug);
     }
@@ -313,6 +335,7 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
     if (matchedGroup?.id && !seenGroupIds.has(matchedGroup.id)) {
       relatedGroups.push({
         _type: "relatedGroup",
+        _key: createArrayKey("rg", matchedGroup.id, relatedGroups.length),
         groupNameJa: matchedGroup.nameJa ?? tag.name,
         imdGroupId: matchedGroup.id,
       });
@@ -336,9 +359,9 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
     .join("; ");
 
   const payload = {
-    _type: "wpImportedArticle",
     title: post.title,
     publishedAt: post.publishedAt,
+    heroImageExternalUrl: post.featuredImageUrl || undefined,
     categories: categoryRefs,
     tags: tagRefs,
     relatedGroups,
@@ -372,6 +395,72 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
   };
 }
 
+function getWpImportedArticleId(wpPostId) {
+  return `wpImportedArticle.wp.${wpPostId}`;
+}
+
+async function applyWpImportedArticles(client, results) {
+  const upsertable = results.filter((item) => item.blockers.length === 0);
+  const skipped = results.filter((item) => item.blockers.length > 0).map((item) => ({
+    wpPostId: item.wpPostId,
+    reason: item.blockers.join("|"),
+  }));
+
+  let appliedCreates = 0;
+  let appliedUpdates = 0;
+  const failed = [];
+
+  const chunkSize = 25;
+  for (let i = 0; i < upsertable.length; i += chunkSize) {
+    const chunk = upsertable.slice(i, i + chunkSize);
+    const mutations = [];
+
+    for (const item of chunk) {
+      const targetId = item.existingSanityId ?? getWpImportedArticleId(item.wpPostId);
+      const isCreate = !item.existingSanityId;
+
+      if (isCreate) {
+        mutations.push({
+          createIfNotExists: {
+            _id: targetId,
+            _type: "wpImportedArticle",
+          },
+        });
+      }
+
+      mutations.push({
+        patch: {
+          id: targetId,
+          set: item.payload,
+        },
+      });
+
+      if (isCreate) appliedCreates += 1;
+      else appliedUpdates += 1;
+    }
+
+    try {
+      await client.mutate(mutations, {visibility: "sync"});
+    } catch (error) {
+      for (const item of chunk) {
+        failed.push({
+          wpPostId: item.wpPostId,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+      appliedCreates -= chunk.filter((item) => !item.existingSanityId).length;
+      appliedUpdates -= chunk.filter((item) => Boolean(item.existingSanityId)).length;
+    }
+  }
+
+  return {
+    appliedCreates,
+    appliedUpdates,
+    skipped,
+    failed,
+  };
+}
+
 async function main() {
   await loadLocalEnv(path.resolve(process.cwd(), ".env.local"));
   const args = parseArgs(process.argv.slice(2));
@@ -380,7 +469,13 @@ async function main() {
   const sanityProjectId = requiredEnv("NEXT_PUBLIC_SANITY_PROJECT_ID");
   const sanityDataset = requiredEnv("NEXT_PUBLIC_SANITY_DATASET");
   const sanityApiVersion = requiredEnv("NEXT_PUBLIC_SANITY_API_VERSION");
-  const sanityReadToken = optionalEnv("SANITY_API_READ_TOKEN") || optionalEnv("SANITY_API_WRITE_TOKEN") || optionalEnv("SANITY_API_TOKEN");
+  const sanityReadToken =
+    optionalEnv("SANITY_API_READ_TOKEN") || optionalEnv("SANITY_API_WRITE_TOKEN") || optionalEnv("SANITY_API_TOKEN");
+  const sanityWriteToken = optionalEnv("SANITY_API_WRITE_TOKEN");
+
+  if (args.apply && !sanityWriteToken) {
+    throw new Error("Missing required env: SANITY_API_WRITE_TOKEN");
+  }
 
   const supabaseUrl = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
   const supabaseKey = optionalEnv("SUPABASE_SERVICE_ROLE_KEY") || optionalEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
@@ -393,7 +488,7 @@ async function main() {
       projectId: sanityProjectId,
       dataset: sanityDataset,
       apiVersion: sanityApiVersion,
-      token: sanityReadToken,
+      token: args.apply ? sanityWriteToken : sanityReadToken,
     }),
   ]);
 
@@ -445,6 +540,7 @@ async function main() {
   });
 
   const summary = {
+    mode: args.apply ? "apply" : "dry-run",
     checkedPosts: results.length,
     wouldCreate: results.filter((r) => r.operation === "would-create").length,
     wouldUpdate: results.filter((r) => r.operation === "would-update").length,
@@ -456,9 +552,22 @@ async function main() {
     totalMissingTagSlugRefs: results.reduce((acc, r) => acc + r.missingTagSlugs.length, 0),
   };
 
+  let applyResult = null;
+  if (args.apply) {
+    applyResult = await applyWpImportedArticles(sanityLookups.client, results);
+    summary.appliedCreates = applyResult.appliedCreates;
+    summary.appliedUpdates = applyResult.appliedUpdates;
+    summary.applySkipped = applyResult.skipped.length;
+    summary.applyFailed = applyResult.failed.length;
+  }
+
   const outputPath = args.output
     ? path.resolve(process.cwd(), args.output)
-    : path.resolve(process.cwd(), "reports", `wp-to-sanity-poc-dry-run-${formatStamp()}.json`);
+    : path.resolve(
+        process.cwd(),
+        "reports",
+        `wp-to-sanity-poc-${args.apply ? "apply" : "dry-run"}-${formatStamp()}.json`
+      );
 
   await fs.mkdir(path.dirname(outputPath), {recursive: true});
   await fs.writeFile(
@@ -466,8 +575,9 @@ async function main() {
     JSON.stringify(
       {
         generatedAt: nowIso,
-        params: {limit: args.limit, page: args.page, includeIds: args.includeIds},
+        params: {limit: args.limit, page: args.page, includeIds: args.includeIds, apply: args.apply},
         summary,
+        apply: applyResult,
         results,
       },
       null,

@@ -1,0 +1,645 @@
+{
+  "generatedAt": "2026-02-27T03:52:18.994Z",
+  "params": {
+    "limit": 10,
+    "page": 1,
+    "includeIds": [],
+    "apply": true
+  },
+  "summary": {
+    "mode": "apply",
+    "checkedPosts": 10,
+    "wouldCreate": 0,
+    "wouldUpdate": 10,
+    "postsWithBlockers": 0,
+    "postsWithWarnings": 0,
+    "postsMissingFeaturedImage": 0,
+    "postsWithRelatedGroups": 6,
+    "totalMissingCategorySlugRefs": 0,
+    "totalMissingTagSlugRefs": 0,
+    "appliedCreates": 0,
+    "appliedUpdates": 10,
+    "applySkipped": 0,
+    "applyFailed": 0
+  },
+  "apply": {
+    "appliedCreates": 0,
+    "appliedUpdates": 10,
+    "skipped": [],
+    "failed": []
+  },
+  "results": [
+    {
+      "wpPostId": 22065,
+      "title": "アイドル第四会議室 vol.204 – 早春と花粉のフリートーク大会 –",
+      "publishedAt": "2026-02-24T00:06:27",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22065",
+      "relatedGroupCount": 0,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22066,
+      "payload": {
+        "title": "アイドル第四会議室 vol.204 – 早春と花粉のフリートーク大会 –",
+        "publishedAt": "2026-02-24T00:06:27",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/9e22953215b814279c72abd57ff780ad.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "8d849197-796f-4c4a-872a-c1922f2cce3b",
+            "_key": "cat-0-8d849197-796f-4c4a-872a-c1922f2cce3b"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.81",
+            "_key": "tag-0-newstag-wp-81"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.832",
+            "_key": "tag-1-newstag-wp-832"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1117",
+            "_key": "tag-2-newstag-wp-1117"
+          }
+        ],
+        "relatedGroups": [],
+        "legacyBodyHtml": "<p class=\"well3\"><strong>「アイドル第四会議室」vol.204は、フリートーク大会（お題あり）をお届けします！<br />\n</strong>音楽サイト「<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite（ミュージサイト）</a>」がプロデュースするラジオ番組「アイドル第四会議室」。vol.204はフリートーク大会。事前に話すネタも公開するのでみんなで盛り上がりましょう！</p>\n<h2><span style=\"font-size: 19.6px;\">アイドル第四会議室 vol.204</span></h2>\n<p>パーソナリティ：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">山田秀樹</a>（<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite</a>）<br />\n放送日時：2026年3月3日（火）23:00〜0:00／再放送：2026年3月6日（金）19:00〜20:00<br />\n放送：<a href=\"http://fm844.co.jp/\" target=\"_blank\" rel=\"noopener\">FMたちかわ</a><br />\n番組に関する情報：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">twitter</a>／<a href=\"https://edge.town/?tag=%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e7%ac%ac%e5%9b%9b%e4%bc%9a%e8%ad%b0%e5%ae%a4\" target=\"_blank\" rel=\"noopener\">EDGEサイト内番組ページ</a></p>\n<p>「アイドル第四会議室」は、毎週火曜23時から約1時間にわたり最新アイドル情報やリクエスト楽曲の紹介、さらに今注目のアイドルさんを招いたトークなど盛りだくさんな企画で、アイドルシーンの今を<strong>”耳で聴く現場”</strong>としてお届けしていく、日本初かもしれないアイドル情報専門ラジオ番組です！</p>\n<h3>アイドル第四会議室の聴き方</h3>\n<p>▼ ListenRadio（リスラジ）でFMたちかわを聴く<br />\n<a href=\"http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F\" target=\"_blank\" rel=\"noopener\">http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F</a></p>\n<p>▼ ListenRadio（リスラジ）のアプリをダウンロードする<br />\n<a style=\"display: inline-block; overflow: hidden; border-radius: 13px; width: 200px; height: 61px;\" href=\"https://apps.apple.com/jp/app/listenradio-%E3%83%AA%E3%82%B9%E3%83%A9%E3%82%B8/id1460129712?itsct=apps_box_badge&amp;itscg=30200\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" style=\"border-radius: 13px; width: 200px; height: 61px;\" src=\"https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=200x61&amp;releaseDate=1558396800&amp;h=e66ee91c3a9793e08ed6950f6d5fb6d2\" alt=\"Download on the App Store\" /></a><a href=\"https://play.google.com/store/apps/details?id=jp.dpn.android.listenradio&amp;hl=ja&amp;pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" src=\"https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png\" alt=\"Google Play で手に入れよう\" width=\"200\" /></a></p>\n<p><strong>アイドル第四会議室は電動キックボード販売の<a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\">SWALLOW合同会社</a>様の提供でお届けしています。</strong><a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\"><img loading=\"lazy\" decoding=\"async\" class=\"alignnone wp-image-1274 size-full\" src=\"https://edge.town/wp-content/uploads/2022/12/ban_swallow_wide-3.jpg\" alt=\"\" width=\"2048\" height=\"801\" /></a></p>\n<h2>アイドルネッサンス、月刊PAMのおたより大募集！（締め切りは2026/2/25 11:59まで！）</h2>\n<p>「アイドル第四会議室」ではゲストや番組に向けたお便りを募集しています。<br />\n番組内でおたより紹介させていただいた方にはmusiciteオンラインショップで利用可能なクーポンコード（500円OFF）をプレゼントいたします！たくさんのおたよりお待ちしています！</p>\n<h3>＜フリートークその壱＞<br />\n元祖青春アイドル！「アイドルネッサンス」について話します！</h3>\n<p>かつて、ひでっきーがライブを見に行くのが楽しみでしかたなかった伝説のアイドル「アイドルネッサンス」がフリートークのテーマその壱です！アイドルネッサンスについての思い出エピソードをお送りください。</p>\n<h3>＜フリートークその弐＞<br />\n2026年も推していく！「月刊PAM」について話します！</h3>\n<p>かつてゲストに来ていただいたこともある船井美玖さんと宇都宮未来さんによる二人組ユニット「月刊PAM」さんについて話します。二人との思い出や好きな曲、推しポイントなどなんでもいいので送ってください。</p>\n<p><strong>※アイドルネッサンス、月刊PAMどちらについてのお便りも↓のエピソード投稿フォームから送ってください。</strong><br />\n<strong>▼ エピソード投稿フォーム</strong><br />\n<strong><a href=\"https://forms.gle/ETg82sYhSzbUjpqSA\" target=\"_blank\" rel=\"noopener\">https://forms.gle/ETg82sYhSzbUjpqSA</a></strong></p>\n<h3>ふつうのお便り、楽曲リクエストも大募集！</h3>\n<p>番組への普通のお便りや↑で募集している以外のゲストへの質問やお便り、番組で流してほしい楽曲のリクエストも下記のフォームから募集しています。<br />\n<strong>▼ ふつおた・楽曲リクエストフォーム</strong><br />\n<strong><a href=\"https://forms.gle/7oidmYVzd45RSrE36\" target=\"_blank\" rel=\"noopener\">https://forms.gle/7oidmYVzd45RSrE36</a></strong></p>\n<h2>アフタートークは放送当日に公開！（YouTubeで無償公開）</h2>\n<p>毎回、ノー台本でお届けするアフタートークは放送当日に公開します。お楽しみに！！</p>\n<p><strong class=\"col_red\">番組へのおたよりや応援メッセージはページ最上部の投げ銭からも受け付けています。</strong><br />\n<strong class=\"col_red\">投げ銭からのメッセージは番組内でほぼ確で紹介！ゲストとパーソナリティからのラブリーな私信ももらえます！！<br />\n<strong>※決済方法は各種クレジットカード、Apple Pay、Google Payにも対応しています。</strong><br />\n</strong></p>\n",
+        "wpPostId": 22065,
+        "originalWpUrl": "https://www.musicite.net/i4c/22065.php",
+        "excerpt": "「アイドル第四会議室」vol.204は、フリートーク大会（お題あり）をお届けします！ 音楽サイト「musicite（ミュージサイト）」がプロデュースするラジオ番組「アイドル第四会議室」。vol.204はフリートーク大会。 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/9e22953215b814279c72abd57ff780ad.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22052,
+      "title": "SOMOSOMOが新メンバーオーディション開催！最終審査はオーディション合宿！",
+      "publishedAt": "2026-02-20T18:01:55",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22052",
+      "relatedGroupCount": 1,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22053,
+      "payload": {
+        "title": "SOMOSOMOが新メンバーオーディション開催！最終審査はオーディション合宿！",
+        "publishedAt": "2026-02-20T18:01:55",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/main2.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "92bce6b5-3cef-4fae-a8b0-8e2face663d0",
+            "_key": "cat-0-92bce6b5-3cef-4fae-a8b0-8e2face663d0"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "ddffa117-322c-46e9-ad0a-becd629c73cc",
+            "_key": "tag-0-ddffa117-322c-46e9-ad0a-becd629c73cc"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-75865ff4-d2e7-4431-a716-71c2a7d480d9",
+            "groupNameJa": "SOMOSOMO",
+            "imdGroupId": "75865ff4-d2e7-4431-a716-71c2a7d480d9"
+          }
+        ],
+        "legacyBodyHtml": "<p>アイドルグループSOMOSOMOが３年ぶりとなる新メンバーオーディションと、オーディション参加者による合宿の開催を発表した。<br />\n兼ねてよりグループの目標として掲げている横浜アリーナやその先のステージに歩みを進めるべく、SOMOSOMO 第3章を共に戦い抜く新メンバーを募集。</p>\n<p>今回は初となるオーディション参加者による合宿を実施、その模様は生配信での一般公開を予定している。<br />\nなお新メンバーは2026年7月8日（水）EX THEATER ROPPONGIにて行われる、SOMOSOMOの7周年ワンマンライブにて発表予定だ。</p>\n<h2>SOMOSOMO新メンバー募集要項</h2>\n<ul>\n<li>横浜アリーナを本気で目指せる方</li>\n<li>16歳以上の女性の方</li>\n<li>応募時点で他のプロダクション、レーベルと専属契約していない方<br />\n※オーディション参加許可を証明でき、退所、契約終了予定の方に限り、契約中の方でも応募可能です。</li>\n<li>関東を中心に全国、海外でも活動できる方</li>\n</ul>\n<h2>SOMOSOMO新メンバーオーディション スケジュール</h2>\n<ol>\n<li>書類公募<br />\n2026年2月20日（金）〜3月31日（火）</li>\n<li>第二次審査（面接）</li>\n<li>第三次審査（ダンス・ボーカル）</li>\n<li>第四次審査（SNS・配信）<br />\n2026年5月上旬〜中旬</li>\n<li>オーディション合宿<br />\n2026年5月下旬　参加者公開<br />\n2026年6月上旬　合宿実施予定</li>\n</ol>\n<h2>応募方法</h2>\n<div id=\"attachment_22055\" style=\"width: 210px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22055\" class=\"wp-image-22055\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/QR-300x300.png\" alt=\"\" width=\"200\" height=\"200\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/QR-300x300.png 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/QR-150x150.png 150w, https://www.musicite.net/inm/wp-content/uploads/2026/02/QR-500x500.png 500w, https://www.musicite.net/inm/wp-content/uploads/2026/02/QR.png 540w\" sizes=\"auto, (max-width: 200px) 100vw, 200px\" /><p id=\"caption-attachment-22055\" class=\"wp-caption-text\">SOMOSOMOオーディションLINE</p></div>\n<p>SOMOSOMO新メンバーオーディションエントリー専用LINEよりご応募ください。<br />\n友だち登録はこちらから<br />\n<a href=\"https://lin.ee/G40Nw27\" target=\"_blank\" rel=\"noopener\">https://lin.ee/G40Nw27</a></p>\n<p>&nbsp;</p>\n<p>&nbsp;</p>\n<h2>リンク</h2>\n<p>SOMOSOMO NEW MEMBER AUDITION2026 <a href=\"https://somosomoaudition2026.vercel.app/\" target=\"_blank\" rel=\"noopener\">https://somosomoaudition2026.vercel.app/</a></p>\n<p><img loading=\"lazy\" decoding=\"async\" class=\"aligncenter wp-image-22057 size-full\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1.png\" alt=\"\" width=\"1698\" height=\"2400\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1.png 1698w, https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1-212x300.png 212w, https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1-768x1086.png 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1-1087x1536.png 1087w, https://www.musicite.net/inm/wp-content/uploads/2026/02/flyer-1-1449x2048.png 1449w\" sizes=\"auto, (max-width: 1698px) 100vw, 1698px\" /></p>\n",
+        "wpPostId": 22052,
+        "originalWpUrl": "https://www.musicite.net/article/22052.php",
+        "excerpt": "アイドルグループSOMOSOMOが３年ぶりとなる新メンバーオーディションと、オーディション参加者による合宿の開催を発表した。 兼ねてよりグループの目標として掲げている横浜アリーナやその先のステージに歩みを進めるべく、SO [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/main2.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22042,
+      "title": "アイドル第四会議室 vol.203 – ハロプロ弱者のハロプロ特集 –",
+      "publishedAt": "2026-02-16T13:33:54",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22042",
+      "relatedGroupCount": 0,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22043,
+      "payload": {
+        "title": "アイドル第四会議室 vol.203 – ハロプロ弱者のハロプロ特集 –",
+        "publishedAt": "2026-02-16T13:33:54",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/28d2115b0bdfd0ee3e6d7fd67d1ccf7c.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "8d849197-796f-4c4a-872a-c1922f2cce3b",
+            "_key": "cat-0-8d849197-796f-4c4a-872a-c1922f2cce3b"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.832",
+            "_key": "tag-0-newstag-wp-832"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1257",
+            "_key": "tag-1-newstag-wp-1257"
+          }
+        ],
+        "relatedGroups": [],
+        "legacyBodyHtml": "<p class=\"well3\"><strong>「アイドル第四会議室」vol.203は、ハロー！プロジェクト特集をお届けします！<br />\n</strong>音楽サイト「<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite（ミュージサイト）</a>」がプロデュースするラジオ番組「アイドル第四会議室」。vol.202は先日サブスクでの楽曲配信が解禁となったハロー！プロジェクト特集をお届けします！</p>\n<h2><span style=\"font-size: 19.6px;\">アイドル第四会議室 vol.203</span></h2>\n<p>パーソナリティ：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">山田秀樹</a>（<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite</a>）<br />\n放送日時：2026年2月17日（火）23:00〜0:00／再放送：2026年2月20日（金）19:00〜20:00<br />\n放送：<a href=\"http://fm844.co.jp/\" target=\"_blank\" rel=\"noopener\">FMたちかわ</a><br />\n番組に関する情報：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">twitter</a>／<a href=\"https://edge.town/?tag=%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e7%ac%ac%e5%9b%9b%e4%bc%9a%e8%ad%b0%e5%ae%a4\" target=\"_blank\" rel=\"noopener\">EDGEサイト内番組ページ</a></p>\n<p>「アイドル第四会議室」は、毎週火曜23時から約1時間にわたり最新アイドル情報やリクエスト楽曲の紹介、さらに今注目のアイドルさんを招いたトークなど盛りだくさんな企画で、アイドルシーンの今を<strong>”耳で聴く現場”</strong>としてお届けしていく、日本初かもしれないアイドル情報専門ラジオ番組です！</p>\n<h3>アイドル第四会議室の聴き方</h3>\n<p>▼ ListenRadio（リスラジ）でFMたちかわを聴く<br />\n<a href=\"http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F\" target=\"_blank\" rel=\"noopener\">http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F</a></p>\n<p>▼ ListenRadio（リスラジ）のアプリをダウンロードする<br />\n<a style=\"display: inline-block; overflow: hidden; border-radius: 13px; width: 200px; height: 61px;\" href=\"https://apps.apple.com/jp/app/listenradio-%E3%83%AA%E3%82%B9%E3%83%A9%E3%82%B8/id1460129712?itsct=apps_box_badge&amp;itscg=30200\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" style=\"border-radius: 13px; width: 200px; height: 61px;\" src=\"https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=200x61&amp;releaseDate=1558396800&amp;h=e66ee91c3a9793e08ed6950f6d5fb6d2\" alt=\"Download on the App Store\" /></a><a href=\"https://play.google.com/store/apps/details?id=jp.dpn.android.listenradio&amp;hl=ja&amp;pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" src=\"https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png\" alt=\"Google Play で手に入れよう\" width=\"200\" /></a></p>\n<p><strong>アイドル第四会議室は電動キックボード販売の<a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\">SWALLOW合同会社</a>様の提供でお届けしています。</strong><a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\"><img loading=\"lazy\" decoding=\"async\" class=\"alignnone wp-image-1274 size-full\" src=\"https://edge.town/wp-content/uploads/2022/12/ban_swallow_wide-3.jpg\" alt=\"\" width=\"2048\" height=\"801\" /></a></p>\n<h2>番組内容 vol.203</h2>\n<p>今週のアイドル第四会議室は、先日の「<strong>#ハロプロサブスク超解禁</strong>」にちなんでハロー！プロジェクトを特集します。ハロプロ弱者のひでっきーがリスナーさんの力に頼ってハロプロのおすすめ楽曲を紹介します！本日番組内で流す曲は…</p>\n<ul>\n<li><a href=\"https://open.spotify.com/intl-ja/track/0TMzYImV47GXIYi2yRJu7B?si=da83e7c3e8874857\" target=\"_blank\" rel=\"noopener\"><strong>「最KIYOU」モーニング娘&#8217;24</strong></a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/3nHp6MDfFbTuASyE7TDcrB?si=efee1b9a712c4a69\" target=\"_blank\" rel=\"noopener\"><strong>「宇宙でLa Ta Ta」太陽とシスコムーン</strong></a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/7HVHLO8ZlVgjaGUBqG3O2D?si=9750903034834738\" target=\"_blank\" rel=\"noopener\"><strong>「都営大江戸線の六本木駅で抱きしめて」CHICA#TETSU</strong></a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/7HiXFaPXzqJQ398x6zcMgm?si=6cf70ea4b36d4d39\" target=\"_blank\" rel=\"noopener\"><strong>「ShyなDestiny」林仁愛</strong></a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/2YVYHVqGpSYlymi3uBaUp8?si=bc3cda48ed9543f9\" target=\"_blank\" rel=\"noopener\"><strong>「大きな愛でもてなして」℃-ute</strong></a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/0FdPpkZlIRG2Ux103uygrS?si=c15d94589bf5444e\" target=\"_blank\" rel=\"noopener\"><strong>「Do it! Now」モーニング娘。</strong></a></li>\n</ul>\n<p>です。たくさんのリクエストありがとうございました！</p>\n<h2>アフタートークのテーマは「ひでっきーがハロプロ強者？だった頃の話」です。（YouTubeで無償公開）</h2>\n<p>毎回、ノー台本でお届けするアフタートークは放送終了後にプレミア配信します。今回はひでっきーがハロプロ強者？だった頃の話をします。主にモーニング娘のはなしです。お楽しみに！！</p>\n<div class=\"ytube\"><iframe loading=\"lazy\" title=\"YouTube video player\" src=\"https://www.youtube.com/embed/Hd82x4BD49s?si=RFX0HYpacOMgO_me\" width=\"560\" height=\"315\" frameborder=\"0\" allowfullscreen=\"allowfullscreen\"></iframe></div>\n<p><strong class=\"col_red\">番組へのおたよりや応援メッセージはページ最上部の投げ銭からも受け付けています。</strong><br />\n<strong class=\"col_red\">投げ銭からのメッセージは番組内でほぼ確で紹介！ゲストとパーソナリティからのラブリーな私信ももらえます！！<br />\n<strong>※決済方法は各種クレジットカード、Apple Pay、Google Payにも対応しています。</strong><br />\n</strong></p>\n",
+        "wpPostId": 22042,
+        "originalWpUrl": "https://www.musicite.net/i4c/22042.php",
+        "excerpt": "「アイドル第四会議室」vol.203は、ハロー！プロジェクト特集をお届けします！ 音楽サイト「musicite（ミュージサイト）」がプロデュースするラジオ番組「アイドル第四会議室」。vol.202は先日サブスクでの楽曲配 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/28d2115b0bdfd0ee3e6d7fd67d1ccf7c.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22035,
+      "title": "アイドル第四会議室 vol.202 – ゲスト：LiVS –",
+      "publishedAt": "2026-02-07T19:52:01",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22035",
+      "relatedGroupCount": 1,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22036,
+      "payload": {
+        "title": "アイドル第四会議室 vol.202 – ゲスト：LiVS –",
+        "publishedAt": "2026-02-07T19:52:01",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/72b8ea162b87cc65503b6904c8b8194b.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "8d849197-796f-4c4a-872a-c1922f2cce3b",
+            "_key": "cat-0-8d849197-796f-4c4a-872a-c1922f2cce3b"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1136",
+            "_key": "tag-0-newstag-wp-1136"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.832",
+            "_key": "tag-1-newstag-wp-832"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-3dce7110-40fd-4931-89e9-43d0a0ed1f05",
+            "groupNameJa": "LiVS",
+            "imdGroupId": "3dce7110-40fd-4931-89e9-43d0a0ed1f05"
+          }
+        ],
+        "legacyBodyHtml": "<p class=\"well3\"><strong>「アイドル第四会議室」vol.202は、LiVSのみなさんにお越しいただきます！<br />\n</strong>音楽サイト「<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite（ミュージサイト）</a>」がプロデュースするラジオ番組「アイドル第四会議室」。vol.2XXはゲストに<b>LiVS</b>のみなさんをお迎えします！</p>\n<h2><span style=\"font-size: 19.6px;\">アイドル第四会議室 vol.202</span></h2>\n<div id=\"attachment_22037\" style=\"width: 210px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22037\" class=\"wp-image-22037\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-300x200.jpg\" alt=\"\" width=\"200\" height=\"133\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-300x200.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-1920x1280.jpg 1920w, https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-768x512.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-1536x1024.jpg 1536w, https://www.musicite.net/inm/wp-content/uploads/2026/02/HAZPksmbcAAPpoo-2048x1366.jpg 2048w\" sizes=\"auto, (max-width: 200px) 100vw, 200px\" /><p id=\"caption-attachment-22037\" class=\"wp-caption-text\">LiVS</p></div>\n<p>パーソナリティ：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">山田秀樹</a>（<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite</a>）<br />\nアシスタント：<a href=\"https://x.com/HELLO_LiVS\">コンニチハクリニック</a>（<a href=\"https://x.com/LiVS_idol\">LiVS</a>）<br />\nゲスト：<a href=\"https://x.com/LiVS_idol\" target=\"_blank\" rel=\"noopener\"><strong>LiVS</strong></a><br />\n放送日時：2026年2月17日（火）23:00〜0:00／再放送：2026年2月20日（金）19:00〜20:00<br />\n放送：<a href=\"http://fm844.co.jp/\" target=\"_blank\" rel=\"noopener\">FMたちかわ</a><br />\n番組に関する情報：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">twitter</a>／<a href=\"https://edge.town/?tag=%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e7%ac%ac%e5%9b%9b%e4%bc%9a%e8%ad%b0%e5%ae%a4\" target=\"_blank\" rel=\"noopener\">EDGEサイト内番組ページ</a></p>\n<p>「アイドル第四会議室」は、毎週火曜23時から約1時間にわたり最新アイドル情報やリクエスト楽曲の紹介、さらに今注目のアイドルさんを招いたトークなど盛りだくさんな企画で、アイドルシーンの今を<strong>”耳で聴く現場”</strong>としてお届けしていく、日本初かもしれないアイドル情報専門ラジオ番組です！</p>\n<h3>アイドル第四会議室の聴き方</h3>\n<p>▼ ListenRadio（リスラジ）でFMたちかわを聴く<br />\n<a href=\"http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F\" target=\"_blank\" rel=\"noopener\">http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F</a></p>\n<p>▼ ListenRadio（リスラジ）のアプリをダウンロードする<br />\n<a style=\"display: inline-block; overflow: hidden; border-radius: 13px; width: 200px; height: 61px;\" href=\"https://apps.apple.com/jp/app/listenradio-%E3%83%AA%E3%82%B9%E3%83%A9%E3%82%B8/id1460129712?itsct=apps_box_badge&amp;itscg=30200\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" style=\"border-radius: 13px; width: 200px; height: 61px;\" src=\"https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=200x61&amp;releaseDate=1558396800&amp;h=e66ee91c3a9793e08ed6950f6d5fb6d2\" alt=\"Download on the App Store\" /></a><a href=\"https://play.google.com/store/apps/details?id=jp.dpn.android.listenradio&amp;hl=ja&amp;pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" src=\"https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png\" alt=\"Google Play で手に入れよう\" width=\"200\" /></a></p>\n<p><strong>アイドル第四会議室は電動キックボード販売の<a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\">SWALLOW合同会社</a>様の提供でお届けしています。</strong><a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\"><img loading=\"lazy\" decoding=\"async\" class=\"alignnone wp-image-1274 size-full\" src=\"https://edge.town/wp-content/uploads/2022/12/ban_swallow_wide-3.jpg\" alt=\"\" width=\"2048\" height=\"801\" /></a></p>\n<h2>番組内容 vol.202</h2>\n<h3>＜アイドルトニー賞＞<br />\n今週のゲストはLiVSの4人です！</h3>\n<p>その年に一番跳ねたアイドルを決める「アイドルトニー賞」のコーナー。今週はLiVSの4人をゲストに迎えました！先日、代官山UNITでのワンマンライブ「LiVS 2.5」を終えたばかりのLiVSからワンマンの感想や新メンバーオーディション、９月に控える渋谷CLUB QUATTROでのワンマンについて話を聞きました！</p>\n<h3>＜今週のプレイリスト＞<br />\n今週のプレイリストはお休みです。</h3>\n<p>本編終了後のプレイリストは放送枠ギリギリまで話してしまったのでお休みです。楽しみにしていた方ごめんなさい！</p>\n<h2>アフタートークは放送終了後に公開！（YouTubeで無償公開）</h2>\n<p>毎回、ノー台本でお届けするアフタートークは放送当日に公開。今回のアフタートークは本放送の延長戦。あまりにもたくさんのお便りが集まったため本編で読めなかったお便りを紹介します。</p>\n<div class=\"ytube\"><iframe loading=\"lazy\" title=\"YouTube video player\" src=\"https://www.youtube.com/embed/tki09JVu0IY?si=cRXznQ2BK79hoP7i\" width=\"560\" height=\"315\" frameborder=\"0\" allowfullscreen=\"allowfullscreen\"></iframe></div>\n<h2>LiVSのサイン入りリスナーカードが本日22時から販売開始！</h2>\n<p><img loading=\"lazy\" decoding=\"async\" class=\"alignright wp-image-22048 size-full\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a.jpg\" alt=\"\" width=\"2048\" height=\"825\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a.jpg 2048w, https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a-300x121.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a-1920x773.jpg 1920w, https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a-768x309.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/6368a4a45776b945bfd1ac2b5ef55f7a-1536x619.jpg 1536w\" sizes=\"auto, (max-width: 2048px) 100vw, 2048px\" /></p>\n<p class=\"well\">ゲストのLiVSのサイン入りリスナーカード（アイドルトニー賞限定ゴールド仕様）が<a href=\"https://musicite.thebase.in/items/135890859\" target=\"_blank\" rel=\"noopener\">musiciteオンラインショップ</a>で本日22時から販売開始します。番組の支援にぜひご購入ください！（2,200円／5枚限定）</p>\n<p><strong class=\"col_red\">番組へのおたよりや応援メッセージはページ最上部の投げ銭からも受け付けています。</strong><br />\n<strong class=\"col_red\">投げ銭からのメッセージは番組内でほぼ確で紹介！ゲストとパーソナリティからのラブリーな私信ももらえます！！<br />\n<strong>※決済方法は各種クレジットカード、Apple Pay、Google Payにも対応しています。</strong><br />\n</strong></p>\n",
+        "wpPostId": 22035,
+        "originalWpUrl": "https://www.musicite.net/i4c/22035.php",
+        "excerpt": "「アイドル第四会議室」vol.202は、LiVSのみなさんにお越しいただきます！ 音楽サイト「musicite（ミュージサイト）」がプロデュースするラジオ番組「アイドル第四会議室」。vol.2XXはゲストにLiVSのみな [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/72b8ea162b87cc65503b6904c8b8194b.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22024,
+      "title": "Palette Parade B3リーグ第18節 東京ユナイテッドBC VS 新潟アルビレックスBB戦 ゲスト出演で盛り上げに貢献！",
+      "publishedAt": "2026-02-05T23:40:30",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22024",
+      "relatedGroupCount": 1,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22025,
+      "payload": {
+        "title": "Palette Parade B3リーグ第18節 東京ユナイテッドBC VS 新潟アルビレックスBB戦 ゲスト出演で盛り上げに貢献！",
+        "publishedAt": "2026-02-05T23:40:30",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/S__43130884.jpg",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "92bce6b5-3cef-4fae-a8b0-8e2face663d0",
+            "_key": "cat-0-92bce6b5-3cef-4fae-a8b0-8e2face663d0"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.793",
+            "_key": "tag-0-newstag-wp-793"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-6637b447-975f-4b9a-bd2a-74b7ec040d4b",
+            "groupNameJa": "Palette Parade",
+            "imdGroupId": "6637b447-975f-4b9a-bd2a-74b7ec040d4b"
+          }
+        ],
+        "legacyBodyHtml": "<div id=\"attachment_22027\" style=\"width: 216px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22027\" class=\"wp-image-22027 size-medium\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-206x300.jpg\" alt=\"\" width=\"206\" height=\"300\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-206x300.jpg 206w, https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-1920x2792.jpg 1920w, https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-768x1117.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-1056x1536.jpg 1056w, https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-1408x2048.jpg 1408w, https://www.musicite.net/inm/wp-content/uploads/2026/02/IMG_0945-scaled.jpg 1760w\" sizes=\"auto, (max-width: 206px) 100vw, 206px\" /><p id=\"caption-attachment-22027\" class=\"wp-caption-text\">試合を観戦するPalette Parade</p></div>\n<p>2021年7月に結成された7人組グループPalette Parade（通称パレパレ）が、B3リーグ 第18節 東京ユナイテッドBC VS 新潟アルビレックスBBにゲスト出演した。</p>\n<p>試合前の盛り上げ役を任されたパレパレは、Bリーグファンに向けたライブステージを披露。自己紹介ソング「パレパレコーシンちゅう！」では、7人がキッズエリアにかわるがわる駆け寄り、子どもたちと笑顔でハイタッチを繰り返した。</p>\n<p>続けて「パレサマ！」「UKIYO-YO ONDO」など、パレパレを初めて知る人でもノリやすい曲でアリーナを盛り上げていく。「起きて笑おう果報者」では、メンバーが客席を勢いよく駆け回るパフォーマンスで会場を一つにした。</p>\n<div id=\"attachment_22026\" style=\"width: 310px\" class=\"wp-caption alignright\"><a href=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/S__11395111.jpg\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22026\" class=\"wp-image-22026 size-medium\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/S__11395111-300x231.jpg\" alt=\"\" width=\"300\" height=\"231\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/S__11395111-300x231.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/S__11395111-768x592.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/S__11395111.jpg 1426w\" sizes=\"auto, (max-width: 300px) 100vw, 300px\" /></a><p id=\"caption-attachment-22026\" class=\"wp-caption-text\">ご一緒に踊られた來未あいさん（真ん中）</p></div>\n<p>続けて7人は、試合途中で行われるハーフタイムショーに参加。東京ユナイテッドBCの公式ユニフォームを着てメインアリーナに躍り出ると、TIBCダンスアカデミー生を含めたパフォーマーたちと大きな円を作り「ユナイト音頭」を披露した。</p>\n<p>その後もパレパレの面々は、前のめりの姿勢で試合を観戦。バスケ経験者である髙橋來都葉の解説にも耳を傾けながら、ダイナミックなプレーが起きるたび拍手と歓声を送っていた。</p>\n<p>グループ初のイベントゲスト出演は大会の盛り上げに見事貢献し、待ち受ける冬の単独公演や春の全国ツアー成功に向け、7人は新たにステージを駆け上がっていく。</p>\n<p><img loading=\"lazy\" decoding=\"async\" class=\"aligncenter size-full wp-image-22028\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/S__7905303.jpg\" alt=\"\" width=\"1202\" height=\"672\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/S__7905303.jpg 1202w, https://www.musicite.net/inm/wp-content/uploads/2026/02/S__7905303-300x168.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/S__7905303-768x429.jpg 768w\" sizes=\"auto, (max-width: 1202px) 100vw, 1202px\" /></p>\n<h2>Palette Parade Valentine LIVE 『Melty March 2026』</h2>\n<div id=\"attachment_22029\" style=\"width: 222px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22029\" class=\"wp-image-22029 size-medium\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/29d3bc99193cb0b837fb8cc53f050ae5-212x300.jpg\" alt=\"\" width=\"212\" height=\"300\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/29d3bc99193cb0b837fb8cc53f050ae5-212x300.jpg 212w, https://www.musicite.net/inm/wp-content/uploads/2026/02/29d3bc99193cb0b837fb8cc53f050ae5.jpg 602w\" sizes=\"auto, (max-width: 212px) 100vw, 212px\" /><p id=\"caption-attachment-22029\" class=\"wp-caption-text\">Melty Marchフライヤー</p></div>\n<p>日程　2026年2月14日(土)<br />\n時間　OPEN 12:15 / START 13:00<br />\n会場　Veats Shibuya<br />\n東京都渋谷区宇田川町33-1<br />\n(https://veats.jp/)</p>\n<p>▼ チケット料金<br />\nSチケット ¥7,000-<br />\n早割チケット ¥1,500-<br />\n一般チケット ¥2,500-<br />\n(各1D代別途)</p>\n<p>▼ チケット販売スケジュール<br />\n抽選販売：2026/1/16（金）20:00〜2026/1/20（火）23:59<br />\n当落確認：2026/1/21（水）<br />\n一般販売（先着）：2026/1/21（水）22:00〜公演前日23:59まで</p>\n<p>▼ 購入はこちらから<br />\n<a href=\"https://ticketdive.com/event/pale0214\" target=\"_blank\" rel=\"noopener\">https://ticketdive.com/event/pale0214</a><br />\n※入場順:Sチケット→早割チケット→一般チケット</p>\n<h2>Palette Parade 全国ツアー2026 『JAM JAM JAM!!!!!!!』</h2>\n<div id=\"attachment_22030\" style=\"width: 222px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22030\" class=\"size-medium wp-image-22030\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/cbf5b9f60da99bf791c0aa12a770f429-212x300.jpg\" alt=\"\" width=\"212\" height=\"300\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/cbf5b9f60da99bf791c0aa12a770f429-212x300.jpg 212w, https://www.musicite.net/inm/wp-content/uploads/2026/02/cbf5b9f60da99bf791c0aa12a770f429.jpg 602w\" sizes=\"auto, (max-width: 212px) 100vw, 212px\" /><p id=\"caption-attachment-22030\" class=\"wp-caption-text\">『JAM JAM JAM!!!!!!!』フライヤー</p></div>\n<p>4月5日（日） 渋谷WWW<br />\n4月11日（土） 宇都宮HEAVEN’S ROCK VJ-2<br />\n4月12日（日） 仙台MACANA<br />\n4月18日（土） LIVE ROXY SHIZUOKA<br />\n4月19日（日） OSAKA MUSE<br />\n4月25日（土） 桜坂セントラル<br />\n4月29日（水・祝） HEAVEN’S ROCKさいたま新都心VJ-3<br />\n5月23日（土）広島CLUB QUATTRO<br />\n5月24日（日）名古屋CLUB QUATTRO<br />\n6月6日（土） 福岡BEAT STATION<br />\n6月13日（土） Spotify O-EAST</p>\n<h2>リンク</h2>\n<p>Palette Parade　公式HP<br />\n<a href=\"https://paletteparade-idol.com/\">https://paletteparade-idol.com/</a><br />\nPalette Parade 公式Xアカウント<br />\n<a href=\"https://x.com/O_PaletteParade\">https://x.com/O_PaletteParade</a><br />\n東京ユナイテッドＢＣ　公式ＨＰ<br />\n<a href=\"https://tubc.tokyo/\">https://tubc.tokyo/</a><br />\n東京ユナイテッドＢＣ　公式Ｘアカウント<br />\n<a href=\"https://x.com/TUBCofficial?s=20\">https://x.com/TUBCofficial?s=20</a></p>\n",
+        "wpPostId": 22024,
+        "originalWpUrl": "https://www.musicite.net/article/22024.php",
+        "excerpt": "2021年7月に結成された7人組グループPalette Parade（通称パレパレ）が、B3リーグ 第18節 東京ユナイテッドBC VS 新潟アルビレックスBBにゲスト出演した。 試合前の盛り上げ役を任されたパレパレは、 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/S__43130884.jpg; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22019,
+      "title": "SOMOSOMO アンダーグラフ制作の新曲「僕らのままで」を2月6日のZepp Shinjukuワンマンで初披露！",
+      "publishedAt": "2026-02-05T23:14:51",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22019",
+      "relatedGroupCount": 1,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22020,
+      "payload": {
+        "title": "SOMOSOMO アンダーグラフ制作の新曲「僕らのままで」を2月6日のZepp Shinjukuワンマンで初披露！",
+        "publishedAt": "2026-02-05T23:14:51",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/760f790c92b9480a8ce7caf2b17821ca.jpg",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "dfef3bbc-7f9c-4942-a670-1ff9feeacbb1",
+            "_key": "cat-0-dfef3bbc-7f9c-4942-a670-1ff9feeacbb1"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "ddffa117-322c-46e9-ad0a-becd629c73cc",
+            "_key": "tag-0-ddffa117-322c-46e9-ad0a-becd629c73cc"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-75865ff4-d2e7-4431-a716-71c2a7d480d9",
+            "groupNameJa": "SOMOSOMO",
+            "imdGroupId": "75865ff4-d2e7-4431-a716-71c2a7d480d9"
+          }
+        ],
+        "legacyBodyHtml": "<div id=\"attachment_22021\" style=\"width: 210px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22021\" class=\"wp-image-22021\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-300x200.jpg\" alt=\"\" width=\"200\" height=\"133\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-300x200.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-1920x1280.jpg 1920w, https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-768x512.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-1536x1024.jpg 1536w, https://www.musicite.net/inm/wp-content/uploads/2026/02/b8209c10778ffa4574acf9daf6b8a81a-2048x1365.jpg 2048w\" sizes=\"auto, (max-width: 200px) 100vw, 200px\" /><p id=\"caption-attachment-22021\" class=\"wp-caption-text\">SOMOSOMO</p></div>\n<p>”全身全霊ではしゃぎ倒す”をコンセプトに活動中のアイドルグループSOMOSOMOが新曲「僕らのままで」を2月6日のZepp Shinjukuでのワンマンライブ「総決算」で初披露する。</p>\n<p>作曲はアンダーグラフ ボーカルギターの真戸原直人、作詞をSOMOSOMOメンバーのゴゴノ コトコが担当。<br />\n2月7日には各音楽配信媒体で配信リリースされる。</p>\n<h2>新曲「僕らのままで」</h2>\n<p>作詞：ゴゴノ コトコ<br />\n作曲：真戸原直人<br />\n編曲：アンダーグラフ 金 旦<br />\ndr.谷口奈緒子<br />\nba.中原一真<br />\ngt.青木サトシ<br />\nkey.金 旦<br />\n振付：松井奈々</p>\n<h2>SOMOSOMOワンマンライブ「総決算」</h2>\n<div id=\"attachment_22022\" style=\"width: 223px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-22022\" class=\"wp-image-22022 size-medium\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa-213x300.jpg\" alt=\"\" width=\"213\" height=\"300\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa-213x300.jpg 213w, https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa-768x1082.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa-1091x1536.jpg 1091w, https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa-1454x2048.jpg 1454w, https://www.musicite.net/inm/wp-content/uploads/2026/02/c120874a56d67d2c38c8683416a551fa.jpg 1704w\" sizes=\"auto, (max-width: 213px) 100vw, 213px\" /><p id=\"caption-attachment-22022\" class=\"wp-caption-text\">ワンマンライブ「総決算」</p></div>\n<p>2026年2月6日（金）OPEN 17:30/START 19:00<br />\n会場：Zepp Shinjuku<br />\n料金：前売りチケット¥1,000＋1D<br />\n<a href=\"https://t.livepocket.jp/e/somo_zepp0206\" target=\"_blank\" rel=\"noopener\">https://t.livepocket.jp/e/somo_zepp0206</a></p>\n",
+        "wpPostId": 22019,
+        "originalWpUrl": "https://www.musicite.net/article/rel/22019.php",
+        "excerpt": "”全身全霊ではしゃぎ倒す”をコンセプトに活動中のアイドルグループSOMOSOMOが新曲「僕らのままで」を2月6日のZepp Shinjukuでのワンマンライブ「総決算」で初披露する。 作曲はアンダーグラフ ボーカルギター [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/760f790c92b9480a8ce7caf2b17821ca.jpg; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22015,
+      "title": "アイドル第四会議室 vol.201 – アイドル楽曲無形文化財 –",
+      "publishedAt": "2026-02-03T13:44:07",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22015",
+      "relatedGroupCount": 0,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22016,
+      "payload": {
+        "title": "アイドル第四会議室 vol.201 – アイドル楽曲無形文化財 –",
+        "publishedAt": "2026-02-03T13:44:07",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/02/bb4cbb38a6302f26ae455805a7f5d022-1.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "8d849197-796f-4c4a-872a-c1922f2cce3b",
+            "_key": "cat-0-8d849197-796f-4c4a-872a-c1922f2cce3b"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1010",
+            "_key": "tag-0-newstag-wp-1010"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.832",
+            "_key": "tag-1-newstag-wp-832"
+          }
+        ],
+        "relatedGroups": [],
+        "legacyBodyHtml": "<p class=\"well3\"><strong>「アイドル第四会議室」vol.201は、アイドル楽曲無形文化財をお届けします！<br />\n</strong>音楽サイト「<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite（ミュージサイト）</a>」がプロデュースするラジオ番組「アイドル第四会議室」。vol.201は、名曲を後世に残す偉大なプロジェクト「アイドル楽曲無形文化財」をお届けします！</p>\n<h2><span style=\"font-size: 19.6px;\">アイドル第四会議室 vol.201</span></h2>\n<p>パーソナリティ：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">山田秀樹</a>（<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite</a>）<br />\n放送日時：2026年2月10日（火）23:00〜0:00／再放送：2026年2月13日（金）19:00〜20:00<br />\n放送：<a href=\"http://fm844.co.jp/\" target=\"_blank\" rel=\"noopener\">FMたちかわ</a><br />\n番組に関する情報：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">twitter</a>／<a href=\"https://edge.town/?tag=%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e7%ac%ac%e5%9b%9b%e4%bc%9a%e8%ad%b0%e5%ae%a4\" target=\"_blank\" rel=\"noopener\">EDGEサイト内番組ページ</a></p>\n<p>「アイドル第四会議室」は、毎週火曜23時から約1時間にわたり最新アイドル情報やリクエスト楽曲の紹介、さらに今注目のアイドルさんを招いたトークなど盛りだくさんな企画で、アイドルシーンの今を<strong>”耳で聴く現場”</strong>としてお届けしていく、日本初かもしれないアイドル情報専門ラジオ番組です！</p>\n<h3>アイドル第四会議室の聴き方</h3>\n<p>▼ ListenRadio（リスラジ）でFMたちかわを聴く<br />\n<a href=\"http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F\" target=\"_blank\" rel=\"noopener\">http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F</a></p>\n<p>▼ ListenRadio（リスラジ）のアプリをダウンロードする<br />\n<a style=\"display: inline-block; overflow: hidden; border-radius: 13px; width: 200px; height: 61px;\" href=\"https://apps.apple.com/jp/app/listenradio-%E3%83%AA%E3%82%B9%E3%83%A9%E3%82%B8/id1460129712?itsct=apps_box_badge&amp;itscg=30200\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" style=\"border-radius: 13px; width: 200px; height: 61px;\" src=\"https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=200x61&amp;releaseDate=1558396800&amp;h=e66ee91c3a9793e08ed6950f6d5fb6d2\" alt=\"Download on the App Store\" /></a><a href=\"https://play.google.com/store/apps/details?id=jp.dpn.android.listenradio&amp;hl=ja&amp;pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" src=\"https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png\" alt=\"Google Play で手に入れよう\" width=\"200\" /></a></p>\n<p><strong>アイドル第四会議室は電動キックボード販売の<a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\">SWALLOW合同会社</a>様の提供でお届けしています。</strong><a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\"><img loading=\"lazy\" decoding=\"async\" class=\"alignnone wp-image-1274 size-full\" src=\"https://edge.town/wp-content/uploads/2022/12/ban_swallow_wide-3.jpg\" alt=\"\" width=\"2048\" height=\"801\" /></a></p>\n<h2>番組内容 vol.201</h2>\n<h3>アイドル楽曲無形文化財</h3>\n<p>今週のアイドル楽曲無形文化財は「後世に残すべきアイドル楽曲」を掘り起こしていくプロジェクト「アイドル楽曲無形文化財」です。今回新たに登録された曲はこちら。</p>\n<ul>\n<li><a href=\"https://open.spotify.com/intl-ja/track/1m7PTlWVkTeXzz9i4Sasv9?si=26b3415245f64d56\">「FRESH!!!」lyrical school</a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/73IlK3x0KeqgMVeix8bH3n?si=8d059eb9cdfe4dee\">「真夏の匂い」SANDAL TELEPHONE</a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/59rrRPvpcbXSqEDfD0hgon?si=b7cfd3505ff54246\">「最the高」ロッカジャポニカ</a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/4YIaum6k5BCZ7JNNxzNQRb?si=cb973f3dd4ce457c\">「いいくらし」チームしゃちほこ</a></li>\n<li><a href=\"https://open.spotify.com/intl-ja/track/5mcBn2kzACQarvjPfyuW4C?si=0529d3dbc09b4b91\">「サヨナラ、ありがとう」東京女子流</a></li>\n</ul>\n<p>「アイドル楽曲無形文化財ってなに？」と思った方は↓のリンク先に詳しい説明があるのでそちらを御覧ください。<br />\n<a href=\"https://www.musicite.net/i4c/col/19843.php\" target=\"_blank\" rel=\"noopener\">後世に残したいアイドル楽曲 -アイドル楽曲無形文化財-</a></p>\n<p>アイドル楽曲無形文化財に登録された曲はSpotifyのプレイリストにまとめています。御覧ください。</p>\n<p><iframe title=\"Spotify Embed: アイドル楽曲無形文化財\" style=\"border-radius: 12px\" width=\"100%\" height=\"352\" frameborder=\"0\" allowfullscreen allow=\"autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture\" loading=\"lazy\" src=\"https://open.spotify.com/embed/playlist/2ySTZHFONIxtYwoebqCaBO?si=52c1044a7d5c44f9&amp;utm_source=oembed\"></iframe></p>\n<h2>アフタートークは「アイドル楽曲無形文化財の感想回」です！（YouTubeで無償公開）</h2>\n<p>毎回、ノー台本でお届けするアフタートークは放送当日に公開。今週は本編放送後（2/11 0:00）に配信をします！お楽しみに！！</p>\n<p><strong class=\"col_red\">番組へのおたよりや応援メッセージはページ最上部の投げ銭からも受け付けています。</strong><br />\n<strong class=\"col_red\">投げ銭からのメッセージは番組内でほぼ確で紹介！ゲストとパーソナリティからのラブリーな私信ももらえます！！<br />\n<strong>※決済方法は各種クレジットカード、Apple Pay、Google Payにも対応しています。</strong><br />\n</strong></p>\n",
+        "wpPostId": 22015,
+        "originalWpUrl": "https://www.musicite.net/i4c/22015.php",
+        "excerpt": "「アイドル第四会議室」vol.201は、アイドル楽曲無形文化財をお届けします！ 音楽サイト「musicite（ミュージサイト）」がプロデュースするラジオ番組「アイドル第四会議室」。vol.201は、名曲を後世に残す偉大な [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/02/bb4cbb38a6302f26ae455805a7f5d022-1.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 22001,
+      "title": "リーズナブルなアイドルフェス「リズフェス」が若手の登竜門イベントになる理由",
+      "publishedAt": "2026-01-31T12:28:43",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.22001",
+      "relatedGroupCount": 6,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 22002,
+      "payload": {
+        "title": "リーズナブルなアイドルフェス「リズフェス」が若手の登竜門イベントになる理由",
+        "publishedAt": "2026-01-31T12:28:43",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "bd771c11-e153-4bb9-9e27-175ebe7337a0",
+            "_key": "cat-0-bd771c11-e153-4bb9-9e27-175ebe7337a0"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1248",
+            "_key": "tag-0-newstag-wp-1248"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1244",
+            "_key": "tag-1-newstag-wp-1244"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1242",
+            "_key": "tag-2-newstag-wp-1242"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1194",
+            "_key": "tag-3-newstag-wp-1194"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1246",
+            "_key": "tag-4-newstag-wp-1246"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1254",
+            "_key": "tag-5-newstag-wp-1254"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1015",
+            "_key": "tag-6-newstag-wp-1015"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1253",
+            "_key": "tag-7-newstag-wp-1253"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1245",
+            "_key": "tag-8-newstag-wp-1245"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1256",
+            "_key": "tag-9-newstag-wp-1256"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1251",
+            "_key": "tag-10-newstag-wp-1251"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1252",
+            "_key": "tag-11-newstag-wp-1252"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1247",
+            "_key": "tag-12-newstag-wp-1247"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1241",
+            "_key": "tag-13-newstag-wp-1241"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.907",
+            "_key": "tag-14-newstag-wp-907"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1250",
+            "_key": "tag-15-newstag-wp-1250"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1239",
+            "_key": "tag-16-newstag-wp-1239"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1240",
+            "_key": "tag-17-newstag-wp-1240"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1243",
+            "_key": "tag-18-newstag-wp-1243"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1255",
+            "_key": "tag-19-newstag-wp-1255"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1249",
+            "_key": "tag-20-newstag-wp-1249"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-c856a9ed-1d3b-43e2-8312-0f30f9db4f93",
+            "groupNameJa": "FANDL",
+            "imdGroupId": "c856a9ed-1d3b-43e2-8312-0f30f9db4f93"
+          },
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-1-60da7930-34ec-4aa3-8e1c-8e063150f953",
+            "groupNameJa": "HUSHHUSH",
+            "imdGroupId": "60da7930-34ec-4aa3-8e1c-8e063150f953"
+          },
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-2-16f24f78-9556-43c6-82bf-57a466babcee",
+            "groupNameJa": "MANACLE",
+            "imdGroupId": "16f24f78-9556-43c6-82bf-57a466babcee"
+          },
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-3-dc4b22e8-cc41-4230-bf9d-ebe44ed76ec9",
+            "groupNameJa": "MIC RAW RUGA",
+            "imdGroupId": "dc4b22e8-cc41-4230-bf9d-ebe44ed76ec9"
+          },
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-4-df17af26-077d-4668-82e6-30e5bbd139c5",
+            "groupNameJa": "THE+BETH",
+            "imdGroupId": "df17af26-077d-4668-82e6-30e5bbd139c5"
+          },
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-5-7b7ed1fd-462a-4cc2-850b-684b1e372bba",
+            "groupNameJa": "ZIGA",
+            "imdGroupId": "7b7ed1fd-462a-4cc2-850b-684b1e372bba"
+          }
+        ],
+        "legacyBodyHtml": "<p>2/1（日）に新宿ヘッドパワーで「リズフェス」というアイドルイベントがあります。</p>\n<p>▼ 前売りチケットは2/1（日）9:30まで！<br />\n<a href=\"https://ticketdive.com/event/lizfes-vol11\" target=\"_blank\" rel=\"noopener\">https://ticketdive.com/event/lizfes-vol11</a></p>\n<p>出演者は<br />\nリベルナント／ゲシュタルトの祈り／CHECK×MATE／MIC RAW RUGA／セカイシティ／幾星霜を彷徨った君と希望を翳して。／AMLS／THE+BETH／HUSHHUSH／ZIGA／AKUMATICA／雨音とアプローズ／チギリ／Tri-Sphere／VS.VERSE／NANOSCOND／MANACLE／FandL／縷々／TIGHT<br />\nの20組。</p>\n<p>開場10:20、開演10:40の朝から晩まで一日中やり続けるイベントです。こちらのイベントにひでっきーは制作スタッフとして携わらせていただいております。</p>\n<p>リズフェスは「リーズナブルなフェス」が合言葉となっており、前売り1,500円、当日券2,500円という破格で遊びに来れるなっております。お目当てのアイドルが出演していなくても、ふらりと遊びに来れる親切設定なイベントです。</p>\n<h2>若手がライジングしやすくなった？2026年のアイドルシーン</h2>\n<p>2025年末から吹き荒れているライブアイドルの解散、現体制終了の嵐。シーンを支える実力者が次々離脱していく2026年は若手やステップアップを狙うアイドルたちにとってはむしろ大チャンス。一つのイベントでの活躍が次につながる確変期ということもできます。</p>\n<h2>リズフェスで活躍したアイドルは関係者へ猛プッシュ！</h2>\n<p>今回開催される「リズフェス」はそんな2026年の飛躍を目指すアイドルたちにとって最高の登竜門イベント！…とすべく、イベントで最も活躍したグループ、「これはくるぞ！」と思ったグループを優勝者として、ひでっきーのポッドキャスト「<a href=\"https://www.youtube.com/@musicite8382\" target=\"_blank\" rel=\"noopener\">まいにちアイドル第四会議室</a>」で発表します！</p>\n<p>アイドル取材歴15年の経験、そして好き嫌いではない公平な目でジャッジし、優勝者をはじめ活躍したグループに関しては関係各位に強くプッシュしていきます！</p>\n<h2>リズフェスは「Counter FES」を運営するHASYAGE jp主催のイベント…ということは？</h2>\n<p>そしてこの「リズフェス」を主催するのは2025年12月14日にLINE CUBE SHIBUYAで開催された「<a href=\"https://counterfes.vercel.app/\" target=\"_blank\" rel=\"noopener\">Counter FES</a>」を運営するHASYAGE jpが主催するイベント。「Counter FES」の他にも「解放区」などのアイドルイベントを手掛けており、（中の人的な立場で言うと）売れたいアイドル、頑張っているアイドル、チャンスを求めているアイドルにはばりばりウェルカムな会社、というイメージがあります。</p>\n<p>「リズフェス」から「Counter FES」へ駆け上がっていったグループも実際にいるので、文字通りの登竜門としての「リズフェス」にぜひ注目を！</p>\n<p>↓のポッドキャストでも「リズフェス」について話しているのでぜひお聴きください。</p>\n<p><iframe loading=\"lazy\" title=\"生配信でまいにちアイドル第四会議室\" width=\"500\" height=\"281\" src=\"https://www.youtube.com/embed/r6f3GpVSf8g?feature=oembed\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" referrerpolicy=\"strict-origin-when-cross-origin\" allowfullscreen></iframe></p>\n<p>&nbsp;</p>\n<h2>リズフェス Vol.11</h2>\n<p>1500円で観れるリーズナブルなフェス。<br />\n日時：2026年2月1日 OPEN 10:20／START 10:40<br />\n会場：新宿ヘッドパワー<br />\n料金：前売り¥1,500／当日¥2,500<br />\n主催者：HASYAGE jp<br />\nチケット：<a href=\"https://ticketdive.com/event/lizfes-vol11\" target=\"_blank\" rel=\"noopener\">https://ticketdive.com/event/lizfes-vol11</a></p>\n<p><img loading=\"lazy\" decoding=\"async\" class=\"aligncenter wp-image-22002 size-full\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6.png\" alt=\"\" width=\"1588\" height=\"2245\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6.png 1588w, https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6-212x300.png 212w, https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6-768x1086.png 768w, https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6-1086x1536.png 1086w, https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6-1449x2048.png 1449w\" sizes=\"auto, (max-width: 1588px) 100vw, 1588px\" /></p>\n",
+        "wpPostId": 22001,
+        "originalWpUrl": "https://www.musicite.net/i4c/col/22001.php",
+        "excerpt": "2/1（日）に新宿ヘッドパワーで「リズフェス」というアイドルイベントがあります。 ▼ 前売りチケットは2/1（日）9:30まで！ https://ticketdive.com/event/lizfes-vol11 出演者 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/01/CD886289-B533-4986-BF79-4F3CAD1D15A6.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 21993,
+      "title": "アイドル第四会議室 vol.200 – 冬と雪のアイドル楽曲リクエスト大会 –",
+      "publishedAt": "2026-01-26T12:36:38",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.21993",
+      "relatedGroupCount": 0,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 21996,
+      "payload": {
+        "title": "アイドル第四会議室 vol.200 – 冬と雪のアイドル楽曲リクエスト大会 –",
+        "publishedAt": "2026-01-26T12:36:38",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/01/8dfbb53f367c552196eecda2ad035152.png",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "8d849197-796f-4c4a-872a-c1922f2cce3b",
+            "_key": "cat-0-8d849197-796f-4c4a-872a-c1922f2cce3b"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.832",
+            "_key": "tag-0-newstag-wp-832"
+          },
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.1238",
+            "_key": "tag-1-newstag-wp-1238"
+          }
+        ],
+        "relatedGroups": [],
+        "legacyBodyHtml": "<p class=\"well3\"><strong>「アイドル第四会議室」vol.200は、”冬と雪限定”アイドル楽曲リクエスト大会をお届けします！<br />\n</strong>音楽サイト「<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite（ミュージサイト）</a>」がプロデュースするラジオ番組「アイドル第四会議室」。vol.200は大人気リクエスト大会、冬と雪に限定したリクエスト大会です。</p>\n<h2><span style=\"font-size: 19.6px;\">アイドル第四会議室 vol.200</span></h2>\n<p>パーソナリティ：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">山田秀樹</a>（<a href=\"https://www.musicite.net/\" target=\"_blank\" rel=\"noopener\">musicite</a>）<br />\n放送日時：2026年2月3日（火）23:00〜0:00／再放送：2026年2月6日（金）19:00〜20:00<br />\n放送：<a href=\"http://fm844.co.jp/\" target=\"_blank\" rel=\"noopener\">FMたちかわ</a><br />\n番組に関する情報：<a href=\"https://twitter.com/musicite_ms\" target=\"_blank\" rel=\"noopener\">twitter</a>／<a href=\"https://edge.town/?tag=%e3%82%a2%e3%82%a4%e3%83%89%e3%83%ab%e7%ac%ac%e5%9b%9b%e4%bc%9a%e8%ad%b0%e5%ae%a4\" target=\"_blank\" rel=\"noopener\">EDGEサイト内番組ページ</a></p>\n<p>「アイドル第四会議室」は、毎週火曜23時から約1時間にわたり最新アイドル情報やリクエスト楽曲の紹介、さらに今注目のアイドルさんを招いたトークなど盛りだくさんな企画で、アイドルシーンの今を<strong>”耳で聴く現場”</strong>としてお届けしていく、日本初かもしれないアイドル情報専門ラジオ番組です！</p>\n<h3>アイドル第四会議室の聴き方</h3>\n<p>▼ ListenRadio（リスラジ）でFMたちかわを聴く<br />\n<a href=\"http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F\" target=\"_blank\" rel=\"noopener\">http://listenradio.jp/Home/ProgramSchedule/30033/FM%E3%81%9F%E3%81%A1%E3%81%8B%E3%82%8F</a></p>\n<p>▼ ListenRadio（リスラジ）のアプリをダウンロードする<br />\n<a style=\"display: inline-block; overflow: hidden; border-radius: 13px; width: 200px; height: 61px;\" href=\"https://apps.apple.com/jp/app/listenradio-%E3%83%AA%E3%82%B9%E3%83%A9%E3%82%B8/id1460129712?itsct=apps_box_badge&amp;itscg=30200\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" style=\"border-radius: 13px; width: 200px; height: 61px;\" src=\"https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=200x61&amp;releaseDate=1558396800&amp;h=e66ee91c3a9793e08ed6950f6d5fb6d2\" alt=\"Download on the App Store\" /></a><a href=\"https://play.google.com/store/apps/details?id=jp.dpn.android.listenradio&amp;hl=ja&amp;pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1\" target=\"_blank\" rel=\"noopener\"><img decoding=\"async\" src=\"https://play.google.com/intl/en_us/badges/static/images/badges/ja_badge_web_generic.png\" alt=\"Google Play で手に入れよう\" width=\"200\" /></a></p>\n<p><strong>アイドル第四会議室は電動キックボード販売の<a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\">SWALLOW合同会社</a>様の提供でお届けしています。</strong><a href=\"https://swallow-scooter.com/\" target=\"_blank\" rel=\"noopener\"><img loading=\"lazy\" decoding=\"async\" class=\"alignnone wp-image-1274 size-full\" src=\"https://edge.town/wp-content/uploads/2022/12/ban_swallow_wide-3.jpg\" alt=\"\" width=\"2048\" height=\"801\" /></a></p>\n<h2>番組内容 vol.200</h2>\n<h3>冬と雪のアイドル楽曲リクエスト大会！</h3>\n<p>今週のアイドル第四会議室は大人気企画のリクエスト大会。今回は「冬と雪」をテーマにおすすめのアイドル楽曲をリクエストしていただきました！ひでっきーのリクエストもあります！</p>\n<h2>今週のプレイリストは「まだある冬と雪のアイドル楽曲特集」です！</h2>\n<p>本編終了後のプレイリスト。今週は、今回のテーマを引き継いで本編では紹介できなかった冬と雪のアイドル楽曲をテーマにしました。最後までお楽しみに！</p>\n<h2>アフタートークのテーマは「アイドル楽曲をカバーするアイドルがいけると思う理由」です（YouTubeで無償公開）</h2>\n<p>毎回、ノー台本でお届けするアフタートーク。今週はひでっきーが2026年のトレンドになることを熱望している「アイドル楽曲をカバーするアイドル」をテーマに話しています。お楽しみに！！</p>\n<div class=\"ytube\"><iframe loading=\"lazy\" title=\"YouTube video player\" src=\"https://www.youtube.com/embed/csf3VJKc2PA?si=nbHXAtIA-L9YT1Ol\" width=\"560\" height=\"315\" frameborder=\"0\" allowfullscreen=\"allowfullscreen\"></iframe></div>\n<p><strong class=\"col_red\">番組へのおたよりや応援メッセージはページ最上部の投げ銭からも受け付けています。</strong><br />\n<strong class=\"col_red\">投げ銭からのメッセージは番組内でほぼ確で紹介！ゲストとパーソナリティからのラブリーな私信ももらえます！！<br />\n<strong>※決済方法は各種クレジットカード、Apple Pay、Google Payにも対応しています。</strong><br />\n</strong></p>\n",
+        "wpPostId": 21993,
+        "originalWpUrl": "https://www.musicite.net/i4c/21993.php",
+        "excerpt": "「アイドル第四会議室」vol.200は、”冬と雪限定”アイドル楽曲リクエスト大会をお届けします！ 音楽サイト「musicite（ミュージサイト）」がプロデュースするラジオ番組「アイドル第四会議室」。vol.200は大人気 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/01/8dfbb53f367c552196eecda2ad035152.png; heroImageSource=wp_featured_media"
+      }
+    },
+    {
+      "wpPostId": 21986,
+      "title": "RAY 新プロジェクト「#MOD_IDOLRemix」始動。Remix EP2作品リリース＆連動Remixイベント開催",
+      "publishedAt": "2026-01-25T23:47:30",
+      "operation": "would-update",
+      "existingSanityId": "wpImportedArticle.wp.21986",
+      "relatedGroupCount": 1,
+      "missingCategorySlugs": [],
+      "missingTagSlugs": [],
+      "blockers": [],
+      "warnings": [],
+      "featuredImageStatus": "ok",
+      "featuredMediaId": 21987,
+      "payload": {
+        "title": "RAY 新プロジェクト「#MOD_IDOLRemix」始動。Remix EP2作品リリース＆連動Remixイベント開催",
+        "publishedAt": "2026-01-25T23:47:30",
+        "heroImageExternalUrl": "https://www.musicite.net/inm/wp-content/uploads/2026/01/ef150de49361d681d92370d49cd4f8b8.jpg",
+        "categories": [
+          {
+            "_type": "reference",
+            "_ref": "dfef3bbc-7f9c-4942-a670-1ff9feeacbb1",
+            "_key": "cat-0-dfef3bbc-7f9c-4942-a670-1ff9feeacbb1"
+          }
+        ],
+        "tags": [
+          {
+            "_type": "reference",
+            "_ref": "newsTag.wp.448",
+            "_key": "tag-0-newstag-wp-448"
+          }
+        ],
+        "relatedGroups": [
+          {
+            "_type": "relatedGroup",
+            "_key": "rg-0-69f4d198-d1d7-431d-9f80-9fa36e692eea",
+            "groupNameJa": "RAY",
+            "imdGroupId": "69f4d198-d1d7-431d-9f80-9fa36e692eea"
+          }
+        ],
+        "legacyBodyHtml": "<p>2026年のRAYのテーマである「MOD(改変・改造)」を象徴する「#MOD_IDOLRemix」プロジェクトが始動。<br />\n「既存のアイドルRemixの常識をMODする」をコンセプトに、音楽的テーマの異なるRemix EP2作をリリース、連動イベントも開催する。</p>\n<p>2月12日には全曲T.M.PによるRAY楽曲のRemix EP『MOSH』がリリース。連動企画として3月5日には新宿MARZにて「RAY presents『#MOD_IDOLRemix』Pt.1 MOSH」を開催。全編T.M.Pによる演奏と共に「アイドルRemix楽曲のライブでの再現性」をテーマに挑戦する。</p>\n<p>2月28日にはCOR!S、ueil、TPSOUND(from HUGEN)、Cwondo、ParannoulによるRAY楽曲のRemix EP『ambience』がリリース。連動企画として3月31日にはTOKIO TOKYOにて「RAY presents『#MOD_IDOLRemix』Pt.2 ambience」を開催。</p>\n<p>「ネオ・アンビエント」をコンセプトに強力なRemixer陣、共演者が並んだ。渋谷という地でエレクトロイベントの最前線をアイドルが牽引する。</p>\n<h2>Remix EP『MOSH』</h2>\n<div id=\"attachment_21988\" style=\"width: 210px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-21988\" class=\"wp-image-21988\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-300x300.png\" alt=\"\" width=\"200\" height=\"200\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-300x300.png 300w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-150x150.png 150w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-768x768.png 768w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-1536x1536.png 1536w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket-500x500.png 500w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP1_MOSH_jacket.png 1600w\" sizes=\"auto, (max-width: 200px) 100vw, 200px\" /><p id=\"caption-attachment-21988\" class=\"wp-caption-text\">「MOSH」ジャケット</p></div>\n<p>リリース日時：2026/2/12 0:00<br />\n収録楽曲：後日詳細告知</p>\n<h2>Remix EP『ambience』</h2>\n<div id=\"attachment_21989\" style=\"width: 210px\" class=\"wp-caption alignright\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-21989\" class=\"wp-image-21989\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-300x300.jpg\" alt=\"\" width=\"200\" height=\"200\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-300x300.jpg 300w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-150x150.jpg 150w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-768x768.jpg 768w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-1536x1536.jpg 1536w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket-500x500.jpg 500w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_EP2_ambience_jacket.jpg 1600w\" sizes=\"auto, (max-width: 200px) 100vw, 200px\" /><p id=\"caption-attachment-21989\" class=\"wp-caption-text\">「ambience」ジャケット</p></div>\n<p>リリース日時：2026/2/28 0:00<br />\n収録楽曲：<br />\n1.読書日記 (COR!S Remix)<br />\n2.ディス・イズ・ノット・ア・ラブソング (ueil Remix)<br />\n3.おとぎ (TPSOUND Remix)<br />\n4.天体 (Cwondo Remix)<br />\n5.See ya! (Parannoul Remix)</p>\n<h2>RAY presents「#MOD_IDOLRemix」Pt.1 MOSH</h2>\n<div id=\"attachment_21990\" style=\"width: 235px\" class=\"wp-caption alignright\"><a href=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer.png\"><img loading=\"lazy\" decoding=\"async\" aria-describedby=\"caption-attachment-21990\" class=\"wp-image-21990 size-medium\" src=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer-225x300.png\" alt=\"\" width=\"225\" height=\"300\" srcset=\"https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer-225x300.png 225w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer-768x1024.png 768w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer-1152x1536.png 1152w, https://www.musicite.net/inm/wp-content/uploads/2026/01/RAY_Remix_event_20260305mosh_20260331ambience_flyer.png 1200w\" sizes=\"auto, (max-width: 225px) 100vw, 225px\" /></a><p id=\"caption-attachment-21990\" class=\"wp-caption-text\">「#MOD_IDOLRemix」フライヤー</p></div>\n<p>2026/3/5(木)<br />\n会場：新宿MARZ<br />\n時間：OPEN/START 18:30/19:00<br />\n料金：前売/当日 3500円/4000円(+1D)<br />\n出演：RAY feat. T.M.P、T.M.P、hypermoshkotto(O.A.)<br />\nチケット情報<br />\n<a href=\"https://livepocket.jp/e/8sr_9\" target=\"_blank\" rel=\"noopener\">https://livepocket.jp/e/8sr_9</a><br />\n一般先着：1/26 21:00-3/4 23:59</p>\n<h2>RAY presents「#MOD_IDOLRemix」Pt.2 ambience</h2>\n<p>2026/3/31(火)<br />\n会場：TOKIO TOKYO<br />\n時間：OPEN/START 18:40/19:10<br />\n料金：前売/当日 4000円/4500円(+1D)<br />\n出演：RAY、RAYPHEX TWIN(RAY IDM SET)、COR!S、Cwondo、TPSOUND(from HUGEN)<br />\nチケット情報<br />\n<a href=\"https://livepocket.jp/e/amw1i\" target=\"_blank\" rel=\"noopener\">https://livepocket.jp/e/amw1i</a><br />\n一般先着：1/26 22:00-3/30 23:59</p>\n",
+        "wpPostId": 21986,
+        "originalWpUrl": "https://www.musicite.net/article/rel/21986.php",
+        "excerpt": "2026年のRAYのテーマである「MOD(改変・改造)」を象徴する「#MOD_IDOLRemix」プロジェクトが始動。 「既存のアイドルRemixの常識をMODする」をコンセプトに、音楽的テーマの異なるRemix EP2 [&hellip;]",
+        "importedAt": "2026-02-27T03:52:18.994Z",
+        "bodyMigrationStatus": "legacy_html",
+        "migrationNotes": "heroImageExternalUrl=https://www.musicite.net/inm/wp-content/uploads/2026/01/ef150de49361d681d92370d49cd4f8b8.jpg; heroImageSource=wp_featured_media"
+      }
+    }
+  ]
+}
