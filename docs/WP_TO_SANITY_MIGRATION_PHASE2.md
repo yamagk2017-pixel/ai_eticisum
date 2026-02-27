@@ -19,6 +19,20 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 
 ---
 
+## 現在進捗（2026-02-27）
+
+- 移行済み: **300件 / 約3,500件**
+  - `page=1`（100件）apply 完了
+  - `page=2`（100件）apply 完了
+  - `page=3`（100件）apply 完了
+- 既知の要確認:
+  - `featuredImage_api_denied`（累計 issues で追跡）
+- 状態:
+  - フェーズ2（全件バッチ移行）は **継続中**
+  - フェーズ3（画像アセット移行 / DNS切替準備）は **設計着手**
+
+---
+
 ## フェーズ2タスク
 
 ### 1) バッチ実行計画
@@ -54,8 +68,22 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
   - `postsWithBlockers=0`, `postsWithWarnings=1`, `postsMissingFeaturedImage=1`
 - apply: `reports/wp-to-sanity-poc-apply-20260227-135551.json`
   - `appliedCreates=90`, `appliedUpdates=10`, `applyFailed=0`
-- issues CSV: `reports/wp-to-sanity-poc-dry-run-20260227-145346.issues.csv`
-  - 要確認記事: 1件（`wpPostId=21277`, `featuredImage_api_denied`）
+- dry-run: `reports/wp-to-sanity-poc-dry-run-20260227-150805.json`
+  - `checkedPosts=100`, `wouldCreate=100`, `wouldUpdate=0`
+  - `postsWithBlockers=0`, `postsWithWarnings=1`, `postsMissingFeaturedImage=1`
+- apply: `reports/wp-to-sanity-poc-apply-20260227-150846.json`
+  - `appliedCreates=100`, `appliedUpdates=0`, `applyFailed=0`
+- dry-run: `reports/wp-to-sanity-poc-dry-run-20260227-151342.json`
+  - `checkedPosts=100`, `wouldCreate=100`, `wouldUpdate=0`
+  - `postsWithBlockers=0`, `postsWithWarnings=4`, `postsMissingFeaturedImage=4`
+- apply: `reports/wp-to-sanity-poc-apply-20260227-151426.json`
+  - `appliedCreates=100`, `appliedUpdates=0`, `applyFailed=0`
+- issues CSV（単回）:
+  - `reports/wp-to-sanity-poc-dry-run-20260227-145346.issues.csv`
+  - `reports/wp-to-sanity-poc-dry-run-20260227-150805.issues.csv`
+  - `reports/wp-to-sanity-poc-dry-run-20260227-151342.issues.csv`
+- issues CSV（統合）:
+  - `reports/wp-to-sanity-poc-issues-merged-*.csv`（`npm run report:wp-poc-issues:merge`）
 
 ### 3) 品質確認（各バッチ）
 
