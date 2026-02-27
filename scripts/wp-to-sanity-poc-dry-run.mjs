@@ -1,0 +1,406 @@
+#!/usr/bin/env node
+
+import fs from "node:fs/promises";
+import path from "node:path";
+import process from "node:process";
+import {createClient} from "@sanity/client";
+import {createClient as createSupabaseClient} from "@supabase/supabase-js";
+
+function parseArgs(argv) {
+  const args = {
+    limit: 10,
+    page: 1,
+    output: null,
+  };
+
+  for (const arg of argv) {
+    if (arg.startsWith("--limit=")) {
+      const n = Number(arg.slice("--limit=".length));
+      if (Number.isFinite(n) && n > 0) args.limit = Math.min(Math.trunc(n), 100);
+      continue;
+    }
+    if (arg.startsWith("--page=")) {
+      const n = Number(arg.slice("--page=".length));
+      if (Number.isFinite(n) && n > 0) args.page = Math.max(Math.trunc(n), 1);
+      continue;
+    }
+    if (arg.startsWith("--output=")) {
+      const output = arg.slice("--output=".length).trim();
+      if (output) args.output = output;
+    }
+  }
+
+  return args;
+}
+
+async function loadLocalEnv(filePath) {
+  try {
+    const raw = await fs.readFile(filePath, "utf8");
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const index = trimmed.indexOf("=");
+      if (index <= 0) continue;
+      const key = trimmed.slice(0, index).trim();
+      const value = trimmed.slice(index + 1).trim().replace(/^['\"]|['\"]$/g, "");
+      if (!(key in process.env)) process.env[key] = value;
+    }
+  } catch {
+    // ignore missing .env.local
+  }
+}
+
+function requiredEnv(name) {
+  const value = process.env[name];
+  if (!value || !value.trim()) {
+    throw new Error(`Missing required env: ${name}`);
+  }
+  return value.trim();
+}
+
+function optionalEnv(name) {
+  const value = process.env[name];
+  return value && value.trim() ? value.trim() : null;
+}
+
+function normalizeBaseUrl(url) {
+  return url.replace(/\/+$/, "");
+}
+
+function stripHtml(html) {
+  return String(html ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function formatStamp(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  const ss = String(date.getSeconds()).padStart(2, "0");
+  return `${y}${m}${d}-${hh}${mm}${ss}`;
+}
+
+async function fetchWpPosts({baseUrl, limit, page}) {
+  const params = new URLSearchParams({
+    per_page: String(limit),
+    page: String(page),
+    _embed: "",
+    orderby: "date",
+    order: "desc",
+  });
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?${params.toString()}`;
+  const response = await fetch(endpoint, {headers: {Accept: "application/json"}});
+  if (!response.ok) {
+    throw new Error(`WP API error: ${response.status} ${response.statusText}`);
+  }
+  const json = await response.json();
+  if (!Array.isArray(json)) return [];
+
+  return json.map((post) => {
+    const termGroups = post?._embedded?.["wp:term"];
+    const terms = Array.isArray(termGroups) ? termGroups.flat() : [];
+
+    const categories = terms
+      .filter((t) => t?.taxonomy === "category")
+      .map((t) => ({
+        id: t?.id,
+        name: typeof t?.name === "string" ? t.name.trim() : "",
+        slug: typeof t?.slug === "string" ? t.slug.trim() : "",
+      }))
+      .filter((t) => t.name);
+
+    const tags = terms
+      .filter((t) => t?.taxonomy === "post_tag")
+      .map((t) => ({
+        id: t?.id,
+        name: typeof t?.name === "string" ? t.name.trim() : "",
+        slug: typeof t?.slug === "string" ? t.slug.trim() : "",
+      }))
+      .filter((t) => t.name);
+
+    const featured = Array.isArray(post?._embedded?.["wp:featuredmedia"]) ? post._embedded["wp:featuredmedia"][0] : null;
+
+    return {
+      wpPostId: Number(post?.id),
+      publishedAt: typeof post?.date === "string" ? post.date : null,
+      title: stripHtml(post?.title?.rendered ?? "(no title)"),
+      titleHtml: typeof post?.title?.rendered === "string" ? post.title.rendered : "",
+      originalWpUrl: typeof post?.link === "string" ? post.link : null,
+      legacyBodyHtml: typeof post?.content?.rendered === "string" ? post.content.rendered : "",
+      excerpt: stripHtml(post?.excerpt?.rendered ?? ""),
+      featuredImageUrl: typeof featured?.source_url === "string" ? featured.source_url : null,
+      categories,
+      tags,
+    };
+  });
+}
+
+async function fetchImdGroups({supabaseUrl, supabaseKey}) {
+  const supabase = createSupabaseClient(supabaseUrl, supabaseKey, {
+    auth: {persistSession: false, autoRefreshToken: false},
+  });
+
+  const rows = [];
+  const pageSize = 1000;
+  let from = 0;
+
+  while (true) {
+    const to = from + pageSize - 1;
+    const {data, error} = await supabase
+      .schema("imd")
+      .from("groups")
+      .select("id,name_ja,slug,status")
+      .eq("status", "active")
+      .range(from, to);
+
+    if (error) throw new Error(`Supabase query error: ${error.message}`);
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  const bySlug = new Map();
+  for (const row of rows) {
+    if (typeof row.slug === "string" && row.slug.trim()) {
+      bySlug.set(row.slug.trim(), {
+        id: typeof row.id === "string" ? row.id : null,
+        nameJa: typeof row.name_ja === "string" ? row.name_ja : null,
+        slug: row.slug.trim(),
+      });
+    }
+  }
+
+  return bySlug;
+}
+
+async function fetchSanityLookups({projectId, dataset, apiVersion, token}) {
+  const client = createClient({
+    projectId,
+    dataset,
+    apiVersion,
+    token: token ?? undefined,
+    useCdn: false,
+    perspective: token ? "previewDrafts" : "published",
+  });
+
+  const [categories, tags] = await Promise.all([
+    client.fetch('*[_type == "newsCategory" && defined(slug.current)]{_id, "slug": slug.current}'),
+    client.fetch('*[_type == "newsTag" && defined(slug.current)]{_id, "slug": slug.current}'),
+  ]);
+
+  const categoryBySlug = new Map();
+  for (const row of categories ?? []) {
+    if (typeof row?._id === "string" && typeof row?.slug === "string" && row.slug.trim()) {
+      categoryBySlug.set(row.slug.trim(), row._id);
+    }
+  }
+
+  const tagBySlug = new Map();
+  for (const row of tags ?? []) {
+    if (typeof row?._id === "string" && typeof row?.slug === "string" && row.slug.trim()) {
+      tagBySlug.set(row.slug.trim(), row._id);
+    }
+  }
+
+  return {client, categoryBySlug, tagBySlug};
+}
+
+async function fetchExistingByWpPostId(client, wpPostIds) {
+  if (wpPostIds.length === 0) return new Map();
+  const rows = await client.fetch(
+    '*[_type == "wpImportedArticle" && wpPostId in $ids]{_id, wpPostId}',
+    {ids: wpPostIds}
+  );
+
+  const map = new Map();
+  for (const row of rows ?? []) {
+    if (typeof row?._id === "string" && Number.isFinite(row?.wpPostId)) {
+      map.set(Number(row.wpPostId), row._id);
+    }
+  }
+  return map;
+}
+
+function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso}) {
+  const categoryRefs = [];
+  const missingCategorySlugs = [];
+  for (const category of post.categories) {
+    if (!category.slug) continue;
+    const refId = categoryBySlug.get(category.slug);
+    if (refId) {
+      categoryRefs.push({_type: "reference", _ref: refId});
+    } else {
+      missingCategorySlugs.push(category.slug);
+    }
+  }
+
+  const tagRefs = [];
+  const missingTagSlugs = [];
+  const relatedGroups = [];
+  const seenGroupIds = new Set();
+
+  for (const tag of post.tags) {
+    if (!tag.slug) continue;
+
+    const tagRefId = tagBySlug.get(tag.slug);
+    if (tagRefId) {
+      tagRefs.push({_type: "reference", _ref: tagRefId});
+    } else {
+      missingTagSlugs.push(tag.slug);
+    }
+
+    const matchedGroup = imdGroupBySlug.get(tag.slug);
+    if (matchedGroup?.id && !seenGroupIds.has(matchedGroup.id)) {
+      relatedGroups.push({
+        _type: "relatedGroup",
+        groupNameJa: matchedGroup.nameJa ?? tag.name,
+        imdGroupId: matchedGroup.id,
+      });
+      seenGroupIds.add(matchedGroup.id);
+    }
+  }
+
+  const migrationNotes = [
+    post.featuredImageUrl ? `heroImageExternalUrl=${post.featuredImageUrl}` : "heroImageExternalUrl=(none)",
+    missingCategorySlugs.length > 0 ? `missingCategorySlugs=${missingCategorySlugs.join("|")}` : null,
+    missingTagSlugs.length > 0 ? `missingTagSlugs=${missingTagSlugs.join("|")}` : null,
+  ]
+    .filter(Boolean)
+    .join("; ");
+
+  const payload = {
+    _type: "wpImportedArticle",
+    title: post.title,
+    publishedAt: post.publishedAt,
+    categories: categoryRefs,
+    tags: tagRefs,
+    relatedGroups,
+    legacyBodyHtml: post.legacyBodyHtml,
+    wpPostId: post.wpPostId,
+    originalWpUrl: post.originalWpUrl,
+    excerpt: post.excerpt || undefined,
+    importedAt: nowIso,
+    bodyMigrationStatus: "legacy_html",
+    migrationNotes,
+  };
+
+  const blockers = [];
+  if (!post.publishedAt) blockers.push("missing_publishedAt");
+  if (!post.originalWpUrl) blockers.push("missing_originalWpUrl");
+  if (!post.legacyBodyHtml) blockers.push("missing_legacyBodyHtml");
+  if (!post.featuredImageUrl) blockers.push("missing_featuredImageUrl");
+
+  return {
+    payload,
+    missingCategorySlugs,
+    missingTagSlugs,
+    blockers,
+    relatedGroupCount: relatedGroups.length,
+  };
+}
+
+async function main() {
+  await loadLocalEnv(path.resolve(process.cwd(), ".env.local"));
+  const args = parseArgs(process.argv.slice(2));
+
+  const wpApiBaseUrl = requiredEnv("WP_API_BASE_URL");
+  const sanityProjectId = requiredEnv("NEXT_PUBLIC_SANITY_PROJECT_ID");
+  const sanityDataset = requiredEnv("NEXT_PUBLIC_SANITY_DATASET");
+  const sanityApiVersion = requiredEnv("NEXT_PUBLIC_SANITY_API_VERSION");
+  const sanityReadToken = optionalEnv("SANITY_API_READ_TOKEN") || optionalEnv("SANITY_API_WRITE_TOKEN") || optionalEnv("SANITY_API_TOKEN");
+
+  const supabaseUrl = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const supabaseKey = optionalEnv("SUPABASE_SERVICE_ROLE_KEY") || optionalEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+  if (!supabaseKey) throw new Error("Missing Supabase key: SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
+
+  const [wpPosts, imdGroupBySlug, sanityLookups] = await Promise.all([
+    fetchWpPosts({baseUrl: wpApiBaseUrl, limit: args.limit, page: args.page}),
+    fetchImdGroups({supabaseUrl, supabaseKey}),
+    fetchSanityLookups({
+      projectId: sanityProjectId,
+      dataset: sanityDataset,
+      apiVersion: sanityApiVersion,
+      token: sanityReadToken,
+    }),
+  ]);
+
+  const existingByWpPostId = await fetchExistingByWpPostId(
+    sanityLookups.client,
+    wpPosts.map((post) => post.wpPostId)
+  );
+
+  const nowIso = new Date().toISOString();
+  const results = wpPosts.map((post) => {
+    const built = buildPayload({
+      post,
+      categoryBySlug: sanityLookups.categoryBySlug,
+      tagBySlug: sanityLookups.tagBySlug,
+      imdGroupBySlug,
+      nowIso,
+    });
+
+    const existingId = existingByWpPostId.get(post.wpPostId) ?? null;
+    const operation = existingId ? "would-update" : "would-create";
+
+    return {
+      wpPostId: post.wpPostId,
+      title: post.title,
+      publishedAt: post.publishedAt,
+      operation,
+      existingSanityId: existingId,
+      relatedGroupCount: built.relatedGroupCount,
+      missingCategorySlugs: built.missingCategorySlugs,
+      missingTagSlugs: built.missingTagSlugs,
+      blockers: built.blockers,
+      payload: built.payload,
+    };
+  });
+
+  const summary = {
+    checkedPosts: results.length,
+    wouldCreate: results.filter((r) => r.operation === "would-create").length,
+    wouldUpdate: results.filter((r) => r.operation === "would-update").length,
+    postsWithBlockers: results.filter((r) => r.blockers.length > 0).length,
+    postsWithRelatedGroups: results.filter((r) => r.relatedGroupCount > 0).length,
+    totalMissingCategorySlugRefs: results.reduce((acc, r) => acc + r.missingCategorySlugs.length, 0),
+    totalMissingTagSlugRefs: results.reduce((acc, r) => acc + r.missingTagSlugs.length, 0),
+  };
+
+  const outputPath = args.output
+    ? path.resolve(process.cwd(), args.output)
+    : path.resolve(process.cwd(), "reports", `wp-to-sanity-poc-dry-run-${formatStamp()}.json`);
+
+  await fs.mkdir(path.dirname(outputPath), {recursive: true});
+  await fs.writeFile(
+    outputPath,
+    JSON.stringify(
+      {
+        generatedAt: nowIso,
+        params: {limit: args.limit, page: args.page},
+        summary,
+        results,
+      },
+      null,
+      2
+    ),
+    "utf8"
+  );
+
+  console.log(`Dry-run report written: ${outputPath}`);
+  console.log("--- summary ---");
+  console.log(JSON.stringify(summary, null, 2));
+}
+
+main().catch((error) => {
+  console.error("[wp-to-sanity-poc-dry-run]", error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});

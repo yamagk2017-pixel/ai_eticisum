@@ -9,7 +9,8 @@
     "lint": "eslint",
     "sanity": "sanity",
     "sanity:deploy": "sanity deploy",
-    "report:wp-unmatched-related-groups": "node scripts/wp-unmatched-related-groups-report.mjs --limit=10 --page=1"
+    "report:wp-unmatched-related-groups": "node scripts/wp-unmatched-related-groups-report.mjs --limit=10 --page=1",
+    "poc:wp-to-sanity:dry-run": "node scripts/wp-to-sanity-poc-dry-run.mjs --limit=10 --page=1"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.2",
