@@ -894,14 +894,14 @@ export default async function Home() {
           <img
             src="/svg_logo_wh.svg"
             alt="IDOL CROSSING"
-            className="home-logo home-logo-dark h-auto w-full max-w-[250px]"
+            className="home-logo home-logo-dark h-auto w-full max-w-full sm:max-w-[250px]"
             loading="lazy"
           />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/svg_logo_bk.svg"
             alt="IDOL CROSSING"
-            className="home-logo home-logo-light h-auto w-full max-w-[250px]"
+            className="home-logo home-logo-light h-auto w-full max-w-full sm:max-w-[250px]"
             loading="lazy"
           />
           <p className="pb-1 text-xs tracking-[0.08em] text-[var(--ui-text-subtle)]">powerd by musicite</p>
