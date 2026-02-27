@@ -104,6 +104,62 @@ function formatStamp(date = new Date()) {
   return `${y}${m}${d}-${hh}${mm}${ss}`;
 }
 
+function csvEscape(value) {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function buildIssuesCsv(results) {
+  const rows = results.filter(
+    (item) =>
+      item.blockers.length > 0 ||
+      item.warnings.length > 0 ||
+      item.featuredImageStatus !== "ok" ||
+      item.missingCategorySlugs.length > 0 ||
+      item.missingTagSlugs.length > 0
+  );
+
+  const header = [
+    "wpPostId",
+    "title",
+    "operation",
+    "featuredImageStatus",
+    "blockers",
+    "warnings",
+    "missingCategorySlugs",
+    "missingTagSlugs",
+    "originalWpUrl",
+  ];
+
+  const lines = [header.join(",")];
+  for (const row of rows) {
+    lines.push(
+      [
+        row.wpPostId,
+        row.title,
+        row.operation,
+        row.featuredImageStatus,
+        row.blockers.join("|"),
+        row.warnings.join("|"),
+        row.missingCategorySlugs.join("|"),
+        row.missingTagSlugs.join("|"),
+        row.payload?.originalWpUrl ?? "",
+      ]
+        .map(csvEscape)
+        .join(",")
+    );
+  }
+
+  return {
+    rows,
+    csvText: `${lines.join("\n")}\n`,
+  };
+}
+
 function createArrayKey(prefix, seed, index) {
   const base = String(seed ?? "")
     .toLowerCase()
@@ -586,7 +642,12 @@ async function main() {
     "utf8"
   );
 
+  const issuesOutputPath = outputPath.replace(/\.json$/i, ".issues.csv");
+  const issuesCsv = buildIssuesCsv(results);
+  await fs.writeFile(issuesOutputPath, issuesCsv.csvText, "utf8");
+
   console.log(`Dry-run report written: ${outputPath}`);
+  console.log(`Issues CSV written: ${issuesOutputPath} (${issuesCsv.rows.length} rows)`);
   console.log("--- summary ---");
   console.log(JSON.stringify(summary, null, 2));
 }
