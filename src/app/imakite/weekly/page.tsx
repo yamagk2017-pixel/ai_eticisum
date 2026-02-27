@@ -12,7 +12,7 @@ export default function ImakiteWeeklyPage() {
             毎週火曜日発表！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
+            <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-5xl">
               イマキテ週間ランキング
             </h1>
           </div>

@@ -12,7 +12,7 @@ export default function ImakitePage() {
             毎日更新！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-3xl font-semibold leading-tight sm:text-5xl">
+            <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-5xl">
               イマキテランキング
             </h1>
           </div>
