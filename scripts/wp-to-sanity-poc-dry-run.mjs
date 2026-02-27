@@ -11,6 +11,7 @@ function parseArgs(argv) {
     limit: 10,
     page: 1,
     output: null,
+    includeIds: [],
   };
 
   for (const arg of argv) {
@@ -27,6 +28,16 @@ function parseArgs(argv) {
     if (arg.startsWith("--output=")) {
       const output = arg.slice("--output=".length).trim();
       if (output) args.output = output;
+      continue;
+    }
+    if (arg.startsWith("--include-ids=")) {
+      const value = arg.slice("--include-ids=".length);
+      const ids = value
+        .split(",")
+        .map((v) => Number(v.trim()))
+        .filter((n) => Number.isFinite(n) && n > 0)
+        .map((n) => Math.trunc(n));
+      args.includeIds = Array.from(new Set([...args.includeIds, ...ids]));
     }
   }
 
@@ -104,43 +115,83 @@ async function fetchWpPosts({baseUrl, limit, page}) {
   const json = await response.json();
   if (!Array.isArray(json)) return [];
 
-  return json.map((post) => {
-    const termGroups = post?._embedded?.["wp:term"];
-    const terms = Array.isArray(termGroups) ? termGroups.flat() : [];
+  return json.map(mapWpPostApiItem);
+}
 
-    const categories = terms
-      .filter((t) => t?.taxonomy === "category")
-      .map((t) => ({
-        id: t?.id,
-        name: typeof t?.name === "string" ? t.name.trim() : "",
-        slug: typeof t?.slug === "string" ? t.slug.trim() : "",
-      }))
-      .filter((t) => t.name);
+function mapWpPostApiItem(post) {
+  const termGroups = post?._embedded?.["wp:term"];
+  const terms = Array.isArray(termGroups) ? termGroups.flat() : [];
 
-    const tags = terms
-      .filter((t) => t?.taxonomy === "post_tag")
-      .map((t) => ({
-        id: t?.id,
-        name: typeof t?.name === "string" ? t.name.trim() : "",
-        slug: typeof t?.slug === "string" ? t.slug.trim() : "",
-      }))
-      .filter((t) => t.name);
+  const categories = terms
+    .filter((t) => t?.taxonomy === "category")
+    .map((t) => ({
+      id: t?.id,
+      name: typeof t?.name === "string" ? t.name.trim() : "",
+      slug: typeof t?.slug === "string" ? t.slug.trim() : "",
+    }))
+    .filter((t) => t.name);
 
-    const featured = Array.isArray(post?._embedded?.["wp:featuredmedia"]) ? post._embedded["wp:featuredmedia"][0] : null;
+  const tags = terms
+    .filter((t) => t?.taxonomy === "post_tag")
+    .map((t) => ({
+      id: t?.id,
+      name: typeof t?.name === "string" ? t.name.trim() : "",
+      slug: typeof t?.slug === "string" ? t.slug.trim() : "",
+    }))
+    .filter((t) => t.name);
 
-    return {
-      wpPostId: Number(post?.id),
-      publishedAt: typeof post?.date === "string" ? post.date : null,
-      title: stripHtml(post?.title?.rendered ?? "(no title)"),
-      titleHtml: typeof post?.title?.rendered === "string" ? post.title.rendered : "",
-      originalWpUrl: typeof post?.link === "string" ? post.link : null,
-      legacyBodyHtml: typeof post?.content?.rendered === "string" ? post.content.rendered : "",
-      excerpt: stripHtml(post?.excerpt?.rendered ?? ""),
-      featuredImageUrl: typeof featured?.source_url === "string" ? featured.source_url : null,
-      categories,
-      tags,
-    };
+  const featured = Array.isArray(post?._embedded?.["wp:featuredmedia"]) ? post._embedded["wp:featuredmedia"][0] : null;
+  const bodyHtml = typeof post?.content?.rendered === "string" ? post.content.rendered : "";
+  const featuredImageFromEmbed = typeof featured?.source_url === "string" ? featured.source_url : null;
+  const featuredImageUrl = featuredImageFromEmbed;
+  const featuredMediaId =
+    typeof post?.featured_media === "number" && Number.isFinite(post.featured_media) && post.featured_media > 0
+      ? post.featured_media
+      : null;
+  const featuredImageStatus = featuredImageFromEmbed
+    ? "ok"
+    : featured?.code === "rest_forbidden"
+      ? "api_denied"
+      : featuredMediaId
+        ? "unresolved"
+        : "no_featured_media";
+  const featuredImageSource = featuredImageFromEmbed
+    ? "wp_featured_media"
+    : "none";
+
+  return {
+    wpPostId: Number(post?.id),
+    publishedAt: typeof post?.date === "string" ? post.date : null,
+    title: stripHtml(post?.title?.rendered ?? "(no title)"),
+    titleHtml: typeof post?.title?.rendered === "string" ? post.title.rendered : "",
+    originalWpUrl: typeof post?.link === "string" ? post.link : null,
+    legacyBodyHtml: bodyHtml,
+    excerpt: stripHtml(post?.excerpt?.rendered ?? ""),
+    featuredImageUrl,
+    featuredImageSource,
+    featuredImageStatus,
+    featuredMediaId,
+    categories,
+    tags,
+  };
+}
+
+async function fetchWpPostsByIds({baseUrl, ids}) {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+
+  const params = new URLSearchParams({
+    include: ids.join(","),
+    per_page: String(Math.min(ids.length, 100)),
+    _embed: "",
   });
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?${params.toString()}`;
+  const response = await fetch(endpoint, {headers: {Accept: "application/json"}});
+  if (!response.ok) {
+    throw new Error(`WP API error (include): ${response.status} ${response.statusText}`);
+  }
+  const json = await response.json();
+  if (!Array.isArray(json)) return [];
+  return json.map(mapWpPostApiItem);
 }
 
 async function fetchImdGroups({supabaseUrl, supabaseKey}) {
@@ -269,8 +320,15 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
     }
   }
 
+  const hasLegacyBodyHtml = typeof post.legacyBodyHtml === "string" && post.legacyBodyHtml.trim().length > 0;
+  const legacyBodyHtml = hasLegacyBodyHtml
+    ? post.legacyBodyHtml
+    : "<p>[migration-warning] 本文を取得できませんでした。元記事をご確認ください。</p>";
+
   const migrationNotes = [
     post.featuredImageUrl ? `heroImageExternalUrl=${post.featuredImageUrl}` : "heroImageExternalUrl=(none)",
+    `heroImageSource=${post.featuredImageSource ?? "none"}`,
+    hasLegacyBodyHtml ? null : "legacyBodyHtml=placeholder_applied",
     missingCategorySlugs.length > 0 ? `missingCategorySlugs=${missingCategorySlugs.join("|")}` : null,
     missingTagSlugs.length > 0 ? `missingTagSlugs=${missingTagSlugs.join("|")}` : null,
   ]
@@ -284,7 +342,7 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
     categories: categoryRefs,
     tags: tagRefs,
     relatedGroups,
-    legacyBodyHtml: post.legacyBodyHtml,
+    legacyBodyHtml,
     wpPostId: post.wpPostId,
     originalWpUrl: post.originalWpUrl,
     excerpt: post.excerpt || undefined,
@@ -294,16 +352,22 @@ function buildPayload({post, categoryBySlug, tagBySlug, imdGroupBySlug, nowIso})
   };
 
   const blockers = [];
+  const warnings = [];
   if (!post.publishedAt) blockers.push("missing_publishedAt");
   if (!post.originalWpUrl) blockers.push("missing_originalWpUrl");
-  if (!post.legacyBodyHtml) blockers.push("missing_legacyBodyHtml");
-  if (!post.featuredImageUrl) blockers.push("missing_featuredImageUrl");
+  if (!hasLegacyBodyHtml) warnings.push("legacyBodyHtml_missing");
+  if (!post.featuredImageUrl) {
+    if (post.featuredImageStatus === "api_denied") warnings.push("featuredImage_api_denied");
+    else if (post.featuredImageStatus === "unresolved") warnings.push("featuredImage_unresolved");
+    else warnings.push("featuredImage_missing");
+  }
 
   return {
     payload,
     missingCategorySlugs,
     missingTagSlugs,
     blockers,
+    warnings,
     relatedGroupCount: relatedGroups.length,
   };
 }
@@ -333,13 +397,25 @@ async function main() {
     }),
   ]);
 
+  const includedPosts = await fetchWpPostsByIds({baseUrl: wpApiBaseUrl, ids: args.includeIds});
+
+  const postById = new Map();
+  for (const post of [...wpPosts, ...includedPosts]) {
+    if (Number.isFinite(post.wpPostId)) postById.set(post.wpPostId, post);
+  }
+  const mergedWpPosts = Array.from(postById.values()).sort((a, b) => {
+    const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    return bTime - aTime;
+  });
+
   const existingByWpPostId = await fetchExistingByWpPostId(
     sanityLookups.client,
-    wpPosts.map((post) => post.wpPostId)
+    mergedWpPosts.map((post) => post.wpPostId)
   );
 
   const nowIso = new Date().toISOString();
-  const results = wpPosts.map((post) => {
+  const results = mergedWpPosts.map((post) => {
     const built = buildPayload({
       post,
       categoryBySlug: sanityLookups.categoryBySlug,
@@ -361,6 +437,9 @@ async function main() {
       missingCategorySlugs: built.missingCategorySlugs,
       missingTagSlugs: built.missingTagSlugs,
       blockers: built.blockers,
+      warnings: built.warnings,
+      featuredImageStatus: post.featuredImageStatus,
+      featuredMediaId: post.featuredMediaId,
       payload: built.payload,
     };
   });
@@ -370,6 +449,8 @@ async function main() {
     wouldCreate: results.filter((r) => r.operation === "would-create").length,
     wouldUpdate: results.filter((r) => r.operation === "would-update").length,
     postsWithBlockers: results.filter((r) => r.blockers.length > 0).length,
+    postsWithWarnings: results.filter((r) => r.warnings.length > 0).length,
+    postsMissingFeaturedImage: results.filter((r) => r.featuredImageStatus !== "ok").length,
     postsWithRelatedGroups: results.filter((r) => r.relatedGroupCount > 0).length,
     totalMissingCategorySlugRefs: results.reduce((acc, r) => acc + r.missingCategorySlugs.length, 0),
     totalMissingTagSlugRefs: results.reduce((acc, r) => acc + r.missingTagSlugs.length, 0),
@@ -385,7 +466,7 @@ async function main() {
     JSON.stringify(
       {
         generatedAt: nowIso,
-        params: {limit: args.limit, page: args.page},
+        params: {limit: args.limit, page: args.page, includeIds: args.includeIds},
         summary,
         results,
       },

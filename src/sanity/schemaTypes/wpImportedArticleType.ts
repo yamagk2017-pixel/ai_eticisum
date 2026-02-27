@@ -28,7 +28,7 @@ export const wpImportedArticleType = defineType({
       title: "Hero Image",
       type: "image",
       options: {hotspot: true},
-      validation: (rule) => rule.required(),
+      description: "任意。WP APIで取得不可のケースがあるため、移行時は空を許容する。",
     }),
     categoryReferencesField,
     tagReferencesField,
