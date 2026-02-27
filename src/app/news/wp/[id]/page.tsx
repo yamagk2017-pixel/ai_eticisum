@@ -223,7 +223,11 @@ export default async function WpNewsArticlePage({
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
             <WpArticleBody html={article.contentHtml} />
-            {relatedGroupPanels.length > 0 ? <NandatteRelatedChart groups={relatedGroupPanels} /> : null}
+            {relatedGroupPanels.length > 0 ? (
+              <div className="mt-10 border-t border-[var(--ui-border)] pt-10">
+                <NandatteRelatedChart groups={relatedGroupPanels} />
+              </div>
+            ) : null}
             <ArticleCitations
               citationSourceArticle={article.citationSourceArticle}
               citedByArticles={article.citedByArticles}

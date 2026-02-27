@@ -88,7 +88,7 @@ export function NandatteRelatedChart({groups}: Props) {
   if (!active) return null;
 
   return (
-    <section className="mt-12 rounded-2xl border border-zinc-500/60 bg-zinc-900/80 px-4 pb-10 pt-6 shadow-[0_10px_30px_rgba(0,0,0,0.25)] sm:px-6 sm:pb-8">
+    <section className="mb-14 rounded-2xl border border-zinc-500/60 bg-zinc-900/80 px-4 pb-10 pt-6 shadow-[0_10px_30px_rgba(0,0,0,0.25)] sm:px-6 sm:pb-8">
       <div className="flex flex-col gap-2">
         <h2 className="font-mincho-jp text-xl font-medium leading-tight text-[var(--ui-text)] sm:text-2xl">
           {active.groupNameJa}ってこんなグループ「ナンダッテ」
