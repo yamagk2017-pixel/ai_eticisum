@@ -13,7 +13,8 @@
     "poc:wp-to-sanity:dry-run": "node scripts/wp-to-sanity-poc-dry-run.mjs --limit=10 --page=1",
     "poc:wp-to-sanity:apply": "node scripts/wp-to-sanity-poc-dry-run.mjs --limit=10 --page=1 --apply",
     "sync:wp-taxonomies:dry-run": "node scripts/wp-sync-taxonomies-to-sanity.mjs --dry-run",
-    "sync:wp-taxonomies:apply": "node scripts/wp-sync-taxonomies-to-sanity.mjs --apply"
+    "sync:wp-taxonomies:apply": "node scripts/wp-sync-taxonomies-to-sanity.mjs --apply",
+    "report:wp-poc-issues:merge": "node scripts/merge-wp-poc-issues.mjs"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.2",
