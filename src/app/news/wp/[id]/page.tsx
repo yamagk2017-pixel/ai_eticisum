@@ -163,9 +163,6 @@ export default async function WpNewsArticlePage({
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <article>
-        <div className="mb-3 text-xs text-[var(--ui-text-subtle)]">
-          source: {article.source} / relatedGroups: {Array.isArray(article.relatedGroups) ? article.relatedGroups.length : 0}
-        </div>
         <div className="mb-6 space-y-3">
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
             <Link href="/" className="underline underline-offset-2">Home</Link>
