@@ -171,7 +171,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
               citedByArticles={article.citedByArticles}
             />
             {relatedGroupPanels.length > 0 ? (
-              <div className="mt-10 border-t border-[var(--ui-border)] pt-10">
+              <div className="mt-10 pt-10">
                 <NandatteRelatedChart groups={relatedGroupPanels} />
               </div>
             ) : null}

@@ -228,7 +228,7 @@ export default async function WpNewsArticlePage({
               citedByArticles={article.citedByArticles}
             />
             {relatedGroupPanels.length > 0 ? (
-              <div className="mt-10 border-t border-[var(--ui-border)] pt-10">
+              <div className="mt-10 pt-10">
                 <NandatteRelatedChart groups={relatedGroupPanels} />
               </div>
             ) : null}
