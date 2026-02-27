@@ -16,6 +16,9 @@ type SanityRelatedArticleDoc = {
   slug?: {current?: string | null} | null;
   wpPostId?: number | null;
   publishedAt?: string | null;
+  heroImageUrl?: string | null;
+  categories?: SanityRefTag[] | null;
+  tags?: SanityRefTag[] | null;
 };
 
 type SanityNewsArticleListDoc = {
@@ -135,7 +138,18 @@ const bySlugQuery = groq`
       title,
       slug,
       wpPostId,
-      publishedAt
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
     },
     "citedByArticles": *[
       _type in ["newsArticle", "wpImportedArticle"] &&
@@ -149,7 +163,18 @@ const bySlugQuery = groq`
       title,
       slug,
       wpPostId,
-      publishedAt
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
     }
   }
 `;
@@ -185,7 +210,18 @@ const wpImportedByPostIdQuery = groq`
       title,
       slug,
       wpPostId,
-      publishedAt
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
     },
     "citedByArticles": *[
       _type in ["newsArticle", "wpImportedArticle"] &&
@@ -199,7 +235,18 @@ const wpImportedByPostIdQuery = groq`
       title,
       slug,
       wpPostId,
-      publishedAt
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
     }
   }
 `;
@@ -245,6 +292,9 @@ function mapRelatedArticle(doc: SanityRelatedArticleDoc | null | undefined): New
     title: (doc.title ?? "").trim() || "(untitled)",
     path,
     publishedAt: doc.publishedAt ?? null,
+    featuredImageUrl: doc.heroImageUrl ?? null,
+    categories: mapRefTags(doc.categories),
+    tags: mapRefTags(doc.tags),
   };
 }
 

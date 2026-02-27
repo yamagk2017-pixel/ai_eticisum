@@ -14,6 +14,9 @@ export type NewsRelatedArticleRef = {
   title: string;
   path: string;
   publishedAt: string | null;
+  featuredImageUrl?: string | null;
+  categories?: NewsTag[];
+  tags?: NewsTag[];
 };
 
 export type NewsArticleSource = "wp" | "sanity" | "sanity_wp_import";

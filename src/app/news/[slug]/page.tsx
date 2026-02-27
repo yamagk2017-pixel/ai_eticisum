@@ -166,15 +166,15 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
             <SanityArticleBody value={article.body} />
+            <ArticleCitations
+              citationSourceArticle={article.citationSourceArticle}
+              citedByArticles={article.citedByArticles}
+            />
             {relatedGroupPanels.length > 0 ? (
               <div className="mt-10 border-t border-[var(--ui-border)] pt-10">
                 <NandatteRelatedChart groups={relatedGroupPanels} />
               </div>
             ) : null}
-            <ArticleCitations
-              citationSourceArticle={article.citationSourceArticle}
-              citedByArticles={article.citedByArticles}
-            />
           </div>
           {relatedGroupPanels.length > 0 ? <RelatedGroupsSidebar groups={relatedGroupPanels} /> : null}
         </div>

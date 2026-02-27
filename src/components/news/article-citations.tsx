@@ -10,13 +10,93 @@ function formatDate(value: string | null) {
 
 function RelatedArticleItem({article}: {article: NewsRelatedArticleRef}) {
   const dateText = formatDate(article.publishedAt);
+  const categories = article.categories ?? [];
+  const tags = article.tags ?? [];
   return (
-    <li className="text-sm text-[var(--ui-text)]">
-      <Link href={article.path} className="underline underline-offset-2">
-        {article.title}
+    <li className="grid gap-3 py-4 sm:grid-cols-[120px_minmax(0,1fr)]">
+      <Link href={article.path} className="block">
+        {article.featuredImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={article.featuredImageUrl}
+            alt=""
+            className="h-20 w-full rounded-lg object-cover sm:h-full"
+          />
+        ) : (
+          <div className="flex h-20 items-center justify-center rounded-lg bg-[var(--ui-panel-soft)] text-xs text-[var(--ui-text-subtle)] sm:h-full">
+            No Image
+          </div>
+        )}
       </Link>
-      {dateText ? <span className="ml-2 text-xs text-[var(--ui-text-subtle)]">({dateText})</span> : null}
+
+      <div className="min-w-0">
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
+          <span>{dateText ?? "-"}</span>
+          {categories.slice(0, 2).map((category) =>
+            category.slug ? (
+              <Link
+                key={category.id}
+                href={`/news?category=${category.slug}`}
+                className="underline underline-offset-2"
+              >
+                {category.name}
+              </Link>
+            ) : (
+              <span key={category.id}>{category.name}</span>
+            )
+          )}
+        </div>
+        <Link
+          href={article.path}
+          className="font-mincho-jp text-lg font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
+        >
+          {article.title}
+        </Link>
+        {tags.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tags.slice(0, 4).map((tag) =>
+              tag.slug ? (
+                <Link
+                  key={tag.id}
+                  href={`/news?tag=${tag.slug}`}
+                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                >
+                  {tag.name}
+                </Link>
+              ) : (
+                <span
+                  key={tag.id}
+                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                >
+                  {tag.name}
+                </span>
+              )
+            )}
+          </div>
+        ) : null}
+      </div>
     </li>
+  );
+}
+
+function CitationBlock({
+  heading,
+  items,
+}: {
+  heading: string;
+  items: NewsRelatedArticleRef[];
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <section className="mt-8">
+      <h2 className="font-mincho-jp text-xl font-semibold text-[var(--ui-text)]">{heading}</h2>
+      <ul className="mt-3 divide-y divide-[var(--ui-border)]">
+        {items.map((article) => (
+          <RelatedArticleItem key={`${article.path}-${article.title}`} article={article} />
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -27,33 +107,15 @@ export function ArticleCitations({
   citationSourceArticle?: NewsRelatedArticleRef | null;
   citedByArticles?: NewsRelatedArticleRef[];
 }) {
-  const hasSource = Boolean(citationSourceArticle);
+  const sourceItems = citationSourceArticle ? [citationSourceArticle] : [];
   const citedBy = citedByArticles ?? [];
-  const hasCitedBy = citedBy.length > 0;
 
-  if (!hasSource && !hasCitedBy) return null;
+  if (sourceItems.length === 0 && citedBy.length === 0) return null;
 
   return (
-    <section className="mt-8 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] p-4 sm:p-5">
-      {hasSource ? (
-        <div>
-          <p className="text-xs font-medium tracking-wide text-[var(--ui-text-subtle)]">引用元の記事</p>
-          <ul className="mt-2 space-y-1">
-            <RelatedArticleItem article={citationSourceArticle!} />
-          </ul>
-        </div>
-      ) : null}
-
-      {hasCitedBy ? (
-        <div className={hasSource ? "mt-5 border-t border-[var(--ui-border)] pt-4" : ""}>
-          <p className="text-xs font-medium tracking-wide text-[var(--ui-text-subtle)]">この記事を引用している記事</p>
-          <ul className="mt-2 space-y-1">
-            {citedBy.map((article) => (
-              <RelatedArticleItem key={`${article.path}-${article.title}`} article={article} />
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </section>
+    <>
+      <CitationBlock heading="この記事の引用元" items={sourceItems} />
+      <CitationBlock heading="この記事を引用している記事" items={citedBy} />
+    </>
   );
 }
