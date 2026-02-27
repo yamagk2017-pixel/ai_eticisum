@@ -21,15 +21,15 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 
 ## 現在進捗（2026-02-27）
 
-- 移行済み: **300件 / 約3,500件**
-  - `page=1`（100件）apply 完了
-  - `page=2`（100件）apply 完了
-  - `page=3`（100件）apply 完了
+- 移行済み: **3,411件 / 約3,500件（WP API上の最終ページまで完了）**
+  - `page=1`〜`page=34`（各100件）apply 完了
+  - `page=35`（11件）apply 完了
+  - `page=36` は `400 Bad Request`（範囲外）で、`page=35` が最終ページ
 - 既知の要確認:
-  - `featuredImage_api_denied`（累計 issues で追跡）
+  - `featuredImage_api_denied` / `featuredImage_missing`（累計 issues CSV で追跡）
 - 状態:
-  - フェーズ2（全件バッチ移行）は **継続中**
-  - フェーズ3（画像アセット移行 / DNS切替準備）は **設計着手**
+  - フェーズ2（全件バッチ移行）は **完了**
+  - フェーズ3（画像アセット移行 / DNS切替準備）へ移行可能
 
 ---
 
@@ -101,8 +101,8 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 - [◯] 再実行対象IDを管理（将来 `--only-ids` 検証用）
 
 現時点の記録:
-- 要修正リスト: 1件（`wpPostId=21277`）
-- 理由: `featuredImage_api_denied`（WP API経由でアイキャッチ取得不可）
+- 要修正リスト: 個別手修正は現時点 `0件`（致命的不具合なし）
+- ただし警告系（`featuredImage_api_denied` / `featuredImage_missing`）は多数発生
 - 対応方針: 記事移行は継続（hero image空を許容）、画像移行フェーズで再対応
 
 ---
@@ -123,11 +123,17 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 
 ## フェーズ2完了条件
 
-- [ ] 全対象記事の移行完了（重複なし）
+- [◯] 全対象記事の移行完了（重複なし）
 - [◯] バッチ実行ログが揃っている
 - [◯] 重大不具合が収束している
 - [◯] `要修正リスト` が処理方針付きで管理されている
-- [ ] フェーズ3（画像アセット移行 / DNS切替準備）に進める状態
+- [◯] フェーズ3（画像アセット移行 / DNS切替準備）に進める状態
+
+最終実行ログ（末尾）:
+- `reports/wp-to-sanity-poc-apply-20260227-201541.json`（page=33）
+- `reports/wp-to-sanity-poc-apply-20260227-201639.json`（page=34）
+- `reports/wp-to-sanity-poc-apply-20260227-201720.json`（page=35）
+- `reports/wp-to-sanity-poc-issues-merged-20260227-202336.csv`（issues統合）
 
 ---
 
