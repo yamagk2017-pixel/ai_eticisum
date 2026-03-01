@@ -3,7 +3,7 @@ import {PortableText, type PortableTextComponents} from "@portabletext/react";
 const components: PortableTextComponents = {
   block: {
     normal: ({children}) => (
-      <p className="my-4 px-2 text-[17px] leading-[2.1] text-zinc-700 dark:text-zinc-200 sm:px-3">
+      <p className="my-4 px-2 text-[17px] leading-[2.1] text-[var(--ui-text)] sm:px-3">
         {children}
       </p>
     ),
@@ -65,4 +65,3 @@ export function SanityArticleBody({value}: {value: unknown}) {
     </div>
   );
 }
-
