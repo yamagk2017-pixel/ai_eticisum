@@ -718,15 +718,6 @@ export function GroupDetail({ slug }: Props) {
         : null,
     },
   ];
-  const headerLinkItems = [
-    { label: "公式", short: "W", key: "website" },
-    { label: "X", short: "X", key: "x" },
-    { label: "YouTube", short: "YT", key: "youtube_channel" },
-    { label: "Instagram", short: "IG", key: "instagram" },
-    { label: "TikTok", short: "TT", key: "tiktok" },
-    { label: "カレンダー", short: "Cal", key: "schedule" },
-  ] as const;
-
   return (
     <div className="flex flex-col gap-10">
       <header>
@@ -742,7 +733,7 @@ export function GroupDetail({ slug }: Props) {
               {displayName}
             </h1>
 
-            <div className="space-y-1 text-xs text-zinc-400 sm:text-sm">
+            <div className="space-y-1 text-xs text-zinc-500 sm:text-sm">
               <p>メンバー: {groupAttributes?.members ?? "-"}</p>
               <p>
                 活動拠点: {groupAttributes?.location ?? "-"} ／ 事務所:{" "}
@@ -752,7 +743,7 @@ export function GroupDetail({ slug }: Props) {
 
             <div className="pt-4">
               {profileBody ? (
-                <p className="font-mincho-jp text-base leading-7 text-zinc-200 whitespace-pre-wrap break-words">
+                <p className="font-mincho-jp text-base leading-7 text-black whitespace-pre-wrap break-words">
                   {displayedProfileText}
                 </p>
               ) : (
@@ -787,30 +778,9 @@ export function GroupDetail({ slug }: Props) {
               <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]" />
             )}
 
-            <div className="flex flex-1 flex-wrap justify-end gap-1.5 sm:max-w-[176px] sm:flex-none lg:max-w-[264px] lg:gap-2">
-              {headerLinkItems.map((item) => {
-                const url = serviceMap.get(item.key)?.url ?? null;
-                if (!url) {
-                  return null;
-                }
-                return (
-                  <a
-                    key={item.key}
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    title={item.label}
-                    aria-label={item.label}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/40 text-[8px] font-semibold text-zinc-200 hover:border-zinc-500 lg:h-10 lg:w-10 lg:text-[10px]"
-                  >
-                    {item.short}
-                  </a>
-                );
-              })}
-            </div>
           </aside>
         </div>
-        <div className="mt-4 h-px w-full bg-zinc-800/80" />
+        <div className="mt-4 h-px w-full bg-zinc-300" />
       </header>
 
       <section>
@@ -822,7 +792,7 @@ export function GroupDetail({ slug }: Props) {
                   <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
                     {displayName}ってこんなグループ「ナンダッテ」
                   </h2>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-zinc-500">
                     上位5件をハイライト / ログインで6位以下も表示
                   </span>
                 </div>
@@ -841,12 +811,12 @@ export function GroupDetail({ slug }: Props) {
                           <span className="font-medium">
                             {index + 1}. {item.label}
                           </span>
-                          <span className="text-zinc-300">{item.count}</span>
+                          <span className="text-zinc-700">{item.count}</span>
                         </div>
-                        <div className="mt-2 h-4 w-full bg-zinc-800">
+                        <div className="mt-2 h-4 w-full bg-zinc-200">
                           <div
                             className={`h-4 ${
-                              isTopFive ? "bg-zinc-400" : "bg-zinc-600"
+                              isTopFive ? "bg-zinc-700" : "bg-zinc-600"
                             }`}
                             style={{ width: `${width}%` }}
                           />
@@ -855,7 +825,7 @@ export function GroupDetail({ slug }: Props) {
                     );
                   })}
                   {!isLoggedIn && hiddenCount > 0 && (
-                    <div className="px-1 py-2 text-sm text-zinc-400 col-span-2">
+                    <div className="px-1 py-2 text-sm text-zinc-600 col-span-2">
                       その他 {hiddenCount} 件
                     </div>
                   )}
@@ -881,12 +851,12 @@ export function GroupDetail({ slug }: Props) {
                   </div>
                 )}
                 {authReady && !userEmail && (
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-400">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-500">
                     <span>投票にはログインが必要</span>
                     <button
                       type="button"
                       onClick={handleSignIn}
-                      className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
+                      className="rounded-full border border-zinc-400 bg-white px-4 py-1 text-xs font-semibold text-zinc-900 hover:bg-zinc-200"
                     >
                       Googleでログイン
                     </button>
@@ -896,11 +866,11 @@ export function GroupDetail({ slug }: Props) {
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold text-zinc-200">
+                  <h3 className="text-base font-semibold text-black">
                     {displayName}の👍ワード
                   </h3>
                   <div className="mt-2 flex items-center gap-1 text-xs text-zinc-500">
-                    <span className="font-medium text-sky-300">F</span>
+                    <span className="font-medium text-[var(--ui-link)]">F</span>
                     <span>はフリーワード</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -920,11 +890,11 @@ export function GroupDetail({ slug }: Props) {
                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-left text-sm transition ${
                             selected
                               ? isFreeword
-                                ? "border-sky-400 bg-sky-400/10 text-sky-100"
-                                : "border-amber-400 bg-amber-400/10 text-amber-100"
+                                ? "border-[var(--ui-link)] bg-[color-mix(in_oklab,var(--ui-link)_12%,var(--ui-panel))] text-[var(--ui-text)]"
+                                : "border-[var(--ui-accent)] bg-[color-mix(in_oklab,var(--ui-accent)_12%,var(--ui-panel))] text-[var(--ui-text)]"
                               : isFreeword
-                              ? "border-sky-900/60 bg-zinc-950 text-zinc-200 hover:border-sky-700"
-                              : "border-zinc-700 bg-zinc-950 text-zinc-200 hover:border-zinc-500"
+                              ? "border-[var(--ui-border)] bg-[var(--ui-panel)] text-[var(--ui-text)] hover:border-[var(--ui-link)] hover:bg-[var(--ui-panel-soft)]"
+                              : "border-[var(--ui-border)] bg-[var(--ui-panel)] text-[var(--ui-text)] hover:border-[var(--ui-accent)] hover:bg-[var(--ui-panel-soft)]"
                           }`}
                           onClick={() =>
                             toggleSelection({
@@ -935,10 +905,10 @@ export function GroupDetail({ slug }: Props) {
                           }
                         >
                           {isFreeword && (
-                            <span className="font-medium text-sky-300">F</span>
+                            <span className="font-medium text-[var(--ui-link)]">F</span>
                           )}
                           <span>{chip.label}</span>
-                          <span className="text-xs text-zinc-500">{chip.count}</span>
+                          <span className="text-xs text-[var(--ui-text-subtle)]">{chip.count}</span>
                         </button>
                       );
                     })}
@@ -947,7 +917,7 @@ export function GroupDetail({ slug }: Props) {
 
                 <div>
                   <label
-                    className="text-base font-semibold text-zinc-200"
+                    className="text-base font-semibold text-black"
                     htmlFor="freeword"
                   >
                     👍フリーワード（10文字以内）
@@ -957,7 +927,7 @@ export function GroupDetail({ slug }: Props) {
                     value={newFreeword}
                     onChange={(event) => setNewFreeword(event.target.value)}
                     maxLength={10}
-                    className="mt-2 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-amber-400 focus:outline-none"
+                    className="mt-2 w-full rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-sm text-[var(--ui-text)] placeholder:text-[var(--ui-text-subtle)] focus:border-[var(--ui-accent)] focus:outline-none"
                     placeholder="例: 世界観が良い"
                   />
                   <p className="mt-2 text-xs text-zinc-500">

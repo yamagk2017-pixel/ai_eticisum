@@ -138,9 +138,9 @@ export function GroupsList() {
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">グループ検索</h2>
             {registeredCount !== null && (
-                <span className="rounded-full border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs text-zinc-300">
+                <span className="rounded-full border border-zinc-400 px-3 py-1 text-xs text-zinc-500">
                 登録グループ{registeredCount.toLocaleString("ja-JP")}組
-                </span>
+              </span>
               )}
           </div>
           <p className="mt-2 text-xs text-zinc-400">
@@ -163,12 +163,12 @@ export function GroupsList() {
               onChange={(event) => {
                 setSearch(event.target.value);
               }}
-              className="w-48 rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2 text-xs text-zinc-200 focus:border-amber-400 focus:outline-none"
+              className="w-48 rounded-full border border-zinc-400 bg-[var(--ui-panel)] px-4 py-2 text-xs text-zinc-800 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none"
               placeholder="グループ名で検索"
             />
             <button
               type="submit"
-              className="rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              className="rounded-full border border-zinc-400 bg-[var(--ui-panel)] px-4 py-2 text-xs text-zinc-800 hover:border-zinc-500 hover:bg-zinc-100"
             >
               検索
             </button>
@@ -191,8 +191,8 @@ export function GroupsList() {
               className={[
                 "rounded-full border px-3 py-1.5 transition-colors",
                 active
-                  ? "border-amber-400 bg-amber-400/10 text-amber-200"
-                  : "border-zinc-700 bg-zinc-950 text-zinc-300 hover:border-zinc-500",
+                  ? "border-zinc-400 bg-zinc-100 text-zinc-900"
+                  : "border-zinc-400 bg-transparent text-zinc-600 hover:border-zinc-500 hover:bg-zinc-100",
               ].join(" ")}
             >
               {filter.label}

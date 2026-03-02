@@ -174,11 +174,19 @@ export function Rankings({
                     />
                   ) : null}
                 </div>
-                <span className="min-w-0 truncate font-medium">
+                <span
+                  className={`min-w-0 truncate font-medium ${
+                    section.key === "vote" || section.key === "recent" ? "text-zinc-700" : ""
+                  }`}
+                >
                   <span className="mr-2 text-sm text-zinc-400">{index + 1}.</span>
                   {item.slug ? (
                     <Link
-                      className="underline decoration-zinc-500 underline-offset-2 hover:text-white"
+                      className={`underline decoration-zinc-500 underline-offset-2 ${
+                        section.key === "vote" || section.key === "recent"
+                          ? "text-zinc-700 hover:text-zinc-900"
+                          : "hover:text-white"
+                      }`}
                       href={`/nandatte/${item.slug}`}
                     >
                       {item.name}
@@ -188,7 +196,7 @@ export function Rankings({
                   )}
                 </span>
               </div>
-              <span className="shrink-0 text-xs text-zinc-400">
+              <span className="shrink-0 text-xs text-zinc-500">
                 {section.key === "vote" ? (
                   `${item.vote_count}票`
                 ) : (
