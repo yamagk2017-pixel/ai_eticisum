@@ -153,7 +153,7 @@ export function GlobalHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--ui-border)] bg-[color-mix(in_oklab,var(--ui-panel)_88%,transparent)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
-        <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.18em]">
+        <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em]">
           IDOL CROSSING
         </Link>
 
