@@ -74,6 +74,52 @@ html[data-theme="dark"] {
   --ui-link-hover: #a5f3fc;
 }
 
+/* Guard rails: keep dark mode readable even when pop-focused utility classes remain. */
+html[data-theme="dark"] .text-black,
+html[data-theme="dark"] .text-zinc-900,
+html[data-theme="dark"] .text-zinc-800 {
+  color: var(--ui-text) !important;
+}
+
+html[data-theme="dark"] .text-zinc-700,
+html[data-theme="dark"] .text-zinc-600,
+html[data-theme="dark"] .text-zinc-500 {
+  color: var(--ui-text-muted) !important;
+}
+
+html[data-theme="dark"] .text-zinc-400 {
+  color: var(--ui-text-subtle) !important;
+}
+
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-zinc-100 {
+  background-color: var(--ui-panel-soft) !important;
+}
+
+html[data-theme="dark"] .bg-zinc-200 {
+  background-color: color-mix(in oklab, var(--ui-panel-soft) 88%, white 12%) !important;
+}
+
+html[data-theme="dark"] .border-zinc-300,
+html[data-theme="dark"] .border-zinc-400,
+html[data-theme="dark"] .border-zinc-500 {
+  border-color: var(--ui-border) !important;
+}
+
+html[data-theme="dark"] .imakite-chip-active {
+  background-color: #52525b !important;
+  border-color: #71717a !important;
+  color: #f4f4f5 !important;
+}
+
+html[data-theme="dark"] .news-article-body .wp-caption {
+  border-color: #3f3f46 !important;
+}
+
+html[data-theme="dark"] .nandatte-profile-divider {
+  background-color: rgba(161, 161, 170, 0.32) !important;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -91,9 +137,10 @@ html[data-theme="light"] body {
   font-family: var(--font-shippori-mincho), serif;
 }
 
-.news-intro-cream > p:nth-of-type(-n + 2) {
+html[data-theme="pop"] .news-intro-cream > p:nth-of-type(-n + 2),
+html[data-theme="light"] .news-intro-cream > p:nth-of-type(-n + 2) {
   background-color: #fffbf3;
-  border: 1px solid #f2e8d5;
+  border: 1px solid #e8dcc4;
   border-radius: 12px;
   padding: 0.75rem 1rem;
 }
@@ -121,7 +168,8 @@ html[data-theme="light"] .news-article-body h3 {
   background-color: color-mix(in oklab, var(--ui-panel-soft) 98%, transparent) !important;
 }
 
-.top-buzz-tweet-theme .react-tweet-theme {
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme,
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme {
   --tweet-bg-color: rgba(255, 248, 232, 0.96) !important;
   --tweet-bg-color-hover: rgba(255, 250, 238, 0.98) !important;
   --tweet-border: 1px solid rgba(221, 193, 149, 0.98) !important;
@@ -140,25 +188,32 @@ html[data-theme="light"] .news-article-body h3 {
     0 0 0 1px rgba(221, 193, 149, 0.58);
 }
 
-.top-buzz-tweet-theme .react-tweet-theme,
-.top-buzz-tweet-theme .react-tweet-theme * {
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme,
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme *,
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme,
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme * {
   color: #3f3f46 !important;
 }
 
-.top-buzz-tweet-theme .react-tweet-theme :is(p, span, strong, b, time) {
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme :is(p, span, strong, b, time),
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme :is(p, span, strong, b, time) {
   color: #3f3f46 !important;
 }
 
-.top-buzz-tweet-theme .react-tweet-theme a,
-.top-buzz-tweet-theme .react-tweet-theme [role="link"] {
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme a,
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme [role="link"],
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme a,
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme [role="link"] {
   color: #8d1b61 !important;
 }
 
-.top-buzz-tweet-theme .react-tweet-theme:hover {
+html[data-theme="pop"] .top-buzz-tweet-theme .react-tweet-theme:hover,
+html[data-theme="light"] .top-buzz-tweet-theme .react-tweet-theme:hover {
   background-color: rgba(255, 250, 238, 0.98) !important;
 }
 
-.top-buzz-tweet-theme.rounded-xl {
+html[data-theme="pop"] .top-buzz-tweet-theme.rounded-xl,
+html[data-theme="light"] .top-buzz-tweet-theme.rounded-xl {
   border-color: rgba(221, 193, 149, 0.72) !important;
   background-color: rgba(255, 244, 220, 0.32) !important;
 }

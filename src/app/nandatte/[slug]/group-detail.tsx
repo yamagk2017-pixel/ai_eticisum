@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
@@ -23,6 +24,19 @@ type MetricCountRow = {
   label: string;
   count: number;
   kind: "fixed" | "freeword" | string;
+  metric_id: string | null;
+  freeword_id: string | null;
+};
+
+type MetricCountRpcRow = {
+  label: string | null;
+  count: number | null;
+  kind: string | null;
+  metric_id: string | null;
+  freeword_id: string | null;
+};
+
+type VoteItemRow = {
   metric_id: string | null;
   freeword_id: string | null;
 };
@@ -108,6 +122,7 @@ export function GroupDetail({ slug }: Props) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [expandedProfileGroupId, setExpandedProfileGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -238,6 +253,7 @@ export function GroupDetail({ slug }: Props) {
   }, []);
 
   const fetchMetricsAndCounts = async (groupId: string) => {
+    setMetricsReady(false);
     const supabase = createClient();
     const [metricsResponse, freeMetricResponse, metricCountsResponse, totalVotesResponse] =
       await Promise.all([
@@ -277,12 +293,12 @@ export function GroupDetail({ slug }: Props) {
       return;
     }
 
-    const counts = (metricCountsResponse.data ?? []).map((row: any) => ({
-      label: row.label as string,
+    const counts = ((metricCountsResponse.data ?? []) as MetricCountRpcRow[]).map((row) => ({
+      label: row.label ?? "",
       count: Number(row.count ?? 0),
-      kind: row.kind as string,
-      metric_id: row.metric_id as string | null,
-      freeword_id: row.freeword_id as string | null,
+      kind: row.kind ?? "fixed",
+      metric_id: row.metric_id,
+      freeword_id: row.freeword_id,
     }));
 
     setMetricCounts(counts);
@@ -318,10 +334,11 @@ export function GroupDetail({ slug }: Props) {
       return;
     }
 
-    setMetricsReady(false);
-    fetchMetricsAndCounts(group.id).catch((err: unknown) => {
-      setVoteStatus("error");
-      setVoteMessage(err instanceof Error ? err.message : "Unknown error");
+    queueMicrotask(() => {
+      fetchMetricsAndCounts(group.id).catch((err: unknown) => {
+        setVoteStatus("error");
+        setVoteMessage(err instanceof Error ? err.message : "Unknown error");
+      });
     });
   }, [group?.id]);
 
@@ -384,11 +401,7 @@ export function GroupDetail({ slug }: Props) {
     return map;
   }, [externalIds]);
 
-  const [isProfileExpanded, setIsProfileExpanded] = useState(false);
-
-  useEffect(() => {
-    setIsProfileExpanded(false);
-  }, [group?.id]);
+  const isProfileExpanded = expandedProfileGroupId === (group?.id ?? null);
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
   const isLoggedIn = !!userEmail;
@@ -439,7 +452,7 @@ export function GroupDetail({ slug }: Props) {
 
       const selected: SelectedItem[] = [];
 
-      for (const item of items as any[]) {
+      for (const item of items as VoteItemRow[]) {
         if (item.freeword_id) {
           let label = freewordLabelMap.get(item.freeword_id) ?? null;
           if (!label) {
@@ -757,7 +770,7 @@ export function GroupDetail({ slug }: Props) {
               {profileBody && profileNeedsExpand && !isProfileExpanded && (
                 <button
                   type="button"
-                  onClick={() => setIsProfileExpanded(true)}
+                  onClick={() => setExpandedProfileGroupId(group?.id ?? null)}
                   className="mt-3 inline-flex items-center rounded-full border border-zinc-600 bg-zinc-700 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:border-zinc-500 hover:bg-zinc-600"
                 >
                   + すべて見る
@@ -768,11 +781,13 @@ export function GroupDetail({ slug }: Props) {
 
           <aside className="flex min-w-0 items-start justify-between gap-3 sm:flex-col sm:items-end sm:justify-start sm:gap-2 lg:gap-3">
             {group.artist_image_url ? (
-              <img
+              <Image
                 src={group.artist_image_url}
                 alt={group.name_ja ? `${group.name_ja} image` : "artist image"}
+                width={185}
+                height={185}
                 className="h-[110px] w-[110px] rounded-xl border border-zinc-700 object-cover sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]"
-                loading="lazy"
+                unoptimized
               />
             ) : (
               <div className="h-[110px] w-[110px] rounded-xl border border-zinc-700 bg-zinc-800/60 sm:h-[110px] sm:w-[110px] lg:h-[185px] lg:w-[185px]" />
@@ -780,7 +795,7 @@ export function GroupDetail({ slug }: Props) {
 
           </aside>
         </div>
-        <div className="mt-4 h-px w-full bg-zinc-300" />
+        <div className="nandatte-profile-divider mt-4 h-px w-full bg-zinc-300" />
       </header>
 
       <section>

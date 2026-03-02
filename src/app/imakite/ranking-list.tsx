@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -455,11 +456,13 @@ export function ImakiteRankingList({
             >
               <div className="absolute inset-0">
                 {row.artist_image_url ? (
-                  <img
+                  <Image
                     src={row.artist_image_url}
                     alt={row.artist_name}
-                    className="h-full w-full object-cover opacity-70"
-                    loading="lazy"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                    className="object-cover opacity-70"
+                    unoptimized
                   />
                 ) : (
                   <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
@@ -549,13 +552,15 @@ export function ImakiteRankingList({
               className="overflow-hidden rounded-xl border border-zinc-400 bg-[var(--ui-panel)]"
             >
               <div className="flex items-start gap-4 p-4 sm:p-5">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-[var(--ui-panel-soft)] sm:h-24 sm:w-24">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-[var(--ui-panel-soft)] sm:h-24 sm:w-24">
                   {row.artist_image_url ? (
-                    <img
+                    <Image
                       src={row.artist_image_url}
                       alt={row.artist_name}
-                      className="h-full w-full object-cover"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 80px, 96px"
+                      className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300" />

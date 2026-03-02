@@ -52,12 +52,6 @@ export function GroupsList() {
   }, [total]);
 
   useEffect(() => {
-    if (page > pageCount) {
-      setPage(pageCount);
-    }
-  }, [page, pageCount]);
-
-  useEffect(() => {
     searchRef.current?.focus();
   }, []);
 
@@ -87,7 +81,8 @@ export function GroupsList() {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
-      const from = (page - 1) * PAGE_SIZE;
+      const effectivePage = Math.min(page, pageCount);
+      const from = (effectivePage - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
       let query = supabase
@@ -123,13 +118,15 @@ export function GroupsList() {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, [page, submittedSearch, initialFilter, hasSearched]);
+  }, [page, pageCount, submittedSearch, initialFilter, hasSearched]);
 
   useEffect(() => {
     if (status === "idle") {
       searchRef.current?.focus();
     }
   }, [status]);
+
+  const currentPage = Math.min(page, pageCount);
 
   return (
     <div>
@@ -237,25 +234,25 @@ export function GroupsList() {
       {hasSearched && (
         <div className="mt-6 flex items-center justify-between text-xs text-zinc-400">
         <span>
-          {total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1}-
-          {Math.min(page * PAGE_SIZE, total)} / {total}
+          {total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}-
+          {Math.min(currentPage * PAGE_SIZE, total)} / {total}
         </span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            disabled={page <= 1}
+            disabled={currentPage <= 1}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 disabled:opacity-40"
           >
             前へ
           </button>
           <span>
-            {page} / {pageCount}
+            {currentPage} / {pageCount}
           </span>
           <button
             type="button"
             onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-            disabled={page >= pageCount}
+            disabled={currentPage >= pageCount}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 disabled:opacity-40"
           >
             次へ

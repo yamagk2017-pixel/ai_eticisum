@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactElement } from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
@@ -454,11 +455,13 @@ export default async function Home() {
           <article className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
             <div className="absolute inset-0">
               {imakiteTop1.artistImageUrl ? (
-                <img
+                <Image
                   src={imakiteTop1.artistImageUrl}
                   alt={imakiteTop1.name}
-                  className="h-full w-full object-cover opacity-70"
-                  loading="lazy"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  className="object-cover opacity-70"
+                  unoptimized
                 />
               ) : (
                 <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
@@ -569,9 +572,16 @@ export default async function Home() {
           summaries.nandatte.voteTop.map((item, index) => (
             <li key={`nandatte-vote-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                      unoptimized
+                    />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
@@ -614,9 +624,16 @@ export default async function Home() {
           summaries.nandatte.recentTop.map((item, index) => (
             <li key={`nandatte-recent-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                   {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" loading="lazy" />
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                      unoptimized
+                    />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
@@ -703,7 +720,6 @@ export default async function Home() {
                   tweetId={extractTweetId(item.tweetUrl)}
                   tweetUrl={item.tweetUrl}
                   compact
-                  className="top-buzz-tweet-theme"
                 />
               </div>
             </article>

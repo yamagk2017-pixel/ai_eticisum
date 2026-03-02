@@ -66,6 +66,8 @@ export default async function WpMvpPage({
   const resolvedSearchParams = (await searchParams) ?? {};
   const rawId = firstParam(resolvedSearchParams.id);
   const rawSlug = firstParam(resolvedSearchParams.slug);
+  let post = null;
+  let fetchErrorMessage: string | null = null;
 
   if (!hasBaseUrl) {
     return (
@@ -87,8 +89,6 @@ export default async function WpMvpPage({
   }
 
   try {
-    let post = null;
-
     if (rawId && /^\d+$/.test(rawId)) {
       post = await fetchWpPostById(Number(rawId));
     } else if (rawSlug) {
@@ -96,78 +96,80 @@ export default async function WpMvpPage({
     } else {
       post = await fetchLatestWpPost();
     }
-
-    if (!post) {
-      return (
-        <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
-          <div className="rounded-2xl border border-zinc-300/80 bg-white/80 p-6 dark:border-zinc-800 dark:bg-zinc-900/60">
-            <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
-            <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
-              記事が取得できませんでした（0件）。
-            </p>
-            {(rawId || rawSlug) && (
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                指定値: {rawId ? `id=${rawId}` : `slug=${rawSlug}`}
-              </p>
-            )}
-          </div>
-        </main>
-      );
-    }
-
-    return (
-      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
-        <article>
-          <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
-            {post.featuredImageUrl ? (
-              <div className="md:order-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={post.featuredImageUrl}
-                  alt={post.featuredImageAlt ?? ""}
-                  className="h-auto w-full rounded-xl object-contain"
-                />
-              </div>
-            ) : null}
-
-            <div className={post.featuredImageUrl ? "md:order-1" : undefined}>
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
-                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(post.date)}</p>
-                <div className="mt-0">
-                  <TermPills items={post.categories} variant="plain" />
-                </div>
-              </div>
-
-              <h1
-                className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
-                dangerouslySetInnerHTML={{ __html: post.titleHtml }}
-              />
-
-              <div className="mt-4">
-                <TermPills items={post.tags} />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-6">
-            <WpArticleBody html={post.contentHtml} />
-          </div>
-        </article>
-      </main>
-    );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    fetchErrorMessage = error instanceof Error ? error.message : "Unknown error";
+  }
 
+  if (fetchErrorMessage) {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
         <div className="rounded-2xl border border-rose-300/70 bg-rose-50 p-6 dark:border-rose-800/60 dark:bg-rose-950/30">
           <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
           <p className="mt-3 text-sm text-rose-900 dark:text-rose-200">取得に失敗しました。</p>
           <pre className="mt-4 overflow-x-auto rounded-xl bg-white/70 p-4 text-xs text-rose-950 dark:bg-zinc-950/60 dark:text-rose-200">
-{message}
+{fetchErrorMessage}
           </pre>
         </div>
       </main>
     );
   }
+
+  if (!post) {
+    return (
+      <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+        <div className="rounded-2xl border border-zinc-300/80 bg-white/80 p-6 dark:border-zinc-800 dark:bg-zinc-900/60">
+          <h1 className="text-2xl font-semibold">WP MVP (latest post)</h1>
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
+            記事が取得できませんでした（0件）。
+          </p>
+          {(rawId || rawSlug) && (
+            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              指定値: {rawId ? `id=${rawId}` : `slug=${rawSlug}`}
+            </p>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+      <article>
+        <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
+          {post.featuredImageUrl ? (
+            <div className="md:order-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.featuredImageUrl}
+                alt={post.featuredImageAlt ?? ""}
+                className="h-auto w-full rounded-xl object-contain"
+              />
+            </div>
+          ) : null}
+
+          <div className={post.featuredImageUrl ? "md:order-1" : undefined}>
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
+              <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(post.date)}</p>
+              <div className="mt-0">
+                <TermPills items={post.categories} variant="plain" />
+              </div>
+            </div>
+
+            <h1
+              className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
+              dangerouslySetInnerHTML={{ __html: post.titleHtml }}
+            />
+
+            <div className="mt-4">
+              <TermPills items={post.tags} />
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-6">
+          <WpArticleBody html={post.contentHtml} />
+        </div>
+      </article>
+    </main>
+  );
 }

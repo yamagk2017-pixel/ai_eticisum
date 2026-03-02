@@ -38,23 +38,30 @@ export function RelatedGroupObjectInput(props: ObjectInputProps<RelatedGroupValu
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    setQuery(value.groupNameJa ?? "");
-  }, [value.groupNameJa]);
+    const nextQuery = value.groupNameJa ?? "";
+    if (nextQuery === query) return;
+    queueMicrotask(() => {
+      setQuery(nextQuery);
+    });
+  }, [value.groupNameJa, query]);
 
   useEffect(() => {
     const q = query.trim();
-    setSearchError(null);
 
     if (q.length < 1) {
-      setItems([]);
-      setIsLoading(false);
+      queueMicrotask(() => {
+        setItems([]);
+        setIsLoading(false);
+      });
       return;
     }
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
-    setIsLoading(true);
+    queueMicrotask(() => {
+      setIsLoading(true);
+    });
 
     const timer = setTimeout(() => {
       fetchSuggestions(q, controller.signal)
@@ -91,6 +98,7 @@ export function RelatedGroupObjectInput(props: ObjectInputProps<RelatedGroupValu
 
   const handleQueryChange = (next: string) => {
     setQuery(next);
+    setSearchError(null);
     setShowSuggestions(true);
     props.onChange([
       patchBase(),
@@ -102,6 +110,7 @@ export function RelatedGroupObjectInput(props: ObjectInputProps<RelatedGroupValu
 
   const handleSelect = (item: Suggestion) => {
     setQuery(item.groupNameJa);
+    setSearchError(null);
     setShowSuggestions(false);
     props.onChange([
       patchBase(),

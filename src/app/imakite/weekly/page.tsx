@@ -28,7 +28,7 @@ export default function ImakiteWeeklyPage() {
             </Link>
             <Link
               href="/imakite/weekly"
-              className="rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
+              className="imakite-chip-active rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
             >
               Weekly
             </Link>

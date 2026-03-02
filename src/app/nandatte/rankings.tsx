@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -166,11 +167,13 @@ export function Rankings({
                     {item.name.slice(0, 1)}
                   </div>
                   {item.imageUrl ? (
-                    <img
+                    <Image
                       src={item.imageUrl}
                       alt={item.name}
-                      className="relative h-full w-full object-cover"
-                      loading="lazy"
+                      fill
+                      sizes="40px"
+                      className="relative object-cover"
+                      unoptimized
                     />
                   ) : null}
                 </div>
