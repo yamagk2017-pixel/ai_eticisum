@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type NavItem = {
@@ -30,12 +30,16 @@ const navItems: NavItem[] = [
 
 export function GlobalHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [userLabel, setUserLabel] = useState<string | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -69,16 +73,22 @@ export function GlobalHeader() {
   }, []);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !searchOpen) return;
 
     const onPointerDown = (event: MouseEvent) => {
-      if (!menuRef.current) return;
-      if (menuRef.current.contains(event.target as Node)) return;
+      const target = event.target as Node;
+      const inMenu = menuRef.current?.contains(target) ?? false;
+      const inSearch = searchRef.current?.contains(target) ?? false;
+      if (inMenu || inSearch) return;
       setMenuOpen(false);
+      setSearchOpen(false);
     };
 
     const onEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setSearchOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", onPointerDown);
@@ -87,12 +97,21 @@ export function GlobalHeader() {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onEscape);
     };
-  }, [menuOpen]);
+  }, [menuOpen, searchOpen]);
 
   useEffect(() => {
     setMobileNavOpen(false);
     setMenuOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const q = searchText.trim();
+    if (!q) return;
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setSearchOpen(false);
+  };
 
   const applyTheme = (nextTheme: "light" | "dark") => {
     setTheme(nextTheme);
@@ -160,7 +179,10 @@ export function GlobalHeader() {
               <>
                 <button
                   type="button"
-                  onClick={() => setMenuOpen((open) => !open)}
+                  onClick={() => {
+                    setMenuOpen((open) => !open);
+                    setSearchOpen(false);
+                  }}
                   disabled={authBusy}
                   className="inline-flex items-center gap-1 rounded-full bg-[var(--ui-text)] px-3 py-1.5 text-xs text-[var(--ui-page)] hover:opacity-90 disabled:opacity-60"
                   aria-expanded={menuOpen}
@@ -230,6 +252,42 @@ export function GlobalHeader() {
               >
                 Googleログイン
               </button>
+            )}
+          </div>
+
+          <div ref={searchRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchOpen((open) => !open);
+                setMenuOpen(false);
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--ui-border)] text-[var(--ui-text)]"
+              aria-expanded={searchOpen}
+              aria-haspopup="dialog"
+              aria-label="検索を開く"
+            >
+              <span aria-hidden="true" className="text-sm leading-none">🔍</span>
+            </button>
+
+            {searchOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-3 shadow-lg">
+                <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                  <input
+                    type="search"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="キーワードを入力"
+                    className="h-9 w-full rounded-md border border-[var(--ui-border)] bg-[var(--ui-page)] px-3 text-sm text-[var(--ui-text)] outline-none focus:border-[var(--ui-text-subtle)]"
+                  />
+                  <button
+                    type="submit"
+                    className="shrink-0 rounded-md bg-[var(--ui-text)] px-3 py-2 text-xs text-[var(--ui-page)]"
+                  >
+                    検索
+                  </button>
+                </form>
+              </div>
             )}
           </div>
 
