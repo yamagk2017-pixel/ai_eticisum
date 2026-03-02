@@ -408,7 +408,7 @@ export function ImakiteRankingList({
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
             {eyebrowLabel}
           </p>
-          <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+          <h2 className="font-mincho-jp text-2xl font-semibold text-zinc-800 sm:text-3xl">
             {title ?? config.defaultTitle}
           </h2>
           {source !== "daily" && source !== "weekly" && dateLabel && (
@@ -418,7 +418,7 @@ export function ImakiteRankingList({
         {showArchiveLink && (
           <Link
             href={config.archiveHref}
-            className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+            className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-zinc-800 hover:border-zinc-400"
           >
             過去のランキングを見る →
           </Link>
@@ -426,7 +426,7 @@ export function ImakiteRankingList({
       </div>
 
       {source === "weekly" && playlistEmbedLink && (
-        <div className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
+        <div className="overflow-hidden rounded-xl border border-zinc-400 bg-[var(--ui-panel-soft)]">
           <iframe
             title="Weekly Playlist"
             src={playlistEmbedLink}
@@ -546,10 +546,10 @@ export function ImakiteRankingList({
           {rows.map((row) => (
             <article
               key={`${row.snapshot_date}-${row.rank}-${row.group_id}`}
-              className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900/40 shadow-lg backdrop-blur"
+              className="overflow-hidden rounded-xl border border-zinc-400 bg-[var(--ui-panel)]"
             >
               <div className="flex items-start gap-4 p-4 sm:p-5">
-                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-slate-800 sm:h-24 sm:w-24">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md border border-zinc-300 bg-[var(--ui-panel-soft)] sm:h-24 sm:w-24">
                   {row.artist_image_url ? (
                     <img
                       src={row.artist_image_url}
@@ -558,18 +558,18 @@ export function ImakiteRankingList({
                       loading="lazy"
                     />
                   ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900" />
+                    <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300" />
                   )}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-amber-300">{row.rank}位</p>
-                      <h3 className="truncate text-xl font-semibold text-white sm:text-2xl">
+                      <p className="text-sm font-semibold text-zinc-700">{row.rank}位</p>
+                      <h3 className="truncate text-xl font-semibold text-[var(--ui-text)] sm:text-2xl">
                         {slugMap.get(row.group_id) ? (
                           <Link
                             href={`/nandatte/${slugMap.get(row.group_id)}`}
-                            className="underline decoration-white/80 underline-offset-4 hover:text-zinc-100"
+                            className="underline decoration-zinc-500/70 underline-offset-4 hover:text-zinc-700"
                           >
                             {row.artist_name}
                           </Link>
@@ -578,12 +578,12 @@ export function ImakiteRankingList({
                         )}
                       </h3>
                     </div>
-                    <div className="rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-zinc-100">
+                    <div className="rounded-full border border-zinc-400 bg-[var(--ui-panel-soft)] px-3 py-1 text-sm font-semibold text-[var(--ui-text)]">
                       {formatScore(row.score)} pts
                     </div>
                   </div>
                   {row.latest_track_name && (
-                    <p className="truncate text-sm text-zinc-200">♪ {row.latest_track_name}</p>
+                    <p className="truncate text-sm text-[var(--ui-text-muted)]">♪ {row.latest_track_name}</p>
                   )}
                 </div>
               </div>

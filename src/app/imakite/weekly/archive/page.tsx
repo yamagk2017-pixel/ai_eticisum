@@ -93,36 +93,36 @@ export default function ImakiteWeeklyArchivePage() {
   const dateList = useMemo(() => dates, [dates]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-16">
         <header className="flex flex-col gap-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--ui-link)]">
             IMAKITE WEEKLY ARCHIVE
           </p>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/imakite/archive"
-              className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-black hover:border-zinc-400"
             >
               Daily Archive
             </Link>
             <Link
               href="/imakite/weekly/archive"
-              className="rounded-full border border-amber-400/70 bg-amber-500/20 px-4 py-2 text-xs font-semibold text-amber-200"
+              className="rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
             >
               Weekly Archive
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-3xl font-semibold sm:text-4xl">過去の週間ランキング</h1>
+            <h1 className="font-mincho-jp text-3xl font-semibold text-zinc-900 sm:text-4xl">過去の週間ランキング</h1>
             <Link
               href="/imakite/weekly"
-              className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-zinc-800 hover:border-zinc-400"
             >
               最新週間ランキングへ →
             </Link>
           </div>
-          <p className="text-sm text-zinc-300">
+          <p className="text-sm text-zinc-700">
             日付を選択すると、その週のランキング詳細へ移動します。
           </p>
         </header>
@@ -133,10 +133,10 @@ export default function ImakiteWeeklyArchivePage() {
           </div>
         )}
 
-        {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
+        {status === "loading" && <p className="text-sm text-zinc-600">読み込み中...</p>}
 
         {status === "idle" && dateList.length === 0 && (
-          <p className="text-sm text-zinc-400">アーカイブがありません。</p>
+          <p className="text-sm text-zinc-600">アーカイブがありません。</p>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -147,25 +147,25 @@ export default function ImakiteWeeklyArchivePage() {
             return (
               <article
                 key={date}
-                className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm text-zinc-200"
+                className="rounded-2xl border border-zinc-400 bg-[var(--ui-panel)] p-4 text-sm text-[var(--ui-text)]"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Link
                     href={`/imakite/weekly/ranking/${date}`}
-                    className="font-semibold hover:text-white"
+                    className="font-semibold hover:text-zinc-700"
                   >
                     {formatArchiveDateLabel(date)}
                   </Link>
                   <Link
                     href={`/imakite/weekly/ranking/${date}`}
-                    className="text-xs text-amber-300 hover:text-amber-200"
+                    className="text-xs text-[var(--ui-link)] hover:text-[var(--ui-link-hover)]"
                   >
                     ランキングを見る →
                   </Link>
                 </div>
 
                 {embedUrl ? (
-                  <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                  <div className="mt-3 overflow-hidden rounded-xl border border-zinc-400 bg-[var(--ui-panel-soft)]">
                     <iframe
                       title={`Weekly Playlist ${date}`}
                       src={embedUrl}
@@ -176,7 +176,7 @@ export default function ImakiteWeeklyArchivePage() {
                     />
                   </div>
                 ) : (
-                  <p className="mt-3 text-xs text-zinc-400">プレイリスト未登録</p>
+                  <p className="mt-3 text-xs text-zinc-600">プレイリスト未登録</p>
                 )}
               </article>
             );

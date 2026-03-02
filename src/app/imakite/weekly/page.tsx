@@ -12,23 +12,23 @@ export default function ImakiteWeeklyPage() {
             毎週火曜日発表！
           </p>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-serif text-3xl font-semibold leading-tight sm:text-5xl">
+            <h1 className="font-serif text-3xl font-semibold leading-tight text-zinc-900 sm:text-5xl">
               イマキテ週間ランキング
             </h1>
           </div>
-          <p className="max-w-2xl text-base text-zinc-300 sm:text-lg">
+          <p className="max-w-2xl text-base text-zinc-700 sm:text-lg">
             イマキテランキングの一週間のデータを集計。週間TOP20を発表します。
           </p>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/imakite"
-              className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-black hover:border-zinc-400"
             >
               Daily
             </Link>
             <Link
               href="/imakite/weekly"
-              className="rounded-full border border-zinc-600 bg-zinc-800/60 px-4 py-2 text-xs font-semibold text-zinc-200"
+              className="rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
             >
               Weekly
             </Link>
