@@ -44,11 +44,8 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">("idle");
   const [youtubeError, setYoutubeError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (activeIndex > groups.length - 1) setActiveIndex(0);
-  }, [activeIndex, groups.length]);
-
-  const active = groups[activeIndex] ?? null;
+  const boundedActiveIndex = groups.length === 0 ? 0 : Math.min(activeIndex, groups.length - 1);
+  const active = groups[boundedActiveIndex] ?? null;
 
   const websiteUrl = active?.websiteUrl ?? null;
   const scheduleUrl = normalizeUrl(active?.scheduleUrl ?? null);
@@ -110,12 +107,30 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   if (!active) return null;
 
   const officialLinks = [
-    {key: "website", href: normalizeUrl(websiteUrl), icon: "/ic_website_dark.svg", label: "Website"},
-    {key: "schedule", href: scheduleUrl, icon: "/ic_schedule_dark.svg", label: "Schedule"},
-    {key: "x", href: xUrl, icon: "/ic_x_dark.svg", label: "X"},
-    {key: "instagram", href: instagramUrl, icon: "/ic_instagram-icon.svg", label: "Instagram"},
-    {key: "tiktok", href: tiktokUrl, icon: "/ic_tiktok_dark.svg", label: "TikTok"},
-    {key: "youtube", href: youtubeUrl, icon: "/ic_youtube.svg", label: "YouTube"},
+    {
+      key: "website",
+      href: normalizeUrl(websiteUrl),
+      darkIcon: "/ic_website_dark.svg",
+      popIcon: "/ic_website_pop.svg",
+      label: "Website",
+    },
+    {
+      key: "schedule",
+      href: scheduleUrl,
+      darkIcon: "/ic_schedule_dark.svg",
+      popIcon: "/ic_schedule_pop.svg",
+      label: "Schedule",
+    },
+    {key: "x", href: xUrl, darkIcon: "/ic_x_dark.svg", popIcon: "/ic_x_pop.svg", label: "X"},
+    {
+      key: "instagram",
+      href: instagramUrl,
+      darkIcon: "/ic_instagram-icon.svg",
+      popIcon: "/ic_instagram-icon.svg",
+      label: "Instagram",
+    },
+    {key: "tiktok", href: tiktokUrl, darkIcon: "/ic_tiktok_dark.svg", popIcon: "/ic_tiktok_pop.svg", label: "TikTok"},
+    {key: "youtube", href: youtubeUrl, darkIcon: "/ic_youtube.svg", popIcon: "/ic_youtube.svg", label: "YouTube"},
   ].filter((item) => Boolean(item.href));
 
   return (
@@ -129,7 +144,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
                 type="button"
                 onClick={() => setActiveIndex(index)}
                 className={`rounded-full border px-3 py-1 text-xs ${
-                  index === activeIndex
+                  index === boundedActiveIndex
                     ? "border-[var(--ui-border)] bg-zinc-300 text-zinc-900 dark:bg-zinc-400 dark:text-zinc-900"
                     : "border-[var(--ui-border)] bg-transparent text-[var(--ui-text)]"
                 }`}
@@ -156,7 +171,9 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
                 className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] hover:opacity-85"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={link.icon} alt={link.label} className="h-4 w-4 object-contain" />
+                <img src={link.darkIcon} alt={link.label} className="theme-icon-dark h-4 w-4 object-contain" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={link.popIcon} alt={link.label} className="theme-icon-pop h-4 w-4 object-contain" />
               </a>
             ))}
           </div>
@@ -170,7 +187,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
         {latestNewsPath ? (
           <a
             href={latestNewsPath}
-            className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+            className="mt-3 inline-flex text-sm text-[var(--ui-link)] underline decoration-current/60 underline-offset-4 hover:text-[var(--ui-link-hover)]"
           >
             {active.groupNameJa}の最新ニュースを見る
           </a>
@@ -182,8 +199,8 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
       <section>
         <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">直近のイベント情報</h2>
         {active.latestEvent ? (
-          <div className="mt-3 space-y-2 text-sm text-zinc-200">
-            <p className="text-zinc-300">{active.latestEvent.eventDate ?? "日程未定"}</p>
+          <div className="mt-3 space-y-2 text-sm text-[var(--ui-text)]">
+            <p className="text-[var(--ui-text-muted)]">{active.latestEvent.eventDate ?? "日程未定"}</p>
             <a
               href={
                 active.latestEvent.eventUrl
@@ -194,15 +211,15 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
               }
               target="_blank"
               rel="noreferrer"
-              className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
+              className={`inline-flex underline decoration-current/60 underline-offset-4 ${
                 active.latestEvent.eventUrl
-                  ? "text-cyan-200 hover:text-cyan-100"
-                  : "pointer-events-none text-zinc-500"
+                  ? "text-[var(--ui-link)] hover:text-[var(--ui-link-hover)]"
+                  : "pointer-events-none text-[var(--ui-text-subtle)]"
               }`}
             >
               {active.latestEvent.eventName ?? "イベント詳細"}
             </a>
-            <p className="text-zinc-400">{active.latestEvent.venueName ?? "-"}</p>
+            <p className="text-[var(--ui-text-subtle)]">{active.latestEvent.venueName ?? "-"}</p>
           </div>
         ) : (
           <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
@@ -217,7 +234,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
               href={spotifyUrl}
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+              className="shrink-0 text-sm text-[var(--ui-link)] underline decoration-current/60 underline-offset-4 hover:text-[var(--ui-link-hover)]"
             >
               Spotifyで開く
             </a>
@@ -245,7 +262,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
               href={youtubeUrl}
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
+              className="shrink-0 text-sm text-[var(--ui-link)] underline decoration-current/60 underline-offset-4 hover:text-[var(--ui-link-hover)]"
             >
               YouTubeで開く
             </a>

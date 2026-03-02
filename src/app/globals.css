@@ -12,6 +12,8 @@
   --ui-text-subtle: #71717a;
   --ui-accent: #18181b;
   --ui-accent-contrast: #fafafa;
+  --ui-link: #0e7490;
+  --ui-link-hover: #0f5f75;
 }
 
 @theme inline {
@@ -22,7 +24,6 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme]),
   html[data-theme="dark"] {
     --background: #09090b;
     --foreground: #f4f4f5;
@@ -35,21 +36,26 @@
     --ui-text-subtle: #a1a1aa;
     --ui-accent: #f4f4f5;
     --ui-accent-contrast: #09090b;
+    --ui-link: #67e8f9;
+    --ui-link-hover: #a5f3fc;
   }
 }
 
+html[data-theme="pop"],
 html[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #171717;
-  --ui-page: #f5f5f5;
-  --ui-panel: #ffffff;
-  --ui-panel-soft: #fafafa;
-  --ui-border: #e4e4e7;
-  --ui-text: #111111;
-  --ui-text-muted: #52525b;
-  --ui-text-subtle: #71717a;
-  --ui-accent: #18181b;
-  --ui-accent-contrast: #fafafa;
+  --background: #fffdfa;
+  --foreground: #3b1d3f;
+  --ui-page: #fffaf4;
+  --ui-panel: #fffdf8;
+  --ui-panel-soft: #fff0f7;
+  --ui-border: #f8cde1;
+  --ui-text: #3b1d3f;
+  --ui-text-muted: #7a4c79;
+  --ui-text-subtle: #9b6a92;
+  --ui-accent: #ef5da8;
+  --ui-accent-contrast: #ffffff;
+  --ui-link: #b4237a;
+  --ui-link-hover: #8d1b61;
 }
 
 html[data-theme="dark"] {
@@ -64,12 +70,21 @@ html[data-theme="dark"] {
   --ui-text-subtle: #a1a1aa;
   --ui-accent: #f4f4f5;
   --ui-accent-contrast: #09090b;
+  --ui-link: #67e8f9;
+  --ui-link-hover: #a5f3fc;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+html[data-theme="pop"] body,
+html[data-theme="light"] body {
+  background-image:
+    radial-gradient(60rem 30rem at 10% -10%, rgba(255, 158, 198, 0.16), transparent 60%),
+    radial-gradient(56rem 28rem at 100% 0%, rgba(255, 205, 108, 0.12), transparent 62%);
 }
 
 .font-mincho-jp {
@@ -89,25 +104,45 @@ body {
 }
 
 .top-buzz-tweet-theme .react-tweet-theme {
-  --tweet-bg-color: rgba(255, 255, 255, 0.96) !important;
-  --tweet-bg-color-hover: rgba(255, 255, 255, 0.98) !important;
-  --tweet-border: 1px solid rgba(255, 255, 255, 0.98) !important;
-  background-color: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(255, 255, 255, 0.98) !important;
-  outline: 1px solid rgba(255, 255, 255, 0.9) !important;
+  --tweet-bg-color: rgba(255, 248, 232, 0.96) !important;
+  --tweet-bg-color-hover: rgba(255, 250, 238, 0.98) !important;
+  --tweet-border: 1px solid rgba(221, 193, 149, 0.98) !important;
+  --tweet-font-color: #3f3f46 !important;
+  --tweet-font-color-secondary: #5b5b66 !important;
+  --tweet-color-text: #3f3f46 !important;
+  --tweet-color-text-secondary: #5b5b66 !important;
+  --tweet-color-blue-secondary: #8d1b61 !important;
+  --tweet-color-blue-primary: #8d1b61 !important;
+  background-color: rgba(255, 248, 232, 0.96) !important;
+  border-color: rgba(221, 193, 149, 0.98) !important;
+  outline: 1px solid rgba(233, 210, 176, 0.92) !important;
   outline-offset: -1px;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.72) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.5);
+    0 0 0 1px rgba(244, 224, 194, 0.72) inset,
+    0 0 0 1px rgba(221, 193, 149, 0.58);
+}
+
+.top-buzz-tweet-theme .react-tweet-theme,
+.top-buzz-tweet-theme .react-tweet-theme * {
+  color: #3f3f46 !important;
+}
+
+.top-buzz-tweet-theme .react-tweet-theme :is(p, span, strong, b, time) {
+  color: #3f3f46 !important;
+}
+
+.top-buzz-tweet-theme .react-tweet-theme a,
+.top-buzz-tweet-theme .react-tweet-theme [role="link"] {
+  color: #8d1b61 !important;
 }
 
 .top-buzz-tweet-theme .react-tweet-theme:hover {
-  background-color: rgba(255, 255, 255, 0.98) !important;
+  background-color: rgba(255, 250, 238, 0.98) !important;
 }
 
 .top-buzz-tweet-theme.rounded-xl {
-  border-color: rgba(255, 255, 255, 0.55) !important;
-  background-color: rgba(255, 255, 255, 0.14) !important;
+  border-color: rgba(221, 193, 149, 0.72) !important;
+  background-color: rgba(255, 244, 220, 0.32) !important;
 }
 
 .home-logo-dark {
@@ -136,10 +171,28 @@ html[data-theme="dark"] .home-logo-light {
   display: none;
 }
 
+html[data-theme="pop"] .home-logo-light,
 html[data-theme="light"] .home-logo-light {
   display: block;
 }
 
+html[data-theme="pop"] .home-logo-dark,
 html[data-theme="light"] .home-logo-dark {
+  display: none;
+}
+
+.theme-icon-dark {
+  display: none;
+}
+
+.theme-icon-pop {
+  display: inline;
+}
+
+html[data-theme="dark"] .theme-icon-dark {
+  display: inline;
+}
+
+html[data-theme="dark"] .theme-icon-pop {
   display: none;
 }

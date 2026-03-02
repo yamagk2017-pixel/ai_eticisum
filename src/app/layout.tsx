@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Shippori_Mincho } from "next/font/google";
+import Link from "next/link";
 import { GlobalHeader } from "@/components/global-header";
+import { THEME_STORAGE_KEY } from "@/lib/theme/mode";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,11 +38,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                const key = "musicite-theme";
+                const key = "${THEME_STORAGE_KEY}";
                 const saved = localStorage.getItem(key);
-                const theme = saved === "light" || saved === "dark"
-                  ? saved
-                  : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                const theme = saved === "light"
+                  ? "pop"
+                  : (saved === "pop" || saved === "dark"
+                    ? saved
+                    : "pop");
                 document.documentElement.dataset.theme = theme;
               } catch {}
             `,
@@ -54,9 +58,9 @@ export default function RootLayout({
         <div className="flex-1">{children}</div>
         <footer className="border-t border-[var(--ui-border)]">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-            <a href="/" className="text-xs text-[var(--ui-text-subtle)] hover:text-[var(--ui-text)]">
+            <Link href="/" className="text-xs text-[var(--ui-text-subtle)] hover:text-[var(--ui-text)]">
               IDOL CROSSING -アイドルと音楽の情報交差点- powerd by musicite
-            </a>
+            </Link>
             <div className="flex items-center gap-3">
               <a
                 href="https://x.com/musicite_tw"

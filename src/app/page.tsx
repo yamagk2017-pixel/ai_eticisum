@@ -436,7 +436,7 @@ export default async function Home() {
             <Link href="/imakite" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
               イマキテランキング
             </Link>
-            <span className="text-xs text-[var(--ui-text-subtle)]">毎日発表！</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">毎日発表！</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">デイリーランキング</h2>
@@ -520,7 +520,7 @@ export default async function Home() {
               <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
                 イマキテランキング
               </Link>
-              <span className="text-xs text-[var(--ui-text-subtle)]">毎週火曜日発表！</span>
+              <span className="text-xs text-[var(--ui-text-muted)]">毎週火曜日発表！</span>
             </div>
             <div className="mt-2 flex items-baseline gap-3">
               <h2 className="font-mincho-jp text-2xl font-semibold">週間ランキング</h2>
@@ -554,7 +554,7 @@ export default async function Home() {
             <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
               ナンダッテ
             </Link>
-            <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
@@ -599,7 +599,7 @@ export default async function Home() {
             <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
               ナンダッテ
             </Link>
-            <span className="text-xs text-[var(--ui-text-subtle)]">リアルなアイドルディクショナリー</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルディクショナリー</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
@@ -644,7 +644,7 @@ export default async function Home() {
             <Link href="/buzzttara" className="text-xs font-semibold tracking-[0.08em] text-cyan-500 underline">
               バズッタラ
             </Link>
-            <span className="text-xs text-[var(--ui-text-subtle)]">100万view以上のポストをアーカイブ</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">100万view以上のポストをアーカイブ</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">最新の投稿</h2>
@@ -666,33 +666,33 @@ export default async function Home() {
                   {item.groupSlug ? (
                     <Link
                       href={`/nandatte/${item.groupSlug}`}
-                      className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                      className="text-sm text-zinc-600 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
                     >
                       {item.groupName ?? "グループ未設定"}
                     </Link>
                   ) : (
-                    <p className="text-sm text-zinc-400">{item.groupName ?? "グループ未設定"}</p>
+                    <p className="text-sm text-zinc-600">{item.groupName ?? "グループ未設定"}</p>
                   )}
                   <div className="mt-1 flex items-baseline gap-2">
                     <Link
                       href={`/buzzttara/tweet/${item.id}`}
-                      className="text-xl font-semibold text-white underline decoration-zinc-300/80 underline-offset-4 hover:text-cyan-200"
+                      className="text-xl font-semibold text-zinc-800 underline decoration-zinc-500/80 underline-offset-4 hover:text-cyan-700"
                     >
                       {item.idolName}
                     </Link>
-                    <span className="text-sm text-zinc-300">さんのバズったポスト</span>
+                    <span className="text-sm text-zinc-700">さんのバズったポスト</span>
                   </div>
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
-                <span className="rounded-full border border-zinc-700 px-2 py-1">view {formatCount(item.viewCount)}</span>
-                <span className="rounded-full border border-zinc-700 px-2 py-1">いいね {formatCount(item.likeCount)}</span>
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-600">
+                <span className="rounded-full border border-zinc-400 px-2 py-1">view {formatCount(item.viewCount)}</span>
+                <span className="rounded-full border border-zinc-400 px-2 py-1">いいね {formatCount(item.likeCount)}</span>
                 {item.tags
-                  .filter((tag) => tag.name !== "SEXY" && tag.name !== "Wow")
+                  .filter((tag) => tag.name !== "SEXY")
                   .map((tag) => (
                     <span
                       key={tag.id}
-                      className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
+                      className="rounded-full border border-zinc-400 px-2 py-1 text-zinc-600"
                     >
                       {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
                     </span>
@@ -703,6 +703,7 @@ export default async function Home() {
                   tweetId={extractTweetId(item.tweetUrl)}
                   tweetUrl={item.tweetUrl}
                   compact
+                  className="top-buzz-tweet-theme"
                 />
               </div>
             </article>
@@ -745,7 +746,7 @@ export default async function Home() {
             >
               {label}
             </Link>
-            <span className="text-xs text-[var(--ui-text-subtle)]">{subtitle}</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">{subtitle}</span>
           </div>
           {!hideHeading ? (
             <div className="mt-2 flex items-baseline gap-3">
@@ -766,7 +767,7 @@ export default async function Home() {
             <div className="mt-2">
               <Link
                 href={article.path}
-                className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text-subtle)] !no-underline hover:!underline"
+                className="font-mincho-jp text-xl font-semibold leading-snug text-zinc-600 !no-underline hover:!underline"
                 dangerouslySetInnerHTML={{ __html: article.titleHtml }}
               />
             </div>
@@ -904,7 +905,7 @@ export default async function Home() {
             className="home-logo home-logo-light h-auto w-full max-w-full sm:max-w-[250px]"
             loading="lazy"
           />
-          <p className="pb-1 text-xs tracking-[0.08em] text-[var(--ui-text-subtle)]">powerd by musicite</p>
+          <p className="pb-1 text-xs tracking-[0.08em] text-black">powerd by musicite</p>
         </div>
         <section className="columns-1 gap-6 lg:columns-3">
           {summaryCards.map((card) => (

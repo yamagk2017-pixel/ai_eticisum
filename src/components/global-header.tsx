@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  applyThemeMode,
+  getInitialThemeMode,
+  isThemeMode,
+  THEME_STORAGE_KEY,
+  type ThemeMode,
+} from "@/lib/theme/mode";
 
 type NavItem = {
   href: string;
@@ -37,7 +44,8 @@ export function GlobalHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<ThemeMode>("pop");
+  const showDevThemeSwitch = process.env.NODE_ENV !== "production";
   const menuRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
 
@@ -64,12 +72,11 @@ export function GlobalHeader() {
 
   useEffect(() => {
     const current = document.documentElement.dataset.theme;
-    if (current === "light" || current === "dark") {
+    if (isThemeMode(current)) {
       setTheme(current);
       return;
     }
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(prefersDark ? "dark" : "light");
+    setTheme(getInitialThemeMode());
   }, []);
 
   useEffect(() => {
@@ -113,10 +120,10 @@ export function GlobalHeader() {
     setSearchOpen(false);
   };
 
-  const applyTheme = (nextTheme: "light" | "dark") => {
+  const applyTheme = (nextTheme: ThemeMode) => {
     setTheme(nextTheme);
-    document.documentElement.dataset.theme = nextTheme;
-    window.localStorage.setItem("musicite-theme", nextTheme);
+    applyThemeMode(nextTheme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
   };
 
   const handleGoogleSignIn = async () => {
@@ -174,6 +181,33 @@ export function GlobalHeader() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          {showDevThemeSwitch && (
+            <div className="hidden items-center gap-1 rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel)] p-1 sm:flex">
+              <button
+                type="button"
+                onClick={() => applyTheme("dark")}
+                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                  theme === "dark"
+                    ? "bg-[var(--ui-text)] text-[var(--ui-page)]"
+                    : "text-[var(--ui-text-muted)]"
+                }`}
+              >
+                Dark
+              </button>
+              <button
+                type="button"
+                onClick={() => applyTheme("pop")}
+                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                  theme === "pop"
+                    ? "bg-[var(--ui-text)] text-[var(--ui-page)]"
+                    : "text-[var(--ui-text-muted)]"
+                }`}
+              >
+                Pop
+              </button>
+            </div>
+          )}
+
           <div ref={menuRef} className="relative flex shrink-0 items-center gap-2">
             {userLabel ? (
               <>
@@ -228,14 +262,14 @@ export function GlobalHeader() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => applyTheme("light")}
+                            onClick={() => applyTheme("pop")}
                             className={`rounded-md px-2 py-1 text-xs ${
-                              theme === "light"
+                              theme === "pop"
                                 ? "bg-[var(--ui-text)] text-[var(--ui-page)]"
                                 : "bg-[var(--ui-panel-soft)] text-[var(--ui-text-muted)]"
                             }`}
                           >
-                            ライト
+                            ポップ
                           </button>
                         </div>
                       </div>
