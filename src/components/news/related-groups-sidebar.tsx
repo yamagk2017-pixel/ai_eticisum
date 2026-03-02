@@ -51,6 +51,9 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   const active = groups[activeIndex] ?? null;
 
   const websiteUrl = active?.websiteUrl ?? null;
+  const xUrl = normalizeUrl(active?.xUrl ?? null);
+  const instagramUrl = normalizeUrl(active?.instagramUrl ?? null);
+  const tiktokUrl = normalizeUrl(active?.tiktokUrl ?? null);
   const spotifyUrl = active?.spotifyUrl ?? null;
   const spotifyExternalId = active?.spotifyExternalId ?? null;
   const spotifyEmbedUrl = useMemo(
@@ -105,6 +108,14 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
 
   if (!active) return null;
 
+  const officialLinks = [
+    {key: "website", href: normalizeUrl(websiteUrl), icon: "/ic_website_dark.svg", label: "Website"},
+    {key: "x", href: xUrl, icon: "/ic_x_dark.svg", label: "X"},
+    {key: "instagram", href: instagramUrl, icon: "/ic_instagram-icon.svg", label: "Instagram"},
+    {key: "tiktok", href: tiktokUrl, icon: "/ic_tiktok_dark.svg", label: "TikTok"},
+    {key: "youtube", href: youtubeUrl, icon: "/ic_youtube.svg", label: "YouTube"},
+  ].filter((item) => Boolean(item.href));
+
   return (
     <aside className="space-y-6 lg:sticky lg:top-20">
       <section className="pt-6 sm:pt-0">
@@ -129,16 +140,24 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
       </section>
 
       <section>
-        <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">公式サイト</h2>
-        {websiteUrl ? (
-          <a
-            href={websiteUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-          >
-            {websiteUrl}
-          </a>
+        <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">公式リンク</h2>
+        {officialLinks.length > 0 ? (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            {officialLinks.map((link) => (
+              <a
+                key={link.key}
+                href={link.href!}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={link.label}
+                title={link.label}
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] hover:opacity-85"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={link.icon} alt={link.label} className="h-4 w-4 object-contain" />
+              </a>
+            ))}
+          </div>
         ) : (
           <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
         )}

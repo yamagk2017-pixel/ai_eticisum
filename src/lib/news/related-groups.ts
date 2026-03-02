@@ -29,6 +29,9 @@ export type NewsRelatedGroupInfo = {
   groupNameJa: string;
   slug: string | null;
   websiteUrl: string | null;
+  xUrl: string | null;
+  instagramUrl: string | null;
+  tiktokUrl: string | null;
   spotifyUrl: string | null;
   spotifyExternalId: string | null;
   youtubeUrl: string | null;
@@ -64,6 +67,9 @@ function normalizeRelatedGroupFallback(item: SanityRelatedGroup): NewsRelatedGro
     groupNameJa: item.groupNameJa,
     slug: null,
     websiteUrl: null,
+    xUrl: null,
+    instagramUrl: null,
+    tiktokUrl: null,
     spotifyUrl: null,
     spotifyExternalId: null,
     youtubeUrl: null,
@@ -136,6 +142,9 @@ export async function getNewsRelatedGroupsInfo(
       const website = serviceMap.get("website");
       const spotify = serviceMap.get("spotify");
       const youtube = serviceMap.get("youtube_channel");
+      const x = serviceMap.get("x") ?? serviceMap.get("twitter");
+      const instagram = serviceMap.get("instagram");
+      const tiktok = serviceMap.get("tiktok");
       const latestEvent = latestEventByGroup.get(item.imdGroupId) ?? null;
 
       return {
@@ -143,6 +152,9 @@ export async function getNewsRelatedGroupsInfo(
         groupNameJa: group?.name_ja ?? item.groupNameJa,
         slug: group?.slug ?? null,
         websiteUrl: website?.url ?? null,
+        xUrl: x?.url ?? null,
+        instagramUrl: instagram?.url ?? null,
+        tiktokUrl: tiktok?.url ?? null,
         spotifyUrl: spotify?.url ?? null,
         spotifyExternalId: spotify?.external_id ?? null,
         youtubeUrl: youtube?.url ?? null,
@@ -162,4 +174,3 @@ export async function getNewsRelatedGroupsInfo(
     return ordered;
   }
 }
-
