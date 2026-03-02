@@ -700,6 +700,7 @@ export function GroupDetail({ slug }: Props) {
       groupNameJa: displayName,
       slug: group.slug ?? null,
       websiteUrl: serviceMap.get("website")?.url ?? null,
+      scheduleUrl: serviceMap.get("schedule")?.url ?? null,
       xUrl: serviceMap.get("x")?.url ?? serviceMap.get("twitter")?.url ?? null,
       instagramUrl: serviceMap.get("instagram")?.url ?? null,
       tiktokUrl: serviceMap.get("tiktok")?.url ?? null,

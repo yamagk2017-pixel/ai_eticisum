@@ -29,6 +29,7 @@ export type NewsRelatedGroupInfo = {
   groupNameJa: string;
   slug: string | null;
   websiteUrl: string | null;
+  scheduleUrl: string | null;
   xUrl: string | null;
   instagramUrl: string | null;
   tiktokUrl: string | null;
@@ -67,6 +68,7 @@ function normalizeRelatedGroupFallback(item: SanityRelatedGroup): NewsRelatedGro
     groupNameJa: item.groupNameJa,
     slug: null,
     websiteUrl: null,
+    scheduleUrl: null,
     xUrl: null,
     instagramUrl: null,
     tiktokUrl: null,
@@ -140,6 +142,7 @@ export async function getNewsRelatedGroupsInfo(
       const group = groupMap.get(item.imdGroupId);
       const serviceMap = selectBestByService(extRowsByGroup.get(item.imdGroupId) ?? []);
       const website = serviceMap.get("website");
+      const schedule = serviceMap.get("schedule");
       const spotify = serviceMap.get("spotify");
       const youtube = serviceMap.get("youtube_channel");
       const x = serviceMap.get("x") ?? serviceMap.get("twitter");
@@ -152,6 +155,7 @@ export async function getNewsRelatedGroupsInfo(
         groupNameJa: group?.name_ja ?? item.groupNameJa,
         slug: group?.slug ?? null,
         websiteUrl: website?.url ?? null,
+        scheduleUrl: schedule?.url ?? null,
         xUrl: x?.url ?? null,
         instagramUrl: instagram?.url ?? null,
         tiktokUrl: tiktok?.url ?? null,

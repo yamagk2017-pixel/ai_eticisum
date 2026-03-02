@@ -51,6 +51,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
   const active = groups[activeIndex] ?? null;
 
   const websiteUrl = active?.websiteUrl ?? null;
+  const scheduleUrl = normalizeUrl(active?.scheduleUrl ?? null);
   const xUrl = normalizeUrl(active?.xUrl ?? null);
   const instagramUrl = normalizeUrl(active?.instagramUrl ?? null);
   const tiktokUrl = normalizeUrl(active?.tiktokUrl ?? null);
@@ -110,6 +111,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
 
   const officialLinks = [
     {key: "website", href: normalizeUrl(websiteUrl), icon: "/ic_website_dark.svg", label: "Website"},
+    {key: "schedule", href: scheduleUrl, icon: "/ic_schedule_dark.svg", label: "Schedule"},
     {key: "x", href: xUrl, icon: "/ic_x_dark.svg", label: "X"},
     {key: "instagram", href: instagramUrl, icon: "/ic_instagram-icon.svg", label: "Instagram"},
     {key: "tiktok", href: tiktokUrl, icon: "/ic_tiktok_dark.svg", label: "TikTok"},
