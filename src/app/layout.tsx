@@ -54,9 +54,9 @@ export default function RootLayout({
         <div className="flex-1">{children}</div>
         <footer className="border-t border-[var(--ui-border)]">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-            <p className="text-xs text-[var(--ui-text-subtle)]">
+            <a href="/" className="text-xs text-[var(--ui-text-subtle)] hover:text-[var(--ui-text)]">
               IDOL CROSSING -アイドルと音楽の情報交差点- powerd by musicite
-            </p>
+            </a>
             <div className="flex items-center gap-3">
               <a
                 href="https://x.com/musicite_tw"
