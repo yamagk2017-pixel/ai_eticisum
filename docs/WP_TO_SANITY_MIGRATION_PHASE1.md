@@ -45,11 +45,11 @@ applyログ（2026-02-27）:
 ### 2) 記事移行スクリプト（保存あり）
 
 - [◯] `wpImportedArticle` への create/update 実装（`--apply`）
-- [ ] 失敗記事のみ再実行オプション（`--only-ids` など）
+- [◯] ID指定の単体再実行オプション（`--include-only --include-ids=`）を実装
 - [◯] 実行ログ（成功/失敗/スキップ）を `reports/` に出力
 
 注記:
-- `--only-ids` の実運用検証は、本番移行時の再実行ケースで確認する。
+- `--include-only --include-ids=` により、通常ページ処理をスキップして指定IDのみ処理可能。
 
 実行コマンド:
 - dry-run: `npm run poc:wp-to-sanity:dry-run`
@@ -60,6 +60,12 @@ applyログ（2026-02-27）:
   - `checkedPosts=11` / `wouldCreate=11` / `totalMissingTagSlugRefs=0`
 - apply: `reports/wp-to-sanity-poc-apply-20260227-121851.json`
   - `checkedPosts=10` / `appliedCreates=10` / `applyFailed=0`
+
+単体インポート実行ログ（2026-02-28）:
+- dry-run: `reports/wp-to-sanity-poc-dry-run-20260227-212836.json`（`wpPostId=22061`）
+- apply: `reports/wp-to-sanity-poc-apply-20260227-212854.json`（`wpPostId=22061`）
+- dry-run: `reports/wp-to-sanity-poc-dry-run-20260228-000714.json`（`wpPostId=22141`）
+- apply: `reports/wp-to-sanity-poc-apply-20260228-000734.json`（`wpPostId=22141`）
 
 ### 3) 品質確認（PoC 10件）
 

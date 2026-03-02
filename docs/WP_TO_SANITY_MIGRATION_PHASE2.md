@@ -31,6 +31,11 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
   - フェーズ2（全件バッチ移行）は **完了**
   - フェーズ3（画像アセット移行 / DNS切替準備）へ移行可能
 
+追記（2026-02-28）:
+- 全件移行完了後の新規WP投稿をID指定で単体インポート可能な運用に移行。
+  - `wpPostId=22061` インポート完了
+  - `wpPostId=22141` インポート完了
+
 ---
 
 ## フェーズ2タスク
@@ -134,6 +139,8 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 - `reports/wp-to-sanity-poc-apply-20260227-201639.json`（page=34）
 - `reports/wp-to-sanity-poc-apply-20260227-201720.json`（page=35）
 - `reports/wp-to-sanity-poc-issues-merged-20260227-202336.csv`（issues統合）
+- `reports/wp-to-sanity-poc-apply-20260227-212854.json`（single id: 22061）
+- `reports/wp-to-sanity-poc-apply-20260228-000734.json`（single id: 22141）
 
 ---
 
