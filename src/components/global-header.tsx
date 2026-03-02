@@ -71,7 +71,7 @@ export function GlobalHeader() {
   }, []);
 
   useEffect(() => {
-    const current = document.documentElement.dataset.theme;
+    const current = document.documentElement.dataset.theme ?? null;
     if (isThemeMode(current)) {
       setTheme(current);
       return;
