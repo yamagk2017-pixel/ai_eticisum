@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
+import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
 import { createClient } from "@/lib/supabase/client";
 
 type GroupRow = {
@@ -382,68 +384,7 @@ export function GroupDetail({ slug }: Props) {
     return map;
   }, [externalIds]);
 
-  const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
-  const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
-  const websiteUrl = serviceMap.get("website")?.url ?? null;
-  const youtubeUrl = serviceMap.get("youtube_channel")?.url ?? null;
-  const youtubeExternalId = serviceMap.get("youtube_channel")?.external_id ?? null;
-
-  const spotifyEmbedUrl = useMemo(() => {
-    // Prefer artist embed only. Ignore track/album/playlist embeds.
-    if (spotifyExternalId) {
-      const uriMatch = spotifyExternalId.match(/^spotify:artist:([A-Za-z0-9]+)$/);
-      if (uriMatch) {
-        return `https://open.spotify.com/embed/artist/${uriMatch[1]}`;
-      }
-      const urlMatch = spotifyExternalId.match(
-        /open\.spotify\.com\/artist\/([A-Za-z0-9]+)/
-      );
-      if (urlMatch) {
-        return `https://open.spotify.com/embed/artist/${urlMatch[1]}`;
-      }
-      if (/^[A-Za-z0-9]+$/.test(spotifyExternalId)) {
-        return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
-      }
-    }
-
-    if (spotifyUrl) {
-      const artistMatch = spotifyUrl.match(/spotify\.com\/artist\/([A-Za-z0-9]+)/);
-      if (artistMatch) {
-        return `https://open.spotify.com/embed/artist/${artistMatch[1]}`;
-      }
-    }
-
-    return null;
-  }, [spotifyUrl, spotifyExternalId]);
-
-  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
-  const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">(
-    "idle"
-  );
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
-
-  useEffect(() => {
-    if (!youtubeUrl && !youtubeExternalId) {
-      setYoutubeVideoId(null);
-      return;
-    }
-
-    const run = async () => {
-      setYoutubeStatus("loading");
-      const params = new URLSearchParams();
-      if (youtubeUrl) params.set("url", youtubeUrl);
-      if (youtubeExternalId) params.set("external_id", youtubeExternalId);
-      const res = await fetch(`/api/youtube?${params.toString()}`);
-      const data = (await res.json()) as { videoId?: string };
-      setYoutubeVideoId(data.videoId ?? null);
-      setYoutubeStatus("idle");
-    };
-
-    run().catch(() => {
-      setYoutubeVideoId(null);
-      setYoutubeStatus("error");
-    });
-  }, [youtubeUrl, youtubeExternalId]);
 
   useEffect(() => {
     setIsProfileExpanded(false);
@@ -753,6 +694,29 @@ export function GroupDetail({ slug }: Props) {
   }
 
   const displayName = group.name_ja ?? group.slug ?? "グループ";
+  const sidebarGroups: NewsRelatedGroupInfo[] = [
+    {
+      imdGroupId: group.id,
+      groupNameJa: displayName,
+      slug: group.slug ?? null,
+      websiteUrl: serviceMap.get("website")?.url ?? null,
+      xUrl: serviceMap.get("x")?.url ?? serviceMap.get("twitter")?.url ?? null,
+      instagramUrl: serviceMap.get("instagram")?.url ?? null,
+      tiktokUrl: serviceMap.get("tiktok")?.url ?? null,
+      spotifyUrl: serviceMap.get("spotify")?.url ?? null,
+      spotifyExternalId: serviceMap.get("spotify")?.external_id ?? null,
+      youtubeUrl: serviceMap.get("youtube_channel")?.url ?? null,
+      youtubeExternalId: serviceMap.get("youtube_channel")?.external_id ?? null,
+      latestEvent: latestEvent
+        ? {
+            eventName: latestEvent.event_name ?? null,
+            eventDate: latestEvent.event_date ?? null,
+            venueName: latestEvent.venue_name ?? null,
+            eventUrl: latestEvent.event_url ?? null,
+          }
+        : null,
+    },
+  ];
   const headerLinkItems = [
     { label: "公式", short: "W", key: "website" },
     { label: "X", short: "X", key: "x" },
@@ -1032,139 +996,7 @@ export function GroupDetail({ slug }: Props) {
             </section>
           </div>
 
-          <aside className="space-y-8">
-            <section>
-              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                公式サイト
-              </h2>
-              {websiteUrl ? (
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                >
-                  {websiteUrl}
-                </a>
-              ) : (
-                <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
-              )}
-            </section>
-
-            <section>
-              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                最新ニュース
-              </h2>
-              <a
-                href={`/news?tag=${encodeURIComponent(group.slug ?? displayName)}`}
-                className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-              >
-                {displayName}の最新ニュースを見る
-              </a>
-            </section>
-
-            <section>
-              <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                直近のイベント情報
-              </h2>
-              {latestEvent ? (
-                <div className="mt-3 space-y-2 text-sm text-zinc-200">
-                  <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
-                  <a
-                    href={
-                      latestEvent.event_url
-                        ? latestEvent.event_url.startsWith("http")
-                          ? latestEvent.event_url
-                          : `https://ticketdive.com/event/${latestEvent.event_url}`
-                        : "#"
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
-                      latestEvent.event_url
-                        ? "text-cyan-200 hover:text-cyan-100"
-                        : "pointer-events-none text-zinc-500"
-                    }`}
-                  >
-                    {latestEvent.event_name ?? "イベント詳細"}
-                  </a>
-                  <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
-                </div>
-              ) : (
-                <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                  Spotify
-                </h2>
-                {spotifyUrl && (
-                  <a
-                    href={spotifyUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                  >
-                    Spotifyで開く
-                  </a>
-                )}
-              </div>
-              {spotifyEmbedUrl ? (
-                <iframe
-                  className="mt-3 block w-full"
-                  src={spotifyEmbedUrl}
-                  height="352"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                  loading="lazy"
-                  title="Spotify preview"
-                />
-              ) : (
-                <p className="mt-3 text-sm text-zinc-400">
-                  Spotifyアーティスト情報が未登録です。
-                </p>
-              )}
-            </section>
-
-            <section>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                  YouTube
-                </h2>
-                {youtubeUrl && (
-                  <a
-                    href={youtubeUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                  >
-                    YouTubeで開く
-                  </a>
-                )}
-              </div>
-              {youtubeStatus === "loading" && (
-                <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
-              )}
-              {youtubeStatus !== "loading" && youtubeVideoId ? (
-                <iframe
-                  className="mt-3 w-full rounded-xl border border-zinc-700"
-                  src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-                  height="220"
-                  loading="lazy"
-                  title="YouTube preview"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                youtubeStatus !== "loading" && (
-                  <p className="mt-3 text-sm text-zinc-400">
-                    YouTubeの最新動画が取得できませんでした。
-                  </p>
-                )
-              )}
-            </section>
-          </aside>
+          <RelatedGroupsSidebar groups={sidebarGroups} />
         </div>
       </section>
     </div>

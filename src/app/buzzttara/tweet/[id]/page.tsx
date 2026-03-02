@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
+import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
 import { createClient } from "@/lib/supabase/client";
 import { SafeTweetEmbed } from "../../safe-tweet-embed";
 
@@ -67,36 +69,6 @@ function extractTweetId(tweetUrl: string): string | null {
   return match?.[1] ?? null;
 }
 
-function buildSpotifyEmbedUrl(spotifyUrl: string | null, spotifyExternalId: string | null): string | null {
-  if (spotifyUrl) {
-    const match = spotifyUrl.match(/spotify\.com\/(track|album|artist|playlist)\/([A-Za-z0-9]+)/);
-    if (match) {
-      return `https://open.spotify.com/embed/${match[1]}/${match[2]}`;
-    }
-  }
-  if (spotifyExternalId) {
-    return `https://open.spotify.com/embed/artist/${spotifyExternalId}`;
-  }
-  return null;
-}
-
-function normalizeUrl(url: string | null): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  if (
-    trimmed.startsWith("youtube.com/") ||
-    trimmed.startsWith("www.youtube.com/") ||
-    trimmed.startsWith("youtu.be/")
-  ) {
-    return `https://${trimmed}`;
-  }
-  if (trimmed.startsWith("@")) {
-    return `https://www.youtube.com/${trimmed}`;
-  }
-  return trimmed;
-}
 
 export default function BuzzttaraTweetDetailPage() {
   const params = useParams<{ id: string }>();
@@ -108,9 +80,6 @@ export default function BuzzttaraTweetDetailPage() {
   const [group, setGroup] = useState<GroupInfo | null>(null);
   const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
   const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
-  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
-  const [youtubeStatus, setYoutubeStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [youtubeError, setYoutubeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tweetIdParam) return;
@@ -232,56 +201,31 @@ export default function BuzzttaraTweetDetailPage() {
     return map;
   })();
 
-  const websiteUrl = serviceMap.get("website")?.url ?? null;
-  const spotifyUrl = serviceMap.get("spotify")?.url ?? null;
-  const spotifyExternalId = serviceMap.get("spotify")?.external_id ?? null;
-  const spotifyEmbedUrl = buildSpotifyEmbedUrl(spotifyUrl, spotifyExternalId);
-  const youtubeRow = serviceMap.get("youtube_channel") ?? null;
-  const youtubeUrl = normalizeUrl(youtubeRow?.url ?? null);
-  const youtubeExternalId = (() => {
-    if (youtubeRow?.external_id) return youtubeRow.external_id;
-    const raw = (youtubeRow?.url ?? "").trim();
-    if (raw.startsWith("UC")) return raw;
-    return null;
-  })();
-
-  useEffect(() => {
-    const run = async () => {
-      if (!youtubeUrl && !youtubeExternalId) {
-        setYoutubeVideoId(null);
-        setYoutubeStatus("idle");
-        setYoutubeError(null);
-        return;
-      }
-      setYoutubeStatus("loading");
-      setYoutubeError(null);
-      const params = new URLSearchParams();
-      if (youtubeUrl) params.set("url", youtubeUrl);
-      if (youtubeExternalId) params.set("external_id", youtubeExternalId);
-      const res = await fetch(`/api/youtube?${params.toString()}`);
-      const data = (await res.json()) as { videoId?: string; error?: string };
-      if (!res.ok) {
-        setYoutubeVideoId(null);
-        setYoutubeStatus("error");
-        setYoutubeError(data.error ?? `API error: ${res.status}`);
-        return;
-      }
-      if (!data.videoId) {
-        setYoutubeVideoId(null);
-        setYoutubeStatus("error");
-        setYoutubeError(data.error ?? "動画IDを取得できませんでした。");
-        return;
-      }
-      setYoutubeVideoId(data.videoId);
-      setYoutubeStatus("idle");
-    };
-
-    run().catch(() => {
-      setYoutubeVideoId(null);
-      setYoutubeStatus("error");
-      setYoutubeError("YouTube APIの呼び出しに失敗しました。");
-    });
-  }, [youtubeExternalId, youtubeUrl]);
+  const sidebarGroups: NewsRelatedGroupInfo[] = group
+    ? [
+        {
+          imdGroupId: group.id,
+          groupNameJa: group.name_ja ?? "グループ",
+          slug: group.slug ?? null,
+          websiteUrl: serviceMap.get("website")?.url ?? null,
+          xUrl: serviceMap.get("x")?.url ?? serviceMap.get("twitter")?.url ?? null,
+          instagramUrl: serviceMap.get("instagram")?.url ?? null,
+          tiktokUrl: serviceMap.get("tiktok")?.url ?? null,
+          spotifyUrl: serviceMap.get("spotify")?.url ?? null,
+          spotifyExternalId: serviceMap.get("spotify")?.external_id ?? null,
+          youtubeUrl: serviceMap.get("youtube_channel")?.url ?? null,
+          youtubeExternalId: serviceMap.get("youtube_channel")?.external_id ?? null,
+          latestEvent: latestEvent
+            ? {
+                eventName: latestEvent.event_name ?? null,
+                eventDate: latestEvent.event_date ?? null,
+                venueName: latestEvent.venue_name ?? null,
+                eventUrl: latestEvent.event_url ?? null,
+              }
+            : null,
+        },
+      ]
+    : [];
 
   if (status === "error") {
     return (
@@ -363,137 +307,7 @@ export default function BuzzttaraTweetDetailPage() {
 
             </div>
 
-            <aside className="space-y-8">
-              <section>
-                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                  公式サイト
-                </h2>
-                {websiteUrl ? (
-                  <a
-                    href={websiteUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex break-all text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                  >
-                    {websiteUrl}
-                  </a>
-                ) : (
-                  <p className="mt-3 text-sm text-zinc-400">公式サイトURLが未登録です。</p>
-                )}
-              </section>
-
-              <section>
-                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                  最新ニュース
-                </h2>
-                <a
-                  href={`/news?tag=${encodeURIComponent(group?.slug ?? "group")}`}
-                  className="mt-3 inline-flex text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                >
-                  {(group?.name_ja ?? "グループ")}の最新ニュースを見る
-                </a>
-              </section>
-
-              <section>
-                <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                  直近のイベント情報
-                </h2>
-                {latestEvent ? (
-                  <div className="mt-3 space-y-2 text-sm text-zinc-200">
-                    <p className="text-zinc-300">{latestEvent.event_date ?? "日程未定"}</p>
-                    <a
-                      href={
-                        latestEvent.event_url
-                          ? latestEvent.event_url.startsWith("http")
-                            ? latestEvent.event_url
-                            : `https://ticketdive.com/event/${latestEvent.event_url}`
-                          : "#"
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`inline-flex underline decoration-cyan-300/70 underline-offset-4 ${
-                        latestEvent.event_url
-                          ? "text-cyan-200 hover:text-cyan-100"
-                          : "pointer-events-none text-zinc-500"
-                      }`}
-                    >
-                      {latestEvent.event_name ?? "イベント詳細"}
-                    </a>
-                    <p className="text-zinc-400">{latestEvent.venue_name ?? "-"}</p>
-                  </div>
-                ) : (
-                  <p className="mt-3 text-sm text-zinc-400">直近のイベント情報はありません。</p>
-                )}
-              </section>
-
-              <section>
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                    Spotify
-                  </h2>
-                  {spotifyUrl && (
-                    <a
-                      href={spotifyUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                    >
-                      Spotifyで開く
-                    </a>
-                  )}
-                </div>
-                {spotifyEmbedUrl ? (
-                  <iframe
-                    className="mt-3 block w-full"
-                    src={spotifyEmbedUrl}
-                    height="352"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="lazy"
-                    title="Spotify preview"
-                  />
-                ) : (
-                  <p className="mt-3 text-sm text-zinc-400">Spotifyアーティスト情報が未登録です。</p>
-                )}
-              </section>
-
-              <section>
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-mincho-jp text-xl font-medium leading-tight sm:text-2xl">
-                    YouTube
-                  </h2>
-                  {youtubeUrl && (
-                    <a
-                      href={youtubeUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="shrink-0 text-sm text-cyan-200 underline decoration-cyan-300/70 underline-offset-4 hover:text-cyan-100"
-                    >
-                      YouTubeで開く
-                    </a>
-                  )}
-                </div>
-                {youtubeStatus === "loading" && (
-                  <p className="mt-3 text-sm text-zinc-400">動画を読み込み中...</p>
-                )}
-                {youtubeStatus !== "loading" && youtubeVideoId ? (
-                  <iframe
-                    className="mt-3 w-full rounded-xl border border-zinc-700"
-                    src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-                    height="220"
-                    loading="lazy"
-                    title="YouTube preview"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : (
-                  youtubeStatus !== "loading" && (
-                    <p className="mt-3 text-sm text-zinc-400">
-                      YouTubeの最新動画が取得できませんでした。
-                    </p>
-                  )
-                )}
-              </section>
-            </aside>
+            {sidebarGroups.length > 0 ? <RelatedGroupsSidebar groups={sidebarGroups} /> : null}
           </div>
         )}
       </main>
