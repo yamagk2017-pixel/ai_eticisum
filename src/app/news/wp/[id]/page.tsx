@@ -56,7 +56,7 @@ function TermPills({
           className={
             variant === "plain"
               ? "text-xs text-[var(--ui-text)] underline underline-offset-2"
-              : "rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2.5 py-1 text-xs text-[var(--ui-text)]"
+              : "rounded-full border border-zinc-400 px-2.5 py-1 text-xs text-[var(--ui-text)]"
           }
           title={item.slug ?? undefined}
         >
@@ -160,11 +160,13 @@ export default async function WpNewsArticlePage({
       : [];
   const relatedGroupPanels =
     relatedGroups.length > 0 ? await getNewsRelatedGroupsInfo(relatedGroups) : [];
+  const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
+  const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
+    <main className="mx-auto w-full max-w-6xl px-6 pt-10 pb-12 sm:px-12">
       <article>
-        <div className="mb-6 space-y-3">
+        <div className="mb-8 space-y-3">
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-subtle)]">
             <Link href="/" className="underline underline-offset-2">Home</Link>
             <span>&gt;</span>
@@ -222,7 +224,7 @@ export default async function WpNewsArticlePage({
 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
-            <WpArticleBody html={article.contentHtml} />
+            <WpArticleBody html={article.contentHtml} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
             <ArticleCitations
               citationSourceArticle={article.citationSourceArticle}
               citedByArticles={article.citedByArticles}

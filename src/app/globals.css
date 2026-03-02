@@ -52,10 +52,10 @@ html[data-theme="light"] {
   --ui-text: #3b1d3f;
   --ui-text-muted: #7a4c79;
   --ui-text-subtle: #9b6a92;
-  --ui-accent: #ef5da8;
+  --ui-accent: #c80000;
   --ui-accent-contrast: #ffffff;
-  --ui-link: #b4237a;
-  --ui-link-hover: #8d1b61;
+  --ui-link: #b00000;
+  --ui-link-hover: #8f0000;
 }
 
 html[data-theme="dark"] {
@@ -89,6 +89,18 @@ html[data-theme="light"] body {
 
 .font-mincho-jp {
   font-family: var(--font-shippori-mincho), serif;
+}
+
+.news-intro-cream > p:nth-of-type(-n + 2) {
+  background-color: #fffbf3;
+  border: 1px solid #f2e8d5;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+html[data-theme="pop"] .news-article-body h3,
+html[data-theme="light"] .news-article-body h3 {
+  color: #3f3f46 !important; /* zinc-700 */
 }
 
 .buzzttara-tweet-theme .react-tweet-theme {

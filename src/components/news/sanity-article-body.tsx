@@ -16,7 +16,7 @@ const components: PortableTextComponents = {
       </h2>
     ),
     h3: ({children}) => (
-      <h3 className="mt-8 mb-1 inline-block border-b border-zinc-400 pb-0 text-[1rem] font-bold leading-snug text-zinc-700 dark:border-zinc-500 dark:text-zinc-300 sm:text-[1.15rem]">
+      <h3 className="mt-8 mb-1 inline-block border-b border-zinc-400 pb-0 text-[1rem] font-bold leading-snug text-zinc-900 dark:border-zinc-500 dark:text-zinc-300 sm:text-[1.15rem]">
         {children}
       </h3>
     ),
@@ -56,11 +56,11 @@ const components: PortableTextComponents = {
   },
 };
 
-export function SanityArticleBody({value}: {value: unknown}) {
+export function SanityArticleBody({value, className}: {value: unknown; className?: string}) {
   if (!Array.isArray(value)) return null;
 
   return (
-    <div className="overflow-wrap-anywhere text-[var(--ui-text)]">
+    <div className={["news-article-body overflow-wrap-anywhere text-[var(--ui-text)]", className].filter(Boolean).join(" ")}>
       <PortableText value={value} components={components} />
     </div>
   );

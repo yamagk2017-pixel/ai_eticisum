@@ -59,14 +59,14 @@ function RelatedArticleItem({article}: {article: NewsRelatedArticleRef}) {
                 <Link
                   key={tag.id}
                   href={`/news?tag=${tag.slug}`}
-                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                  className="rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
                 >
                   {tag.name}
                 </Link>
               ) : (
                 <span
                   key={tag.id}
-                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-2 py-1 text-xs text-[var(--ui-text)]"
+                  className="rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
                 >
                   {tag.name}
                 </span>

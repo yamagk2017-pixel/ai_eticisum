@@ -145,8 +145,8 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
                 onClick={() => setActiveIndex(index)}
                 className={`rounded-full border px-3 py-1 text-xs ${
                   index === boundedActiveIndex
-                    ? "border-[var(--ui-border)] bg-zinc-300 text-zinc-900 dark:bg-zinc-400 dark:text-zinc-900"
-                    : "border-[var(--ui-border)] bg-transparent text-[var(--ui-text)]"
+                    ? "border-zinc-400 bg-zinc-200 text-zinc-900"
+                    : "border-zinc-400 bg-transparent text-[var(--ui-text)]"
                 }`}
               >
                 {group.groupNameJa}
@@ -168,7 +168,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
                 rel="noreferrer"
                 aria-label={link.label}
                 title={link.label}
-                className="inline-flex h-8 w-8 items-center justify-center rounded border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] hover:opacity-85"
+                className="inline-flex h-8 w-8 items-center justify-center rounded border border-zinc-400 hover:opacity-85"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={link.darkIcon} alt={link.label} className="theme-icon-dark h-4 w-4 object-contain" />
