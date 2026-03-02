@@ -212,12 +212,12 @@ export function GroupsList() {
       ) : groups.length === 0 ? (
         <p className="mt-6 text-sm text-zinc-400">該当するグループがありません。</p>
       ) : (
-        <ul className="mt-4 grid gap-2 text-sm text-zinc-200 sm:grid-cols-2">
+        <ul className="mt-4 grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
           {groups.map((group) => (
-            <li key={group.id} className="rounded-lg border border-zinc-800/60 p-3">
+            <li key={group.id} className="rounded-lg border border-zinc-300 p-3">
               {group.slug ? (
                 <Link
-                  className="underline decoration-zinc-500 underline-offset-2 hover:text-white"
+                  className="text-zinc-600 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-800"
                   href={`/nandatte/${group.slug}`}
                 >
                   {group.name_ja ?? group.slug}
