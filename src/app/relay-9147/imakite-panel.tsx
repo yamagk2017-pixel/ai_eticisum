@@ -74,19 +74,19 @@ export function ImakitePanel() {
   };
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-slate-900/60 p-6">
+    <section className="rounded-3xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-white">IMAKITE 管理</h2>
+        <h2 className="text-xl font-semibold text-[var(--ui-text)]">IMAKITE 管理</h2>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/imakite"
-            className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
+            className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text)] hover:border-zinc-500"
           >
             /imakite
           </Link>
           <Link
             href="/imakite/archive"
-            className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
+            className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text)] hover:border-zinc-500"
           >
             /imakite/archive
           </Link>
@@ -101,7 +101,7 @@ export function ImakitePanel() {
 
       <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-zinc-300" htmlFor="relay-imakite-date">
+          <label className="text-sm text-[var(--ui-text-muted)]" htmlFor="relay-imakite-date">
             対象日
           </label>
           <input
@@ -109,21 +109,21 @@ export function ImakitePanel() {
             type="date"
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value)}
-            className="rounded-xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white"
+            className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-3 text-sm text-[var(--ui-text)]"
           />
-          {latestDate && <p className="text-xs text-zinc-400">最新日: {latestDate}</p>}
+          {latestDate && <p className="text-xs text-[var(--ui-text-subtle)]">最新日: {latestDate}</p>}
         </div>
         <button
           type="button"
           onClick={fetchRanking}
-          className="rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full bg-[var(--ui-accent)] px-6 py-3 text-sm font-semibold text-[var(--ui-accent-contrast)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={status === "loading"}
         >
           ランキングデータ取得
         </button>
       </div>
 
-      {status === "loading" && <p className="mt-4 text-sm text-zinc-300">取得中...</p>}
+      {status === "loading" && <p className="mt-4 text-sm text-[var(--ui-text-muted)]">取得中...</p>}
 
       {status === "success" && (
         <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
@@ -136,7 +136,7 @@ export function ImakitePanel() {
           {rows.slice(0, 10).map((row) => (
             <li
               key={`${row.snapshot_date}-${row.rank}-${row.group_id}`}
-              className="rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-zinc-200"
+              className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-3 text-sm text-[var(--ui-text)]"
             >
               {row.rank}位 {row.artist_name}
             </li>

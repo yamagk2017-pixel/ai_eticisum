@@ -197,9 +197,9 @@ export function BuzzttaraPanel() {
   };
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-zinc-900/60 p-6">
-      <h2 className="text-xl font-semibold text-white">BUZZTTARA 管理</h2>
-      <p className="mt-1 text-sm text-zinc-300">`public.tweets` / `public.tweet_tags` を編集します。</p>
+    <section className="rounded-3xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
+      <h2 className="text-xl font-semibold text-[var(--ui-text)]">BUZZTTARA 管理</h2>
+      <p className="mt-1 text-sm text-[var(--ui-text-muted)]">`public.tweets` / `public.tweet_tags` を編集します。</p>
 
       {status === "error" && (
         <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">
@@ -212,21 +212,24 @@ export function BuzzttaraPanel() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="mt-5 grid gap-4 rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <form
+        onSubmit={onSubmit}
+        className="mt-5 grid gap-4 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] p-4"
+      >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="flex flex-col gap-2 text-sm text-zinc-300">
+          <label className="flex flex-col gap-2 text-sm text-[var(--ui-text-muted)]">
             Tweet URL
             <input
-              className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+              className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-sm text-[var(--ui-text)]"
               value={tweetUrl}
               onChange={(e) => setTweetUrl(e.target.value)}
               placeholder="https://x.com/.../status/..."
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm text-zinc-300">
+          <label className="flex flex-col gap-2 text-sm text-[var(--ui-text-muted)]">
             Idol Name
             <input
-              className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+              className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-sm text-[var(--ui-text)]"
               value={idolName}
               onChange={(e) => setIdolName(e.target.value)}
               placeholder="表示名"
@@ -234,10 +237,10 @@ export function BuzzttaraPanel() {
           </label>
         </div>
 
-        <label className="flex flex-col gap-2 text-sm text-zinc-300">
+        <label className="flex flex-col gap-2 text-sm text-[var(--ui-text-muted)]">
           Group (IMD)
           <select
-            className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+            className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-sm text-[var(--ui-text)]"
             value={groupId}
             onChange={(e) => setGroupId(e.target.value)}
           >
@@ -250,10 +253,10 @@ export function BuzzttaraPanel() {
           </select>
         </label>
 
-        <label className="flex flex-col gap-2 text-sm text-zinc-300">
+        <label className="flex flex-col gap-2 text-sm text-[var(--ui-text-muted)]">
           Admin Comment
           <textarea
-            className="min-h-24 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white"
+            className="min-h-24 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-2 text-sm text-[var(--ui-text)]"
             value={adminComment}
             onChange={(e) => setAdminComment(e.target.value)}
             placeholder="任意コメント"
@@ -261,12 +264,12 @@ export function BuzzttaraPanel() {
         </label>
 
         <div>
-          <p className="text-sm text-zinc-300">Tags</p>
+          <p className="text-sm text-[var(--ui-text-muted)]">Tags</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {tags.map((tag) => (
               <label
                 key={tag.id}
-                className="inline-flex items-center gap-2 rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text)]"
               >
                 <input
                   type="checkbox"
@@ -283,7 +286,7 @@ export function BuzzttaraPanel() {
         <div className="flex flex-wrap gap-2">
           <button
             type="submit"
-            className="rounded-full bg-cyan-400 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-300 disabled:opacity-60"
+            className="rounded-full bg-[var(--ui-accent)] px-4 py-2 text-xs font-semibold text-[var(--ui-accent-contrast)] hover:opacity-90 disabled:opacity-60"
             disabled={status === "saving" || status === "loading"}
           >
             {editingId ? "更新する" : "追加する"}
@@ -292,7 +295,7 @@ export function BuzzttaraPanel() {
             <button
               type="button"
               onClick={resetForm}
-              className="rounded-full border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:border-zinc-500"
+              className="rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs text-[var(--ui-text)] hover:border-zinc-500"
             >
               編集をキャンセル
             </button>
@@ -301,8 +304,8 @@ export function BuzzttaraPanel() {
       </form>
 
       <div className="mt-6 overflow-x-auto">
-        <table className="min-w-full text-left text-sm text-zinc-200">
-          <thead className="text-xs uppercase tracking-wide text-zinc-400">
+        <table className="min-w-full text-left text-sm text-[var(--ui-text)]">
+          <thead className="text-xs uppercase tracking-wide text-[var(--ui-text-subtle)]">
             <tr>
               <th className="px-2 py-2">Idol</th>
               <th className="px-2 py-2">Group</th>
@@ -313,11 +316,11 @@ export function BuzzttaraPanel() {
           </thead>
           <tbody>
             {tweets.map((tweet) => (
-              <tr key={tweet.id} className="border-t border-zinc-800">
+              <tr key={tweet.id} className="border-t border-[var(--ui-border)]">
                 <td className="px-2 py-2">{tweet.idol_name}</td>
                 <td className="px-2 py-2">{groupMap.get(tweet.group_id ?? "")?.name_ja ?? "-"}</td>
                 <td className="max-w-[240px] truncate px-2 py-2">
-                  <a href={tweet.tweet_url} target="_blank" rel="noreferrer" className="hover:text-white">
+                  <a href={tweet.tweet_url} target="_blank" rel="noreferrer" className="hover:text-[var(--ui-link)]">
                     {tweet.tweet_url}
                   </a>
                 </td>
@@ -327,7 +330,7 @@ export function BuzzttaraPanel() {
                     <button
                       type="button"
                       onClick={() => startEdit(tweet)}
-                      className="rounded-full border border-zinc-700 px-3 py-1 text-xs hover:border-zinc-500"
+                      className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs hover:border-zinc-500"
                     >
                       編集
                     </button>
