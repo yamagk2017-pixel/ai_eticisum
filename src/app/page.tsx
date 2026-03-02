@@ -24,8 +24,10 @@ type ImakiteSummaryItem = {
 
 type ImakiteSummary = {
   latestDate: string | null;
+  latestUpdatedAt: string | null;
   items: ImakiteSummaryItem[];
   weeklyPlaylistDate: string | null;
+  weeklyUpdatedAt: string | null;
   weeklyPlaylistEmbedUrl: string | null;
 };
 
@@ -85,6 +87,23 @@ function pickNumber(row: RowRecord, keys: string[]) {
   return null;
 }
 
+function pickLatestTimestamp(rows: RowRecord[], keys: string[]) {
+  let latest: string | null = null;
+  for (const row of rows) {
+    const value = pickString(row, keys);
+    if (!value) continue;
+    if (!latest) {
+      latest = value;
+      continue;
+    }
+    const currentTs = Date.parse(value);
+    const latestTs = Date.parse(latest);
+    if (Number.isNaN(currentTs)) continue;
+    if (Number.isNaN(latestTs) || currentTs > latestTs) latest = value;
+  }
+  return latest;
+}
+
 function formatPoint(value: number) {
   return new Intl.NumberFormat("ja-JP", {
     minimumFractionDigits: 0,
@@ -124,8 +143,10 @@ async function getHomeSummaries() {
   const fallback = {
     imakite: {
       latestDate: null,
+      latestUpdatedAt: null,
       items: [] as ImakiteSummaryItem[],
       weeklyPlaylistDate: null,
+      weeklyUpdatedAt: null,
       weeklyPlaylistEmbedUrl: null,
     } satisfies ImakiteSummary,
     nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
@@ -149,7 +170,7 @@ async function getHomeSummaries() {
         const latest = await supabase
           .schema("ihc")
           .from("daily_top20")
-          .select("snapshot_date")
+          .select("*")
           .order("snapshot_date", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -166,6 +187,22 @@ async function getHomeSummaries() {
           .order("rank", { ascending: true })
           .limit(5);
         if (rowsRes.error) throw new Error(`IMAKITE rows: ${rowsRes.error.message}`);
+
+        const latestRowRecord = asRecord(latest.data ?? null);
+        const latestUpdatedAtFromLatestRow = pickString(latestRowRecord, [
+          "updated_at",
+          "created_at",
+          "refreshed_at",
+          "generated_at",
+        ]);
+        const rowRecords = ((rowsRes.data ?? []) as unknown[]).map(asRecord);
+        const latestUpdatedAtFromRows = pickLatestTimestamp(rowRecords, [
+          "updated_at",
+          "created_at",
+          "refreshed_at",
+          "generated_at",
+        ]);
+        const latestUpdatedAt = latestUpdatedAtFromRows ?? latestUpdatedAtFromLatestRow ?? latestDate;
 
         const baseItems: ImakiteSummaryItem[] = ((rowsRes.data ?? []) as unknown[])
           .map((row) => {
@@ -228,7 +265,7 @@ async function getHomeSummaries() {
         const weeklyRes = await supabase
           .schema("ihc")
           .from("weekly_playlists")
-          .select("week_end_date,spotify_embed_url,spotify_playlist_url")
+          .select("*")
           .order("week_end_date", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -238,8 +275,11 @@ async function getHomeSummaries() {
           ? null
           : pickString(weeklyRow, ["spotify_embed_url", "spotify_playlist_url"]);
         const weeklyPlaylistDate = weeklyRes.error ? null : pickString(weeklyRow, ["week_end_date"]);
+        const weeklyUpdatedAt = weeklyRes.error
+          ? null
+          : pickString(weeklyRow, ["updated_at", "created_at", "refreshed_at", "generated_at"]) ?? weeklyPlaylistDate;
 
-        return { latestDate, items, weeklyPlaylistDate, weeklyPlaylistEmbedUrl };
+        return { latestDate, latestUpdatedAt, items, weeklyPlaylistDate, weeklyUpdatedAt, weeklyPlaylistEmbedUrl };
       } catch (error) {
         errors.push(error instanceof Error ? error.message : "IMAKITE summary error");
         return fallback.imakite;
@@ -853,10 +893,15 @@ export default async function Home() {
   });
 
   const summaryCards = [
-    { key: "imakite-daily", sortValue: toSortValue(summaries.imakite.latestDate), tiePriority: 0, node: imakiteDailyCard },
+    {
+      key: "imakite-daily",
+      sortValue: toSortValue(summaries.imakite.latestUpdatedAt ?? summaries.imakite.latestDate),
+      tiePriority: 0,
+      node: imakiteDailyCard,
+    },
     {
       key: "imakite-weekly",
-      sortValue: toSortValue(summaries.imakite.weeklyPlaylistDate),
+      sortValue: toSortValue(summaries.imakite.weeklyUpdatedAt ?? summaries.imakite.weeklyPlaylistDate),
       tiePriority: 0,
       node: imakiteWeeklyCard,
     },
