@@ -230,7 +230,7 @@ export default function BuzzttaraTweetDetailPage() {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
         <main className="mx-auto w-full max-w-5xl px-10 py-16 sm:px-12">
           <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-6 text-sm text-red-100">
             投稿の取得に失敗しました: {message}
@@ -241,18 +241,18 @@ export default function BuzzttaraTweetDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-10 pt-8 pb-16 sm:px-12">
         <div className="flex flex-wrap gap-2">
           <Link
             href="/buzzttara"
-            className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 hover:border-zinc-500"
+            className="rounded-full border border-zinc-400 px-3 py-1 text-xs text-[var(--ui-text)] hover:border-zinc-500"
           >
             一覧へ戻る
           </Link>
         </div>
 
-        {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
+        {status === "loading" && <p className="text-sm text-[var(--ui-text-subtle)]">読み込み中...</p>}
 
         {tweet && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -261,23 +261,23 @@ export default function BuzzttaraTweetDetailPage() {
               {group?.slug ? (
                 <Link
                   href={`/nandatte/${group.slug}`}
-                  className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                  className="text-sm text-[var(--ui-text-muted)] underline decoration-zinc-400 underline-offset-4 hover:text-[var(--ui-text)]"
                 >
                   {group.name_ja ?? "グループ未設定"}
                 </Link>
               ) : (
-                <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
+                <p className="text-sm text-[var(--ui-text-muted)]">{group?.name_ja ?? "グループ未設定"}</p>
               )}
               <div className="mt-1 flex items-baseline gap-2">
                 <h1 className="text-4xl font-semibold sm:text-[2.6rem]">{tweet.idolName}</h1>
-                <p className="text-sm text-zinc-300">さんのバズったポスト</p>
+                <p className="text-sm text-[var(--ui-text-muted)]">さんのバズったポスト</p>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-muted)]">
                 <span>{formatDate(tweet.createdAt)}</span>
-                <span className="rounded-full border border-zinc-700 px-2 py-1">
+                <span className="rounded-full border border-zinc-400 px-2 py-1">
                   view {formatCount(tweet.viewCount)}
                 </span>
-                <span className="rounded-full border border-zinc-700 px-2 py-1">
+                <span className="rounded-full border border-zinc-400 px-2 py-1">
                   いいね {formatCount(tweet.likeCount)}
                 </span>
                 {tweet.tags
@@ -285,7 +285,7 @@ export default function BuzzttaraTweetDetailPage() {
                   .map((tag) => (
                     <span
                       key={tag.id}
-                      className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
+                      className="rounded-full border border-zinc-400 bg-transparent px-2 py-1 text-[var(--ui-text-muted)]"
                     >
                       {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
                     </span>
@@ -302,7 +302,7 @@ export default function BuzzttaraTweetDetailPage() {
             {tweet.adminComment && (
               <section className="pt-4">
                 <h2 className="text-lg font-semibold">コメント</h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm text-zinc-200">{tweet.adminComment}</p>
+                <p className="mt-3 whitespace-pre-wrap text-sm text-[var(--ui-text)]">{tweet.adminComment}</p>
               </section>
             )}
 

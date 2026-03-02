@@ -149,14 +149,14 @@ export function BuzzList() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-white sm:text-3xl">{countLabel}のバズッタラ</h2>
+          <h2 className="font-mincho-jp text-2xl font-semibold text-[var(--ui-text)] sm:text-3xl">{countLabel}のバズッタラ</h2>
         </div>
       </div>
 
-      {status === "loading" && <p className="text-sm text-zinc-400">読み込み中...</p>}
+      {status === "loading" && <p className="text-sm text-[var(--ui-text-subtle)]">読み込み中...</p>}
 
       {status === "idle" && tweets.length === 0 && (
-        <p className="text-sm text-zinc-400">表示できる投稿がありません。</p>
+        <p className="text-sm text-[var(--ui-text-subtle)]">表示できる投稿がありません。</p>
       )}
 
       <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
@@ -166,37 +166,37 @@ export function BuzzList() {
           return (
           <article
             key={tweet.id}
-            className="mb-4 break-inside-avoid rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 transition hover:border-zinc-600"
+            className="mb-4 break-inside-avoid rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-5 transition hover:border-zinc-400"
           >
             <div className="flex items-baseline gap-3">
               <div>
                 {group?.slug ? (
                   <Link
                     href={`/nandatte/${group.slug}`}
-                    className="text-sm text-zinc-400 underline decoration-zinc-500/80 underline-offset-4 hover:text-zinc-200"
+                    className="text-sm text-[var(--ui-text-muted)] underline decoration-zinc-400 underline-offset-4 hover:text-[var(--ui-text)]"
                   >
                     {group.name_ja ?? "グループ未設定"}
                   </Link>
                 ) : (
-                  <p className="text-sm text-zinc-400">{group?.name_ja ?? "グループ未設定"}</p>
+                  <p className="text-sm text-[var(--ui-text-muted)]">{group?.name_ja ?? "グループ未設定"}</p>
                 )}
                 <div className="mt-1 flex items-baseline gap-2">
                   <Link
                     href={`/buzzttara/tweet/${tweet.id}`}
-                    className="text-xl font-semibold text-white underline decoration-zinc-300/80 underline-offset-4 hover:text-cyan-200"
+                    className="text-xl font-semibold text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 hover:text-[var(--ui-link)]"
                   >
                     {tweet.idol_name}
                   </Link>
-                  <span className="text-sm text-zinc-300">さんのバズったポスト</span>
+                  <span className="text-sm text-[var(--ui-text-muted)]">さんのバズったポスト</span>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-zinc-300">
-              <span className="rounded-full border border-zinc-700 px-2 py-1">
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-muted)]">
+              <span className="rounded-full border border-zinc-400 px-2 py-1">
                 view {formatCount(tweet.view_count)}
               </span>
-              <span className="rounded-full border border-zinc-700 px-2 py-1">
+              <span className="rounded-full border border-zinc-400 px-2 py-1">
                 いいね {formatCount(tweet.likeCount)}
               </span>
                 {tweet.tweet_tags
@@ -204,7 +204,7 @@ export function BuzzList() {
                   .map((item) => (
                     <span
                       key={item.id}
-                      className="rounded-full border border-zinc-700 bg-zinc-800/40 px-2 py-1 text-zinc-200"
+                      className="rounded-full border border-zinc-400 bg-transparent px-2 py-1 text-[var(--ui-text-muted)]"
                     >
                       {(item.tags?.icon ?? "") + " " + (item.tags?.name ?? "tag")} ({formatCount(item.like_count)})
                     </span>

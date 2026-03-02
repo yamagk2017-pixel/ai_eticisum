@@ -104,15 +104,21 @@ html[data-theme="light"] .news-article-body h3 {
 }
 
 .buzzttara-tweet-theme .react-tweet-theme {
-  --tweet-bg-color: rgba(24, 24, 27, 0.4) !important;
-  --tweet-bg-color-hover: rgba(24, 24, 27, 0.4) !important;
-  --tweet-border: 1px solid rgb(39, 39, 42) !important;
-  background-color: rgba(24, 24, 27, 0.4) !important;
-  border: 1px solid rgb(39, 39, 42) !important;
+  --tweet-bg-color: color-mix(in oklab, var(--ui-panel) 96%, transparent) !important;
+  --tweet-bg-color-hover: color-mix(in oklab, var(--ui-panel-soft) 98%, transparent) !important;
+  --tweet-border: 1px solid var(--ui-border) !important;
+  --tweet-font-color: var(--ui-text) !important;
+  --tweet-font-color-secondary: var(--ui-text-muted) !important;
+  --tweet-color-text: var(--ui-text) !important;
+  --tweet-color-text-secondary: var(--ui-text-muted) !important;
+  --tweet-color-blue-secondary: var(--ui-link) !important;
+  --tweet-color-blue-primary: var(--ui-link) !important;
+  background-color: color-mix(in oklab, var(--ui-panel) 96%, transparent) !important;
+  border: 1px solid var(--ui-border) !important;
 }
 
 .buzzttara-tweet-theme .react-tweet-theme:hover {
-  background-color: rgba(24, 24, 27, 0.4) !important;
+  background-color: color-mix(in oklab, var(--ui-panel-soft) 98%, transparent) !important;
 }
 
 .top-buzz-tweet-theme .react-tweet-theme {

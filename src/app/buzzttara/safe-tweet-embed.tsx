@@ -67,15 +67,17 @@ export function SafeTweetEmbed({ tweetId, tweetUrl, compact = false, className =
   }
 
   return (
-    <div className={`${className} rounded-xl border border-zinc-700 bg-zinc-900/70 p-4 text-center`.trim()}>
-      <p className={`text-zinc-300 ${compact ? "text-xs" : "text-sm"}`}>
+    <div
+      className={`${className} rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 text-center`.trim()}
+    >
+      <p className={`text-[var(--ui-text-muted)] ${compact ? "text-xs" : "text-sm"}`}>
         {mode === "loading" ? "ツイートを読み込み中..." : "埋め込みを表示できないため、Xでご確認ください。"}
       </p>
       <a
         href={tweetUrl}
         target="_blank"
         rel="noreferrer"
-        className={`mt-3 inline-flex rounded-full border border-cyan-400/50 px-3 py-1 text-cyan-200 hover:border-cyan-300 ${
+        className={`mt-3 inline-flex rounded-full border border-zinc-400 px-3 py-1 text-[var(--ui-link)] hover:text-[var(--ui-link-hover)] ${
           compact ? "text-xs" : "text-sm"
         }`}
       >
