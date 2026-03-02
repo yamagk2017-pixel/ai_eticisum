@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { formatArchiveDateLabel } from "../ranking-list";
 
@@ -25,7 +25,7 @@ function buildArchiveHref(page: number): string {
   return page <= 1 ? "/imakite/archive" : `/imakite/archive?page=${page}`;
 }
 
-export default function ImakiteArchivePage() {
+function ImakiteArchiveContent() {
   const [dates, setDates] = useState<string[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string>("");
@@ -154,5 +154,21 @@ export default function ImakiteArchivePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function ImakiteArchivePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
+          <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-16">
+            <p className="text-sm text-zinc-600">読み込み中...</p>
+          </main>
+        </div>
+      }
+    >
+      <ImakiteArchiveContent />
+    </Suspense>
   );
 }
