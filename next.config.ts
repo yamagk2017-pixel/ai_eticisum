@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         destination: "/news/wp/:id",
         permanent: true,
       },
+      {
+        source: "/article/:section/:id(\\d+).php",
+        destination: "/news/wp/:id",
+        permanent: true,
+      },
     ];
   },
 };
