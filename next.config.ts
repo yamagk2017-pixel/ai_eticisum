@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
         destination: "/news/wp/:id",
         permanent: true,
       },
+      {
+        source: "/inm/wp-content/uploads/:path*",
+        destination: "https://musicite.sub.jp/inm/wp-content/uploads/:path*",
+        permanent: true,
+      },
     ];
   },
 };
