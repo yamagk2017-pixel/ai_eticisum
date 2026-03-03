@@ -37,6 +37,8 @@ const navItems: NavItem[] = [
 
 export function GlobalHeader() {
   const pathname = usePathname();
+  if (pathname?.startsWith("/studio")) return null;
+
   const router = useRouter();
   const [userLabel, setUserLabel] = useState<string | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
