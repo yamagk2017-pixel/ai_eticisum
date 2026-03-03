@@ -96,7 +96,7 @@ export function MyVotes() {
 
   if (status === "loading") {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-sm text-zinc-300">
+      <div className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 text-sm text-[var(--ui-text-muted)]">
         読み込み中...
       </div>
     );
@@ -112,32 +112,32 @@ export function MyVotes() {
 
   if (votes.length === 0) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 text-sm text-zinc-300">
+      <div className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 text-sm text-[var(--ui-text-muted)]">
         {message}
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
-      <ul className="grid gap-3 text-sm text-zinc-200 sm:grid-cols-2">
+    <div className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
+      <ul className="grid gap-3 text-sm text-[var(--ui-text)] sm:grid-cols-2">
         {votes.map((vote) => (
-          <li key={vote.id} className="rounded-xl border border-zinc-800 p-4">
+          <li key={vote.id} className="rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] p-4">
             <div className="flex items-center justify-between gap-4">
               <div>
                 {vote.slug ? (
-                  <Link className="text-base font-semibold hover:text-white" href={`/nandatte/${vote.slug}`}>
+                  <Link className="text-base font-semibold hover:text-[var(--ui-link)]" href={`/nandatte/${vote.slug}`}>
                     {vote.name}
                   </Link>
                 ) : (
                   <span className="text-base font-semibold">{vote.name}</span>
                 )}
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">
                   最終投票: {new Date(vote.updated_at).toLocaleDateString("ja-JP")}
                 </p>
               </div>
               {vote.slug && (
-                <Link className="text-xs text-zinc-400 hover:text-white" href={`/nandatte/${vote.slug}`}>
+                <Link className="text-xs text-[var(--ui-text-subtle)] hover:text-[var(--ui-text)]" href={`/nandatte/${vote.slug}`}>
                   詳細へ →
                 </Link>
               )}

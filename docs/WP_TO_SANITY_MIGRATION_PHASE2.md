@@ -36,6 +36,11 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
   - `wpPostId=22061` インポート完了
   - `wpPostId=22141` インポート完了
 
+追記（2026-03-03）:
+- 単体再インポート運用を継続。
+  - `wpPostId=22065` 再インポート完了（更新反映）
+  - `wpPostId=22146` インポート完了
+
 ---
 
 ## フェーズ2タスク
@@ -141,6 +146,7 @@ PoCで確立した移行手順を使い、WP既存記事（約3,500件）を `wp
 - `reports/wp-to-sanity-poc-issues-merged-20260227-202336.csv`（issues統合）
 - `reports/wp-to-sanity-poc-apply-20260227-212854.json`（single id: 22061）
 - `reports/wp-to-sanity-poc-apply-20260228-000734.json`（single id: 22141）
+- `reports/wp-to-sanity-poc-apply-20260303-144528.json`（single id: 22065 再インポート）
 
 ---
 

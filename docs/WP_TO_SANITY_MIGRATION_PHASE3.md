@@ -10,7 +10,7 @@
 
 ---
 
-## 現在進捗（2026-03-02）
+## 現在進捗（2026-03-03）
 
 - [◯] フェーズ3ドキュメント作成・更新
 - [◯] フェーズ2完了後の前提へ更新（全件移行済み）
@@ -20,11 +20,14 @@
 - [◯] 置換 apply 実行（`musicite.net` → `musicite.sub.jp`）
 - [◯] HTTPS化に伴う再置換 apply 実行（`http://musicite.sub.jp` → `https://musicite.sub.jp`）
 - [◯] 代表記事で画像表示確認（ヒーロー/本文/FooGallery）
-- [ ] DNS切替前チェックリスト運用
+- [◯] DNS切替前チェックリスト運用
+- [◯] DNS切替作業の実施（`musicite.net` / `www.musicite.net`）
+- [◯] 切替後の基本表示確認（新サイト表示・画像表示）
+- [◯] `/studio` のグローバルヘッダー非表示化（Studio UI干渉を解消）
 
 状態:
 - フェーズ2（全件移行）は完了。
-- フェーズ3は **実装進行中（DNS切替準備フェーズ）**。
+- フェーズ3は **実装進行中（DNS切替後の安定化 / 画像アセット移行準備）**。
 
 ---
 
@@ -80,6 +83,7 @@
 - [ ] canonical切替手順確定（旧WP → self）
 - [ ] noindex / robots方針確定（切替前後）
 - [ ] ロールバック手順確定
+- [◯] DNS切替実施（本番）
 
 ### 5) DNS切替前の必須対応（旧WP参照URLの切替）
 
@@ -125,6 +129,10 @@
   - `reports/wp-image-host-replace-apply-20260302-184943.json`
   - `reports/wp-image-host-replace-apply-20260302-184943.csv`
   - summary: `from=http://musicite.sub.jp`, `to=https://musicite.sub.jp`, `appliedUpdatedDocs=1062`, `applyFailedDocs=0`
+
+運用メモ（2026-03-03）:
+- DNS切替直後、通常ブラウザとプライベートモードで表示先が一時的に混在する状態を確認（DNS/HTTPキャッシュ由来）。
+- `/studio` は `src/components/global-header.tsx` でヘッダー非表示化済み（`/studio` 配下のみ）。
 
 ---
 
