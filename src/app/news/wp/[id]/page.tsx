@@ -160,9 +160,6 @@ export default async function WpNewsArticlePage({
       : [];
   const relatedGroupPanels =
     relatedGroups.length > 0 ? await getNewsRelatedGroupsInfo(relatedGroups) : [];
-  const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
-  const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
-
   return (
     <main className="mx-auto w-full max-w-6xl px-6 pt-10 pb-12 sm:px-12">
       <article>
@@ -224,7 +221,7 @@ export default async function WpNewsArticlePage({
 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
-            <WpArticleBody html={article.contentHtml} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
+            <WpArticleBody html={article.contentHtml} />
             <ArticleCitations
               citationSourceArticle={article.citationSourceArticle}
               citedByArticles={article.citedByArticles}

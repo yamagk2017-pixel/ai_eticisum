@@ -137,12 +137,18 @@ html[data-theme="light"] body {
   font-family: var(--font-shippori-mincho), serif;
 }
 
-html[data-theme="pop"] .news-intro-cream > p:nth-of-type(-n + 2),
-html[data-theme="light"] .news-intro-cream > p:nth-of-type(-n + 2) {
-  background-color: #fffbf3;
-  border: 1px solid #e8dcc4;
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
+html[data-theme="pop"] .news-article-body .well3,
+html[data-theme="light"] .news-article-body .well3 {
+  background-color: #fffbf3 !important;
+  border: 1px solid #e8dcc4 !important;
+  border-radius: 16px !important;
+  padding: 0.9rem 1.1rem !important;
+  color: #4a2c50 !important;
+}
+
+html[data-theme="pop"] .news-article-body .well3 :is(p, a, strong, em, span),
+html[data-theme="light"] .news-article-body .well3 :is(p, a, strong, em, span) {
+  color: inherit !important;
 }
 
 html[data-theme="pop"] .news-article-body h3,
