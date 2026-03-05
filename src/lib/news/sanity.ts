@@ -10,7 +10,7 @@ type SanityRefTag = {
 };
 
 type SanityRelatedArticleDoc = {
-  _type?: "newsArticle" | "wpImportedArticle";
+  _type?: "newsArticle" | "eventAnnouncement" | "wpImportedArticle";
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
@@ -22,7 +22,7 @@ type SanityRelatedArticleDoc = {
 };
 
 type SanityNewsArticleListDoc = {
-  _type?: "newsArticle" | "wpImportedArticle";
+  _type?: "newsArticle" | "eventAnnouncement" | "wpImportedArticle";
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
@@ -56,9 +56,9 @@ export type SanityNewsArticleDetail = {
 
 const listQuery = groq`
   *[
-    _type in ["newsArticle", "wpImportedArticle"] &&
+    _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
     (
-      (_type == "newsArticle" && defined(slug.current)) ||
+      (_type in ["newsArticle", "eventAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     !(_id in path("drafts.**")) &&
@@ -96,9 +96,9 @@ const listQuery = groq`
 
 const countQuery = groq`
   count(*[
-    _type in ["newsArticle", "wpImportedArticle"] &&
+    _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
     (
-      (_type == "newsArticle" && defined(slug.current)) ||
+      (_type in ["newsArticle", "eventAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     !(_id in path("drafts.**")) &&
@@ -109,7 +109,7 @@ const countQuery = groq`
 `;
 
 const bySlugQuery = groq`
-  *[_type == "newsArticle" && slug.current == $slug][0]{
+  *[_type in ["newsArticle", "eventAnnouncement"] && slug.current == $slug][0]{
     _id,
     title,
     slug,
@@ -152,7 +152,7 @@ const bySlugQuery = groq`
       }
     },
     "citedByArticles": *[
-      _type in ["newsArticle", "wpImportedArticle"] &&
+      _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
@@ -224,7 +224,7 @@ const wpImportedByPostIdQuery = groq`
       }
     },
     "citedByArticles": *[
-      _type in ["newsArticle", "wpImportedArticle"] &&
+      _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&

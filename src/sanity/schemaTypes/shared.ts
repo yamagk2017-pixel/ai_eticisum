@@ -25,69 +25,71 @@ export const tagReferencesField = defineField({
   ],
 });
 
+export const relatedGroupArrayMembers = [
+  defineArrayMember({
+    type: "object",
+    name: "relatedGroup",
+    components: {
+      input: RelatedGroupObjectInput,
+    },
+    fields: [
+      defineField({
+        name: "groupNameJa",
+        title: "Group Name (JA)",
+        type: "string",
+        description: "入力は日本語グループ名ベース。将来はAutocompleteに置き換え予定。",
+        validation: (rule) => rule.required(),
+      }),
+      defineField({
+        name: "imdGroupId",
+        title: "imd.groups ID",
+        type: "string",
+        description:
+          "暫定: custom input 実装まで非表示運用。将来は候補選択時に自動保存される内部キー。",
+        validation: (rule) => rule.custom((value) => {
+          if (!value) return true;
+          if (typeof value !== "string") return "imd.groups ID must be a string (uuid)";
+          return true;
+        }),
+        hidden: true,
+      }),
+      defineField({
+        name: "displayOrder",
+        title: "Display Order",
+        type: "number",
+        description: "複数グループ登録時の表示順（任意）",
+        validation: (rule) => rule.integer().positive(),
+      }),
+    ],
+    preview: {
+      select: {
+        title: "groupNameJa",
+        subtitle: "imdGroupId",
+      },
+      prepare({title, subtitle}) {
+        return {
+          title: title ?? "(no group name)",
+          subtitle: subtitle ? `imdGroupId: ${subtitle}` : "imdGroupId: (pending)",
+        };
+      },
+    },
+  }),
+];
+
 export const relatedGroupsField = defineField({
   name: "relatedGroups",
   title: "Related Groups (imd.groups)",
   description:
     "基本は1記事=1グループ。複数登録は例外対応。将来は imd.groups.name_ja を検索候補に出す custom input を導入予定。",
   type: "array",
-  of: [
-    defineArrayMember({
-      type: "object",
-      name: "relatedGroup",
-      components: {
-        input: RelatedGroupObjectInput,
-      },
-      fields: [
-        defineField({
-          name: "groupNameJa",
-          title: "Group Name (JA)",
-          type: "string",
-          description: "入力は日本語グループ名ベース。将来はAutocompleteに置き換え予定。",
-          validation: (rule) => rule.required(),
-        }),
-        defineField({
-          name: "imdGroupId",
-          title: "imd.groups ID",
-          type: "string",
-          description:
-            "暫定: custom input 実装まで非表示運用。将来は候補選択時に自動保存される内部キー。",
-          validation: (rule) => rule.custom((value) => {
-            if (!value) return true;
-            if (typeof value !== "string") return "imd.groups ID must be a string (uuid)";
-            return true;
-          }),
-          hidden: true,
-        }),
-        defineField({
-          name: "displayOrder",
-          title: "Display Order",
-          type: "number",
-          description: "複数グループ登録時の表示順（任意）",
-          validation: (rule) => rule.integer().positive(),
-        }),
-      ],
-      preview: {
-        select: {
-          title: "groupNameJa",
-          subtitle: "imdGroupId",
-        },
-        prepare({title, subtitle}) {
-          return {
-            title: title ?? "(no group name)",
-            subtitle: subtitle ? `imdGroupId: ${subtitle}` : "imdGroupId: (pending)",
-          };
-        },
-      },
-    }),
-  ],
+  of: relatedGroupArrayMembers,
 });
 
 export const citationSourceArticleField = defineField({
   name: "citationSourceArticle",
   title: "Citation Source Article",
   type: "reference",
-  to: [{type: "newsArticle"}, {type: "wpImportedArticle"}],
+  to: [{type: "newsArticle"}, {type: "eventAnnouncement"}, {type: "wpImportedArticle"}],
   options: {
     disableNew: true,
   },
