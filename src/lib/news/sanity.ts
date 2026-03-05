@@ -38,6 +38,7 @@ type SanityNewsArticleListDoc = {
 export type SanityRelatedGroup = NewsRelatedGroupRef;
 
 export type SanityNewsArticleDetail = {
+  type: "newsArticle" | "eventAnnouncement";
   id: string;
   slug: string;
   path: string;
@@ -50,6 +51,17 @@ export type SanityNewsArticleDetail = {
   tags: NewsTag[];
   body: unknown;
   relatedGroups: SanityRelatedGroup[];
+  eventInfo: {
+    eventDate: string | null;
+    eventTimeText: string | null;
+    representativePerformers: Array<{
+      name: string;
+      groupNameJa: string | null;
+      imdGroupId: string | null;
+    }>;
+    legacyExternalPerformers: string[];
+    ticketSalesUrl: string | null;
+  } | null;
   citationSourceArticle: NewsRelatedArticleRef | null;
   citedByArticles: NewsRelatedArticleRef[];
 };
@@ -110,6 +122,7 @@ const countQuery = groq`
 
 const bySlugQuery = groq`
   *[_type in ["newsArticle", "eventAnnouncement"] && slug.current == $slug][0]{
+    _type,
     _id,
     title,
     slug,
@@ -132,6 +145,17 @@ const bySlugQuery = groq`
       imdGroupId,
       displayOrder
     },
+    eventDate,
+    eventTimeText,
+    "representativePerformers": representativePerformers[]{
+      name,
+      "group": group{
+        groupNameJa,
+        imdGroupId
+      }
+    },
+    externalPerformers,
+    ticketSalesUrl,
     "citationSourceArticle": citationSourceArticle->{
       _type,
       _id,
@@ -390,6 +414,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
   if (!trimmed) return null;
 
   const doc = await sanityClient.fetch<{
+    _type?: "newsArticle" | "eventAnnouncement";
     _id: string;
     title?: string | null;
     slug?: {current?: string | null} | null;
@@ -400,6 +425,19 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     categories?: SanityRefTag[] | null;
     tags?: SanityRefTag[] | null;
     relatedGroups?: SanityRelatedGroup[] | null;
+    eventDate?: string | null;
+    eventTimeText?: string | null;
+    representativePerformers?:
+      | Array<{
+          name?: string | null;
+          group?: {
+            groupNameJa?: string | null;
+            imdGroupId?: string | null;
+          } | null;
+        }>
+      | null;
+    externalPerformers?: string[] | null;
+    ticketSalesUrl?: string | null;
     citationSourceArticle?: SanityRelatedArticleDoc | null;
     citedByArticles?: SanityRelatedArticleDoc[] | null;
   } | null>(bySlugQuery, {slug: trimmed});
@@ -411,6 +449,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
   const title = (doc.title ?? "").trim() || "(untitled)";
 
   return {
+    type: doc._type === "eventAnnouncement" ? "eventAnnouncement" : "newsArticle",
     id: doc._id,
     slug: currentSlug,
     path: `/news/${currentSlug}`,
@@ -425,6 +464,33 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     relatedGroups: (doc.relatedGroups ?? []).filter(
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),
+    eventInfo:
+      doc._type === "eventAnnouncement"
+        ? {
+            eventDate: doc.eventDate ?? null,
+            eventTimeText: doc.eventTimeText ?? null,
+            representativePerformers: (doc.representativePerformers ?? [])
+              .map((item) => ({
+                name: typeof item?.name === "string" ? item.name.trim() : "",
+                groupNameJa:
+                  typeof item?.group?.groupNameJa === "string" && item.group.groupNameJa.trim().length > 0
+                    ? item.group.groupNameJa.trim()
+                    : null,
+                imdGroupId:
+                  typeof item?.group?.imdGroupId === "string" && item.group.imdGroupId.trim().length > 0
+                    ? item.group.imdGroupId.trim()
+                    : null,
+              }))
+              .filter((item) => item.name.length > 0),
+            legacyExternalPerformers: (doc.externalPerformers ?? []).filter(
+              (item): item is string => typeof item === "string" && item.trim().length > 0
+            ),
+            ticketSalesUrl:
+              typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim().length > 0
+                ? doc.ticketSalesUrl.trim()
+                : null,
+          }
+        : null,
     citationSourceArticle: mapRelatedArticle(doc.citationSourceArticle),
     citedByArticles: mapRelatedArticles(doc.citedByArticles),
   };

@@ -1,4 +1,5 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
+import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 import {
   categoryReferencesField,
   citationSourceArticleField,
@@ -21,7 +22,7 @@ export const eventAnnouncementType = defineType({
   fields: [
     defineField({
       name: "title",
-      title: "イベントタイトル",
+      title: "タイトル",
       type: "string",
       fieldset: "eventInfo",
       validation: (rule) => rule.required(),
@@ -44,22 +45,65 @@ export const eventAnnouncementType = defineType({
     }),
     defineField({
       name: "relatedGroups",
-      title: "出演者1（imd.groups）",
-      description: "imd.groups から1件選択してください。",
+      title: "出演グループ（imd.groups）",
+      description: "ライブ出演など、グループ単位で出演する場合に登録します。複数可。",
       type: "array",
       of: relatedGroupArrayMembers,
       fieldset: "eventInfo",
-      validation: (rule) => rule.required().min(1).max(1),
     }),
     defineField({
-      name: "externalPerformers",
-      title: "出演者2（imd.groups登録外・複数可）",
+      name: "representativePerformers",
+      title: "代表者出演（複数可）",
+      description: "トークイベントなど、個人名で表示したい出演者を登録します。",
       type: "array",
-      of: [defineArrayMember({type: "string"})],
       fieldset: "eventInfo",
-      options: {
-        sortable: true,
-      },
+      of: [
+        defineArrayMember({
+          type: "object",
+          name: "representativePerformer",
+          fields: [
+            defineField({
+              name: "name",
+              title: "出演者名",
+              type: "string",
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: "group",
+              title: "所属グループ（imd.groups・任意）",
+              type: "object",
+              components: {
+                input: RelatedGroupObjectInput,
+              },
+              fields: [
+                defineField({
+                  name: "groupNameJa",
+                  title: "Group Name (JA)",
+                  type: "string",
+                }),
+                defineField({
+                  name: "imdGroupId",
+                  title: "imd.groups ID",
+                  type: "string",
+                  hidden: true,
+                }),
+              ],
+            }),
+          ],
+          preview: {
+            select: {
+              title: "name",
+              groupName: "group.groupNameJa",
+            },
+            prepare({title, groupName}) {
+              return {
+                title: title ?? "(no performer name)",
+                subtitle: groupName ? `所属: ${groupName}` : "所属: 未設定",
+              };
+            },
+          },
+        }),
+      ],
     }),
     defineField({
       name: "ticketSalesUrl",

@@ -7,7 +7,7 @@ import {RelatedGroupsSidebar} from "@/components/news/related-groups-sidebar";
 import {SanityArticleBody} from "@/components/news/sanity-article-body";
 import {getNewsRelatedGroupsInfo} from "@/lib/news/related-groups";
 import {buildArticleMetadata, stripHtmlForText} from "@/lib/news/seo";
-import {getSanityNewsBySlug} from "@/lib/news/sanity";
+import {getSanityNewsBySlug, type SanityRelatedGroup} from "@/lib/news/sanity";
 import type {NewsArticle} from "@/lib/news/types";
 import {hasSanityStudioEnv} from "@/sanity/env";
 
@@ -23,6 +23,31 @@ function formatDate(value: string | null) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(time));
+}
+
+function formatDateOnly(value: string | null) {
+  if (!value) return "-";
+  const time = Date.parse(value);
+  if (Number.isNaN(time)) return value;
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(time));
+}
+
+function toSafeHref(url: string | null) {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return null;
+}
+
+function relatedGroupKey(item: SanityRelatedGroup) {
+  const id = typeof item.imdGroupId === "string" ? item.imdGroupId.trim() : "";
+  if (id) return `id:${id}`;
+  return `name:${item.groupNameJa.trim().toLowerCase()}`;
 }
 
 function toSeoArticleShape(article: Awaited<ReturnType<typeof getSanityNewsBySlug>>): NewsArticle | null {
@@ -77,7 +102,85 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   if (!article) notFound();
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
-  const relatedGroupPanels = await getNewsRelatedGroupsInfo(article.relatedGroups);
+  const eventInfo = article.eventInfo;
+  const ticketHref = toSafeHref(eventInfo?.ticketSalesUrl ?? null);
+
+  const combinedRelatedGroups = [...article.relatedGroups];
+  const existingKeys = new Set(combinedRelatedGroups.map(relatedGroupKey));
+  for (const rep of eventInfo?.representativePerformers ?? []) {
+    const hasGroupId = typeof rep.imdGroupId === "string" && rep.imdGroupId.trim().length > 0;
+    const hasGroupName = typeof rep.groupNameJa === "string" && rep.groupNameJa.trim().length > 0;
+    if (!hasGroupId && !hasGroupName) continue;
+    const candidate: SanityRelatedGroup = {
+      groupNameJa: rep.groupNameJa ?? "",
+      imdGroupId: rep.imdGroupId ?? null,
+    };
+    const key = relatedGroupKey(candidate);
+    if (existingKeys.has(key)) continue;
+    existingKeys.add(key);
+    combinedRelatedGroups.push(candidate);
+  }
+
+  const allGroupPanels = await getNewsRelatedGroupsInfo(combinedRelatedGroups);
+  const sidebarSourceGroups = article.relatedGroups.length > 0 ? article.relatedGroups : combinedRelatedGroups;
+  const sidebarGroupKeys = new Set(sidebarSourceGroups.map(relatedGroupKey));
+  const relatedGroupPanels = allGroupPanels.filter((group) =>
+    sidebarGroupKeys.has(relatedGroupKey({groupNameJa: group.groupNameJa, imdGroupId: group.imdGroupId}))
+  );
+
+  const groupById = new Map<string, {name: string; href: string | null}>();
+  const groupByName = new Map<string, {name: string; href: string | null}>();
+  for (const group of allGroupPanels) {
+    const href = group.slug ? `/nandatte/${group.slug}` : null;
+    if (group.imdGroupId) groupById.set(group.imdGroupId, {name: group.groupNameJa, href});
+    groupByName.set(group.groupNameJa.trim().toLowerCase(), {name: group.groupNameJa, href});
+  }
+
+  type PerformerItem =
+    | {kind: "group"; groupName: string; href: string | null}
+    | {kind: "representative"; name: string; groupName: string | null; groupHref: string | null}
+    | {kind: "legacy"; name: string};
+  const performerItems: PerformerItem[] = [];
+  const representativeNameSet = new Set<string>();
+  const representativeCompositeSet = new Set<string>();
+  for (const group of article.relatedGroups) {
+    const byId = group.imdGroupId ? groupById.get(group.imdGroupId) : null;
+    const byName = groupByName.get(group.groupNameJa.trim().toLowerCase());
+    const linked = byId ?? byName ?? null;
+    performerItems.push({
+      kind: "group",
+      groupName: linked?.name ?? group.groupNameJa,
+      href: linked?.href ?? null,
+    });
+  }
+
+  for (const rep of eventInfo?.representativePerformers ?? []) {
+    const groupInfo = rep.imdGroupId
+      ? groupById.get(rep.imdGroupId) ?? null
+      : rep.groupNameJa
+        ? groupByName.get(rep.groupNameJa.trim().toLowerCase()) ?? null
+        : null;
+
+    const groupText = groupInfo?.name ?? rep.groupNameJa ?? null;
+    const repNameKey = rep.name.trim().toLowerCase();
+    const repCompositeKey = `${repNameKey}|${(rep.imdGroupId ?? "").trim()}|${(groupText ?? "").trim().toLowerCase()}`;
+    if (representativeCompositeSet.has(repCompositeKey)) continue;
+    representativeCompositeSet.add(repCompositeKey);
+    if (repNameKey) representativeNameSet.add(repNameKey);
+
+    performerItems.push({
+      kind: "representative",
+      name: rep.name,
+      groupName: groupText,
+      groupHref: groupInfo?.href ?? null,
+    });
+  }
+
+  for (const legacyName of eventInfo?.legacyExternalPerformers ?? []) {
+    const legacyNameKey = legacyName.trim().toLowerCase();
+    if (legacyNameKey && representativeNameSet.has(legacyNameKey)) continue;
+    performerItems.push({kind: "legacy", name: legacyName});
+  }
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 pt-10 pb-12 sm:px-12">
@@ -161,6 +264,74 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                   )
                 ))}
               </div>
+            ) : null}
+
+            {eventInfo ? (
+              <section className="mt-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
+                <h2 className="text-sm font-semibold text-[var(--ui-text)]">イベント情報</h2>
+                <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
+                  <dt className="text-[var(--ui-text-subtle)]">タイトル</dt>
+                  <dd className="break-words">{stripHtmlForText(article.titleHtml)}</dd>
+
+                  <dt className="text-[var(--ui-text-subtle)]">日にち</dt>
+                  <dd>{formatDateOnly(eventInfo.eventDate)}</dd>
+
+                  <dt className="text-[var(--ui-text-subtle)]">時間</dt>
+                  <dd>{eventInfo.eventTimeText ?? "-"}</dd>
+
+                  <dt className="text-[var(--ui-text-subtle)]">出演</dt>
+                  <dd className="break-words">
+                    {performerItems.length > 0 ? (
+                      performerItems.map((item, index) => (
+                        <span key={`${item.kind}-${index}`}>
+                          {index > 0 ? " / " : null}
+                          {item.kind === "group" ? (
+                            item.href ? (
+                              <Link href={item.href} className="underline underline-offset-2">
+                                {item.groupName}
+                              </Link>
+                            ) : (
+                              item.groupName
+                            )
+                          ) : item.kind === "representative" ? (
+                            <>
+                              {item.name}
+                              {item.groupName ? (
+                                <>
+                                  （
+                                  {item.groupHref ? (
+                                    <Link href={item.groupHref} className="underline underline-offset-2">
+                                      {item.groupName}
+                                    </Link>
+                                  ) : (
+                                    item.groupName
+                                  )}
+                                  ）
+                                </>
+                              ) : null}
+                            </>
+                          ) : (
+                            item.name
+                          )}
+                        </span>
+                      ))
+                    ) : (
+                      "-"
+                    )}
+                  </dd>
+
+                  <dt className="text-[var(--ui-text-subtle)]">チケット販売URL</dt>
+                  <dd className="break-all">
+                    {ticketHref ? (
+                      <a href={ticketHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                        {eventInfo.ticketSalesUrl}
+                      </a>
+                    ) : (
+                      eventInfo.ticketSalesUrl ?? "-"
+                    )}
+                  </dd>
+                </dl>
+              </section>
             ) : null}
           </div>
         </div>
