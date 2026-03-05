@@ -270,16 +270,16 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
               <section className="mt-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
                 <h2 className="text-sm font-semibold text-[var(--ui-text)]">イベント情報</h2>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
-                  <dt className="text-[var(--ui-text-subtle)]">タイトル</dt>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">タイトル</dt>
                   <dd className="break-words">{stripHtmlForText(article.titleHtml)}</dd>
 
-                  <dt className="text-[var(--ui-text-subtle)]">日にち</dt>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">日にち</dt>
                   <dd>{formatDateOnly(eventInfo.eventDate)}</dd>
 
-                  <dt className="text-[var(--ui-text-subtle)]">時間</dt>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">時間</dt>
                   <dd>{eventInfo.eventTimeText ?? "-"}</dd>
 
-                  <dt className="text-[var(--ui-text-subtle)]">出演</dt>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">出演</dt>
                   <dd className="break-words">
                     {performerItems.length > 0 ? (
                       performerItems.map((item, index) => (
@@ -320,7 +320,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                     )}
                   </dd>
 
-                  <dt className="text-[var(--ui-text-subtle)]">チケット販売URL</dt>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">チケット販売URL</dt>
                   <dd className="break-all">
                     {ticketHref ? (
                       <a href={ticketHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
