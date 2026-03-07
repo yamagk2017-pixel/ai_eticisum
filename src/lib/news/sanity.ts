@@ -35,7 +35,27 @@ type SanityNewsArticleListDoc = {
   tags?: SanityRefTag[] | null;
 };
 
+type SanityRelatedEventHomeDoc = {
+  _id: string;
+  title?: string | null;
+  slug?: {current?: string | null} | null;
+  eventDate?: string | null;
+  eventTimeText?: string | null;
+  ticketSalesUrl?: string | null;
+  heroImageUrl?: string | null;
+};
+
 export type SanityRelatedGroup = NewsRelatedGroupRef;
+
+export type HomeRelatedEvent = {
+  id: string;
+  title: string;
+  path: string;
+  eventDate: string;
+  eventTimeText: string | null;
+  ticketSalesUrl: string | null;
+  featuredImageUrl: string | null;
+};
 
 export type SanityNewsArticleDetail = {
   type: "newsArticle" | "eventAnnouncement";
@@ -200,6 +220,26 @@ const bySlugQuery = groq`
         slug
       }
     }
+  }
+`;
+
+const relatedEventsForHomeQuery = groq`
+  *[
+    _type == "eventAnnouncement" &&
+    isMyRelatedEvent == true &&
+    defined(slug.current) &&
+    defined(eventDate) &&
+    !(_id in path("drafts.**")) &&
+    !defined(*[_id == ("drafts." + ^._id)][0]._id)
+  ]
+  | order(eventDate asc, publishedAt desc)[0...$limit]{
+    _id,
+    title,
+    slug,
+    eventDate,
+    eventTimeText,
+    ticketSalesUrl,
+    "heroImageUrl": heroImage.asset->url
   }
 `;
 
@@ -540,4 +580,29 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     citationSourceArticle: mapRelatedArticle(doc.citationSourceArticle),
     citedByArticles: mapRelatedArticles(doc.citedByArticles),
   };
+}
+
+export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRelatedEvent[]> {
+  if (!hasSanityStudioEnv()) return [];
+  const safeLimit = Math.max(1, Math.min(20, Math.trunc(limit || 3)));
+
+  const docs = await sanityClient.fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {limit: safeLimit});
+
+  return docs
+    .map((doc) => {
+      const slug = doc.slug?.current?.trim();
+      const eventDate = doc.eventDate?.trim();
+      if (!slug || !eventDate) return null;
+      return {
+        id: doc._id,
+        title: (doc.title ?? "").trim() || "(untitled)",
+        path: `/news/${slug}`,
+        eventDate,
+        eventTimeText: typeof doc.eventTimeText === "string" && doc.eventTimeText.trim() ? doc.eventTimeText.trim() : null,
+        ticketSalesUrl:
+          typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim() ? doc.ticketSalesUrl.trim() : null,
+        featuredImageUrl: doc.heroImageUrl ?? null,
+      } satisfies HomeRelatedEvent;
+    })
+    .filter((item): item is HomeRelatedEvent => Boolean(item));
 }

@@ -112,6 +112,15 @@ export const eventAnnouncementType = defineType({
       fieldset: "eventInfo",
     }),
     defineField({
+      name: "isMyRelatedEvent",
+      title: "私の主催/関連イベント",
+      type: "boolean",
+      fieldset: "eventInfo",
+      initialValue: false,
+      description:
+        "ONにすると、トップページの「関連イベント」枠に表示対象になります（開催日を過ぎると自動で非表示）。",
+    }),
+    defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
@@ -164,8 +173,9 @@ export const eventAnnouncementType = defineType({
       eventDate: "eventDate",
       eventTimeText: "eventTimeText",
       relatedGroups: "relatedGroups",
+      isMyRelatedEvent: "isMyRelatedEvent",
     },
-    prepare({title, media, eventDate, eventTimeText, relatedGroups}) {
+    prepare({title, media, eventDate, eventTimeText, relatedGroups, isMyRelatedEvent}) {
       const mainPerformer =
         Array.isArray(relatedGroups) && relatedGroups[0]?.groupNameJa ? relatedGroups[0].groupNameJa : "出演者未設定";
       const dateText = eventDate ?? "日付未設定";
@@ -173,7 +183,7 @@ export const eventAnnouncementType = defineType({
       return {
         title,
         media,
-        subtitle: `${dateText} ${timeText} / ${mainPerformer}`,
+        subtitle: `${isMyRelatedEvent ? "[関連] " : ""}${dateText} ${timeText} / ${mainPerformer}`,
       };
     },
   },

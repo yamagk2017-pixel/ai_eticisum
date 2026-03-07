@@ -4,6 +4,7 @@ import type { ReactElement } from "react";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
 import { getNewsList } from "@/lib/news";
+import { getSanityRelatedEventsForHome, type HomeRelatedEvent } from "@/lib/news/sanity";
 import type { NewsArticle } from "@/lib/news/types";
 import { createServerClient } from "@/lib/supabase/server";
 
@@ -63,6 +64,10 @@ type NewsSummary = {
   others: NewsArticle | null;
 };
 
+type RelatedEventsSummary = {
+  items: HomeRelatedEvent[];
+};
+
 function asRecord(value: unknown): RowRecord {
   return value && typeof value === "object" ? (value as RowRecord) : {};
 }
@@ -118,6 +123,36 @@ function formatShortDate(value: string | null) {
   return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(new Date(ts));
 }
 
+function formatEventDate(value: string) {
+  const ts = Date.parse(value);
+  if (Number.isNaN(ts)) return value;
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(ts));
+}
+
+function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
+  const syntheticId = Math.abs(Array.from(event.id).reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0));
+  return {
+    source: "sanity",
+    routeType: "sanity-slug",
+    path: event.path,
+    id: syntheticId,
+    slug: event.path.split("/").filter(Boolean).pop() ?? String(syntheticId),
+    url: null,
+    publishedAt: event.eventDate,
+    titleHtml: event.title,
+    excerptHtml: "",
+    contentHtml: "",
+    featuredImageUrl: event.featuredImageUrl,
+    featuredImageAlt: "",
+    categories: [],
+    tags: [],
+  };
+}
+
 function formatMonthDayUpdateLabel(value: string | null) {
   if (!value) return "最新1件";
   const ts = Date.parse(value);
@@ -152,6 +187,7 @@ async function getHomeSummaries() {
     nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
     buzz: { items: [] as BuzzSummaryItem[] },
     news: { i4c: null, col: null, others: null } satisfies NewsSummary,
+    relatedEvents: { items: [] as HomeRelatedEvent[] } satisfies RelatedEventsSummary,
   };
   const errors: string[] = [];
 
@@ -419,30 +455,42 @@ async function getHomeSummaries() {
       }
     })();
 
-    const newsPromise = (async () => {
+    const newsAndRelatedPromise = (async () => {
       try {
-        const items = await getNewsList({ limit: 20 });
+        const [items, relatedEventItems] = await Promise.all([getNewsList({ limit: 40 }), getSanityRelatedEventsForHome(3)]);
+        const relatedEventPaths = new Set(relatedEventItems.map((event) => event.path));
         const hasCategory = (article: NewsArticle, slug: string) =>
           article.categories.some((category) => category.slug === slug);
         const i4c = items.find((article) => hasCategory(article, "i4c")) ?? null;
         const col = items.find((article) => hasCategory(article, "col")) ?? null;
-        const others =
-          items.find((article) => !hasCategory(article, "i4c") && !hasCategory(article, "col")) ?? null;
-        return { i4c, col, others };
+        const baseOthersFilter = (article: NewsArticle) => !hasCategory(article, "i4c") && !hasCategory(article, "col");
+        const others = relatedEventPaths.size
+          ? items.find((article) => baseOthersFilter(article) && !relatedEventPaths.has(article.path)) ?? null
+          : items.find(baseOthersFilter) ?? null;
+        return { news: { i4c, col, others }, relatedEvents: { items: relatedEventItems } };
       } catch (error) {
-        errors.push(error instanceof Error ? error.message : "News summary error");
-        return fallback.news;
+        errors.push(error instanceof Error ? error.message : "News/related events summary error");
+        return {
+          news: fallback.news,
+          relatedEvents: fallback.relatedEvents,
+        };
       }
     })();
 
-    const [imakite, nandatte, buzz, news] = await Promise.all([imakitePromise, nandattePromise, buzzPromise, newsPromise]);
+    const [imakite, nandatte, buzz, newsAndRelated] = await Promise.all([
+      imakitePromise,
+      nandattePromise,
+      buzzPromise,
+      newsAndRelatedPromise,
+    ]);
 
     return {
       ok: errors.length === 0,
       imakite,
       nandatte,
       buzz,
-      news,
+      news: newsAndRelated.news,
+      relatedEvents: newsAndRelated.relatedEvents,
       error: errors.length ? errors.join(" | ") : null,
     };
   } catch (error) {
@@ -892,6 +940,21 @@ export default async function Home() {
     labelClassName: "text-fuchsia-500",
   });
 
+  const relatedEventTop = summaries.relatedEvents.items[0] ?? null;
+  const relatedEventCard = relatedEventTop
+    ? renderNewsLatestCard({
+        key: "related-event",
+        title: "イベント",
+        subtitle: `${formatEventDate(relatedEventTop.eventDate)}${relatedEventTop.eventTimeText ? ` ${relatedEventTop.eventTimeText}` : ""}`,
+        article: toNewsArticleFromRelatedEvent(relatedEventTop),
+        inlineArticleTitle: true,
+        hideHeading: true,
+        label: "イベント",
+        labelClassName: "text-rose-500",
+        labelHref: "/news?category=ev",
+      })
+    : null;
+
   const summaryCards = [
     {
       key: "imakite-daily",
@@ -935,6 +998,12 @@ export default async function Home() {
       sortValue: toSortValue(summaries.news.others?.publishedAt ?? null),
       tiePriority: 0,
       node: newsOtherCard,
+    },
+    {
+      key: "related-event",
+      sortValue: toSortValue(relatedEventTop?.eventDate ?? null),
+      tiePriority: 2,
+      node: relatedEventCard,
     },
   ]
     .filter(
