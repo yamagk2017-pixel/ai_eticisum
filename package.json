@@ -15,6 +15,7 @@
     "sync:wp-taxonomies:dry-run": "node scripts/wp-sync-taxonomies-to-sanity.mjs --dry-run",
     "sync:wp-taxonomies:apply": "node scripts/wp-sync-taxonomies-to-sanity.mjs --apply",
     "report:wp-poc-issues:merge": "node scripts/merge-wp-poc-issues.mjs",
+    "capture:imakite": "node scripts/capture-imakite.mjs",
     "replace:wp-image-host:dry-run": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp",
     "replace:wp-image-host:apply": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp --apply"
   },
@@ -37,6 +38,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "playwright": "^1.58.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -44,6 +44,8 @@ export function ImakitePanel() {
     post2: "idle",
     post3: "idle",
   });
+  const [captureStatus, setCaptureStatus] = useState<Status>("idle");
+  const [captureMessage, setCaptureMessage] = useState<string>("");
 
   const postTexts = useMemo(() => {
     const topRows = rows.slice().sort((a, b) => a.rank - b.rank);
@@ -187,6 +189,24 @@ https://www.musicite.net/imakite`;
     await fetchRankingByDate(selectedDate, "選択日の告知文を再生成しました。");
   };
 
+  const captureImages = async () => {
+    setCaptureStatus("loading");
+    setCaptureMessage("");
+    try {
+      const res = await fetch("/api/imakite/capture", { method: "POST" });
+      const body = (await res.json()) as { ok?: boolean; files?: string[]; error?: string };
+      if (!res.ok || !body.ok) {
+        throw new Error(body.error ?? "キャプチャの生成に失敗しました。");
+      }
+      const files = body.files ?? [];
+      setCaptureStatus("success");
+      setCaptureMessage(files.length > 0 ? `保存先: ${files.join(" / ")}` : "キャプチャを生成しました。");
+    } catch (error) {
+      setCaptureStatus("error");
+      setCaptureMessage(error instanceof Error ? error.message : "Unknown error");
+    }
+  };
+
   return (
     <section className="rounded-3xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -235,9 +255,17 @@ https://www.musicite.net/imakite`;
         <div className="flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
+            onClick={captureImages}
+            className="rounded-full border border-[var(--ui-border)] px-5 py-3 text-sm font-semibold text-[var(--ui-text)] hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={status === "loading" || captureStatus === "loading"}
+          >
+            {captureStatus === "loading" ? "キャプチャ生成中..." : "キャプチャを撮る"}
+          </button>
+          <button
+            type="button"
             onClick={regeneratePosts}
             className="rounded-full border border-[var(--ui-border)] px-5 py-3 text-sm font-semibold text-[var(--ui-text)] hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={status === "loading"}
+            disabled={status === "loading" || captureStatus === "loading"}
           >
             告知文を再生成する
           </button>
@@ -245,7 +273,7 @@ https://www.musicite.net/imakite`;
             type="button"
             onClick={fetchRanking}
             className="rounded-full bg-[var(--ui-accent)] px-6 py-3 text-sm font-semibold text-[var(--ui-accent-contrast)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={status === "loading"}
+            disabled={status === "loading" || captureStatus === "loading"}
           >
             選択日のデータを再取得
           </button>
@@ -257,6 +285,18 @@ https://www.musicite.net/imakite`;
       {status === "success" && (
         <div className="mt-4 rounded-xl border border-emerald-600/40 bg-emerald-100 p-4 text-sm text-emerald-900">
           {successMessage || `取得完了: ${rows.length}件`}
+        </div>
+      )}
+
+      {captureStatus === "success" && (
+        <div className="mt-4 rounded-xl border border-sky-600/40 bg-sky-100 p-4 text-sm text-sky-900">
+          キャプチャ生成完了。{captureMessage}
+        </div>
+      )}
+
+      {captureStatus === "error" && (
+        <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-100">
+          キャプチャ生成に失敗しました: {captureMessage}
         </div>
       )}
 
