@@ -118,7 +118,7 @@ export function NandatteRelatedChart({groups}: Props) {
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-700">
         <span>総投票数 {data?.totalVotes ?? "-"}</span>
         <span>投票ランキング {data?.voteRank ?? "-"}</span>
-        <span>イマキテ総合順位 {rankDisplay}</span>
+        <span>イマキテ最新順位 {rankDisplay}</span>
       </div>
 
       {status === "loading" ? (
