@@ -12,6 +12,10 @@ type BodyImageValue = {
   wrap?: "none" | "left" | "right";
 };
 
+type CalloutBoxValue = {
+  text?: string;
+};
+
 function resolveImageUrl(value: BodyImageValue) {
   if (typeof value?.asset?.url === "string" && value.asset.url.trim().length > 0) {
     return value.asset.url.trim();
@@ -77,6 +81,16 @@ const components: PortableTextComponents = {
   },
   types: {
     horizontalRule: () => <hr className="my-8 border-0 border-t border-[var(--ui-border)]" />,
+    calloutBox: ({value}) => {
+      const item = (value ?? {}) as CalloutBoxValue;
+      const text = typeof item.text === "string" ? item.text.trim() : "";
+      if (!text) return null;
+      return (
+        <div className="well3 my-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-3 text-[17px] leading-[2.1] text-[var(--ui-text)]">
+          <p className="m-0 whitespace-pre-wrap">{text}</p>
+        </div>
+      );
+    },
     image: ({value}) => {
       const imageValue = (value ?? {}) as BodyImageValue;
       const url = resolveImageUrl(imageValue);
