@@ -43,3 +43,6 @@ next-env.d.ts
 
 # generated migration reports
 /reports/
+
+# local temp workspace
+/tmp/
