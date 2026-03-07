@@ -104,6 +104,10 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
   const eventInfo = article.eventInfo;
   const ticketHref = toSafeHref(eventInfo?.ticketSalesUrl ?? null);
+  const streamingHref = toSafeHref(eventInfo?.streamingUrl ?? null);
+  const hasStreamingInfo = Boolean(
+    eventInfo?.streamingUrl || eventInfo?.streamingDeadline || eventInfo?.streamingPrice
+  );
 
   const combinedRelatedGroups = [...article.relatedGroups];
   const existingKeys = new Set(combinedRelatedGroups.map(relatedGroupKey));
@@ -320,6 +324,9 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                     )}
                   </dd>
 
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">料金</dt>
+                  <dd className="break-words">{eventInfo.eventPrice ?? "-"}</dd>
+
                   <dt className="font-semibold text-[var(--ui-text-subtle)]">チケット販売URL</dt>
                   <dd className="break-all">
                     {ticketHref ? (
@@ -331,6 +338,30 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                     )}
                   </dd>
                 </dl>
+
+                {hasStreamingInfo ? (
+                  <>
+                    <h2 className="mt-5 text-sm font-semibold text-[var(--ui-text)]">配信情報</h2>
+                    <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">配信URL</dt>
+                      <dd className="break-all">
+                        {streamingHref ? (
+                          <a href={streamingHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                            {eventInfo.streamingUrl}
+                          </a>
+                        ) : (
+                          eventInfo.streamingUrl ?? "-"
+                        )}
+                      </dd>
+
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">視聴期限</dt>
+                      <dd>{eventInfo.streamingDeadline ? `〜${formatDateOnly(eventInfo.streamingDeadline)}` : "-"}</dd>
+
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">配信料金</dt>
+                      <dd className="break-words">{eventInfo.streamingPrice ?? "-"}</dd>
+                    </dl>
+                  </>
+                ) : null}
               </section>
             ) : null}
           </div>

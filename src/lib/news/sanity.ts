@@ -41,6 +41,8 @@ type SanityRelatedEventHomeDoc = {
   slug?: {current?: string | null} | null;
   eventDate?: string | null;
   eventTimeText?: string | null;
+  streamingUrl?: string | null;
+  streamingDeadline?: string | null;
   ticketSalesUrl?: string | null;
   heroImageUrl?: string | null;
 };
@@ -74,6 +76,7 @@ export type SanityNewsArticleDetail = {
   eventInfo: {
     eventDate: string | null;
     eventTimeText: string | null;
+    eventPrice: string | null;
     representativePerformers: Array<{
       name: string;
       groupNameJa: string | null;
@@ -81,6 +84,9 @@ export type SanityNewsArticleDetail = {
     }>;
     legacyExternalPerformers: string[];
     ticketSalesUrl: string | null;
+    streamingUrl: string | null;
+    streamingDeadline: string | null;
+    streamingPrice: string | null;
   } | null;
   citationSourceArticle: NewsRelatedArticleRef | null;
   citedByArticles: NewsRelatedArticleRef[];
@@ -167,6 +173,7 @@ const bySlugQuery = groq`
     },
     eventDate,
     eventTimeText,
+    eventPrice,
     "representativePerformers": representativePerformers[]{
       name,
       "group": group{
@@ -176,6 +183,9 @@ const bySlugQuery = groq`
     },
     externalPerformers,
     ticketSalesUrl,
+    streamingUrl,
+    streamingDeadline,
+    streamingPrice,
     "citationSourceArticle": citationSourceArticle->{
       _type,
       _id,
@@ -229,6 +239,14 @@ const relatedEventsForHomeQuery = groq`
     isMyRelatedEvent == true &&
     defined(slug.current) &&
     defined(eventDate) &&
+    (
+      eventDate >= $today ||
+      (
+        defined(streamingUrl) &&
+        defined(streamingDeadline) &&
+        streamingDeadline >= $today
+      )
+    ) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id)
   ]
@@ -238,6 +256,8 @@ const relatedEventsForHomeQuery = groq`
     slug,
     eventDate,
     eventTimeText,
+    streamingUrl,
+    streamingDeadline,
     ticketSalesUrl,
     "heroImageUrl": heroImage.asset->url
   }
@@ -467,6 +487,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     relatedGroups?: SanityRelatedGroup[] | null;
     eventDate?: string | null;
     eventTimeText?: string | null;
+    eventPrice?: string | null;
     representativePerformers?:
       | Array<{
           name?: string | null;
@@ -478,6 +499,9 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
       | null;
     externalPerformers?: string[] | null;
     ticketSalesUrl?: string | null;
+    streamingUrl?: string | null;
+    streamingDeadline?: string | null;
+    streamingPrice?: string | null;
     citationSourceArticle?: SanityRelatedArticleDoc | null;
     citedByArticles?: SanityRelatedArticleDoc[] | null;
   } | null>(bySlugQuery, {slug: trimmed});
@@ -509,6 +533,8 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
         ? {
             eventDate: doc.eventDate ?? null,
             eventTimeText: doc.eventTimeText ?? null,
+            eventPrice:
+              typeof doc.eventPrice === "string" && doc.eventPrice.trim().length > 0 ? doc.eventPrice.trim() : null,
             representativePerformers: (doc.representativePerformers ?? [])
               .map((item) => ({
                 name: typeof item?.name === "string" ? item.name.trim() : "",
@@ -528,6 +554,18 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
             ticketSalesUrl:
               typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim().length > 0
                 ? doc.ticketSalesUrl.trim()
+                : null,
+            streamingUrl:
+              typeof doc.streamingUrl === "string" && doc.streamingUrl.trim().length > 0
+                ? doc.streamingUrl.trim()
+                : null,
+            streamingDeadline:
+              typeof doc.streamingDeadline === "string" && doc.streamingDeadline.trim().length > 0
+                ? doc.streamingDeadline.trim()
+                : null,
+            streamingPrice:
+              typeof doc.streamingPrice === "string" && doc.streamingPrice.trim().length > 0
+                ? doc.streamingPrice.trim()
                 : null,
           }
         : null,
@@ -585,8 +623,12 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
 export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRelatedEvent[]> {
   if (!hasSanityStudioEnv()) return [];
   const safeLimit = Math.max(1, Math.min(20, Math.trunc(limit || 3)));
+  const today = new Date().toISOString().slice(0, 10);
 
-  const docs = await sanityClient.fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {limit: safeLimit});
+  const docs = await sanityClient.fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {
+    limit: safeLimit,
+    today,
+  });
 
   return docs
     .map((doc) => {

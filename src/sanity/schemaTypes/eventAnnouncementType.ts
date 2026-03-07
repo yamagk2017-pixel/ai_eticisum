@@ -106,10 +106,38 @@ export const eventAnnouncementType = defineType({
       ],
     }),
     defineField({
+      name: "eventPrice",
+      title: "料金",
+      type: "string",
+      fieldset: "eventInfo",
+      description: "例: 前売3,000円 / 当日3,500円（+1D）",
+    }),
+    defineField({
       name: "ticketSalesUrl",
       title: "チケット販売URL",
       type: "string",
       fieldset: "eventInfo",
+    }),
+    defineField({
+      name: "streamingUrl",
+      title: "配信URL",
+      type: "string",
+      fieldset: "eventInfo",
+    }),
+    defineField({
+      name: "streamingDeadline",
+      title: "視聴期限",
+      type: "date",
+      options: {dateFormat: "YYYY-MM-DD"},
+      fieldset: "eventInfo",
+      description: "配信がある場合のみ入力",
+    }),
+    defineField({
+      name: "streamingPrice",
+      title: "配信料金",
+      type: "string",
+      fieldset: "eventInfo",
+      description: "例: 視聴チケット 2,000円",
     }),
     defineField({
       name: "isMyRelatedEvent",
@@ -118,7 +146,7 @@ export const eventAnnouncementType = defineType({
       fieldset: "eventInfo",
       initialValue: false,
       description:
-        "ONにすると、トップページの「関連イベント」枠に表示対象になります（開催日を過ぎると自動で非表示）。",
+        "ONにすると、トップページの「イベント」枠に表示対象になります（開催日または視聴期限を過ぎると自動で非表示）。",
     }),
     defineField({
       name: "slug",
