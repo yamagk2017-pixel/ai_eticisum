@@ -902,7 +902,7 @@ export function GroupDetail({ slug }: Props) {
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="rounded-full border border-[var(--ui-border)] px-4 py-1 text-xs text-[var(--ui-text)] hover:border-[var(--ui-text-subtle)]"
+                      className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-1 text-xs font-semibold text-[var(--ui-text)] hover:border-[var(--ui-text-subtle)]"
                     >
                       ログアウト
                     </button>
