@@ -1,5 +1,6 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
 import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
+import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
 import {
   categoryReferencesField,
   citationSourceArticleField,
@@ -183,7 +184,7 @@ export const eventAnnouncementType = defineType({
             {title: "H2", value: "h2"},
             {title: "H3", value: "h3"},
             {title: "Quote", value: "blockquote"},
-            {title: "囲み罫線", value: "well3"},
+            {title: "囲み罫線", value: "well3", component: Well3StylePreview},
           ],
         }),
         defineArrayMember({
@@ -200,6 +201,32 @@ export const eventAnnouncementType = defineType({
               hidden: true,
             }),
           ],
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "calloutBox",
+          title: "囲み罫線ボックス",
+          fields: [
+            defineField({
+              name: "text",
+              title: "Text",
+              type: "text",
+              rows: 4,
+              validation: (rule) => rule.required(),
+            }),
+          ],
+          preview: {
+            select: {
+              text: "text",
+            },
+            prepare({text}) {
+              const raw = typeof text === "string" ? text.trim() : "";
+              return {
+                title: "囲み罫線ボックス",
+                subtitle: raw.length > 0 ? raw : "(empty)",
+              };
+            },
+          },
         }),
         defineArrayMember({
           type: "image",
