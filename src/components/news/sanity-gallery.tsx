@@ -10,15 +10,35 @@ type GalleryImage = {
 
 export function SanityGallery({images}: {images: GalleryImage[]}) {
   const [activeImage, setActiveImage] = useState<GalleryImage | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [modalImageError, setModalImageError] = useState(false);
 
   const normalizeImageUrl = (url: string) => {
-    if (url.startsWith("http://musicite.sub.jp/")) return url.replace("http://", "https://");
-    if (url.startsWith("http://cdn.sanity.io/")) return url.replace("http://", "https://");
-    return url;
+    const normalized = url.trim();
+    if (normalized.startsWith("http://musicite.sub.jp/")) return normalized.replace("http://", "https://");
+    if (normalized.startsWith("http://cdn.sanity.io/")) return normalized.replace("http://", "https://");
+    return normalized;
   };
 
+  const isValidHttpUrl = (url: string) => /^https?:\/\//i.test(url);
   const activeImageUrl = activeImage ? normalizeImageUrl(activeImage.url) : null;
+  const hasPagination = images.length > 1;
+
+  const goPrev = () => {
+    if (!activeImage || !hasPagination) return;
+    const nextIndex = activeIndex <= 0 ? images.length - 1 : activeIndex - 1;
+    setActiveIndex(nextIndex);
+    setActiveImage(images[nextIndex] ?? null);
+    setModalImageError(false);
+  };
+
+  const goNext = () => {
+    if (!activeImage || !hasPagination) return;
+    const nextIndex = activeIndex >= images.length - 1 ? 0 : activeIndex + 1;
+    setActiveIndex(nextIndex);
+    setActiveImage(images[nextIndex] ?? null);
+    setModalImageError(false);
+  };
 
   return (
     <>
@@ -29,7 +49,9 @@ export function SanityGallery({images}: {images: GalleryImage[]}) {
               <button
                 type="button"
                 onClick={() => {
-                  setModalImageError(false);
+                  const normalized = normalizeImageUrl(image.url);
+                  setModalImageError(!isValidHttpUrl(normalized));
+                  setActiveIndex(index);
                   setActiveImage(image);
                 }}
                 className="block w-full text-left"
@@ -56,29 +78,22 @@ export function SanityGallery({images}: {images: GalleryImage[]}) {
           aria-modal="true"
         >
           <div
-            className="relative max-h-[92vh] max-w-[92vw] overflow-auto rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-0 text-[var(--ui-text)]"
+            className="relative min-h-[220px] w-[92vw] max-w-[1200px] max-h-[92vh] overflow-auto rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-0 text-[var(--ui-text)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              type="button"
-              onClick={() => setActiveImage(null)}
-              className="absolute right-2 top-2 z-10 rounded-full bg-black/70 px-3 py-1 text-sm text-white"
-              aria-label="Close image modal"
-            >
-              Close
-            </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {!modalImageError ? (
               <img
                 src={activeImageUrl ?? ""}
                 alt={activeImage.alt ?? ""}
-                className="block max-h-[90vh] max-w-[92vw] object-contain"
+                className="mx-auto block h-auto w-full max-h-[85vh] object-contain"
+                onLoad={() => setModalImageError(false)}
                 onError={() => setModalImageError(true)}
               />
             ) : (
               <div className="min-w-[320px] max-w-[92vw] px-4 py-16 text-center">
                 <p className="text-sm text-rose-500">画像を読み込めませんでした。</p>
-                {activeImageUrl ? (
+                {activeImageUrl && isValidHttpUrl(activeImageUrl) ? (
                   <a
                     href={activeImageUrl}
                     target="_blank"
@@ -91,6 +106,41 @@ export function SanityGallery({images}: {images: GalleryImage[]}) {
               </div>
             )}
             {activeImage.caption ? <p className="px-4 py-3 text-xs text-[var(--ui-text-subtle)]">{activeImage.caption}</p> : null}
+            <div className="flex items-center justify-between gap-3 border-t border-[var(--ui-border)] px-4 py-3">
+              <div className="flex items-center gap-2">
+                {hasPagination ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goPrev}
+                      className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-sm"
+                      aria-label="Previous image"
+                    >
+                      Prev
+                    </button>
+                    <span className="text-xs text-[var(--ui-text-subtle)]">
+                      {activeIndex + 1} / {images.length}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={goNext}
+                      className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-sm"
+                      aria-label="Next image"
+                    >
+                      Next
+                    </button>
+                  </>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveImage(null)}
+                className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-sm"
+                aria-label="Close image modal"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
