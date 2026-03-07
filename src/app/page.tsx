@@ -601,7 +601,7 @@ export default async function Home() {
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
-            <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+            <Link href="/nandatte/ranking?focus=vote" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
           </div>
@@ -653,7 +653,7 @@ export default async function Home() {
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
-            <Link href="/nandatte" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+            <Link href="/nandatte/ranking?focus=recent" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
               more...
             </Link>
           </div>
