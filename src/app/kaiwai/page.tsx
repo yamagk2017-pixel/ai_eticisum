@@ -279,7 +279,7 @@ export default async function KaiwaiPage() {
                 {section.kaiwai.length === 0 ? (
                   <p className="mt-4 text-sm text-[var(--ui-text-muted)]">重なりはありません</p>
                 ) : (
-                  <ol className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+                  <ol className="mt-4 grid gap-2 rounded-xl border border-[var(--ui-border)] p-3 text-sm sm:grid-cols-2">
                     {section.kaiwai.map((item) => (
                       <li key={`${section.groupId}-${item.groupId}`} className="px-1 py-1">
                         <div className="flex items-center justify-between gap-3">
