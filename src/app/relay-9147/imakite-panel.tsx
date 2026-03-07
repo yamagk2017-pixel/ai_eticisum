@@ -76,7 +76,12 @@ export function ImakitePanel() {
   return (
     <section className="rounded-3xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold text-[var(--ui-text)]">IMAKITE 管理</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--ui-text)]">IMAKITE 管理</h2>
+          <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">
+            この画面は既存の集計データ参照用です（集計生成は別ジョブ）。
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <Link
             href="/imakite"
@@ -119,7 +124,7 @@ export function ImakitePanel() {
           className="rounded-full bg-[var(--ui-accent)] px-6 py-3 text-sm font-semibold text-[var(--ui-accent-contrast)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={status === "loading"}
         >
-          ランキングデータ取得
+          選択日のデータを再取得
         </button>
       </div>
 
