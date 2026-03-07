@@ -73,6 +73,11 @@ export type SanityNewsArticleDetail = {
   categories: NewsTag[];
   tags: NewsTag[];
   body: unknown;
+  galleryImages: Array<{
+    url: string;
+    alt: string | null;
+    caption: string | null;
+  }>;
   relatedGroups: SanityRelatedGroup[];
   eventInfo: {
     eventDate: string | null;
@@ -156,6 +161,11 @@ const bySlugQuery = groq`
     publishedAt,
     excerpt,
     body,
+    "galleryImages": galleryImages[]{
+      "url": asset->url,
+      alt,
+      caption
+    },
     "heroImageUrl": heroImage.asset->url,
     "categories": categories[]->{
       _id,
@@ -482,6 +492,13 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     publishedAt?: string | null;
     excerpt?: string | null;
     body?: unknown;
+    galleryImages?:
+      | Array<{
+          url?: string | null;
+          alt?: string | null;
+          caption?: string | null;
+        }>
+      | null;
     heroImageUrl?: string | null;
     categories?: SanityRefTag[] | null;
     tags?: SanityRefTag[] | null;
@@ -526,6 +543,13 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
     body: doc.body ?? [],
+    galleryImages: (doc.galleryImages ?? [])
+      .map((item) => ({
+        url: typeof item?.url === "string" ? item.url.trim() : "",
+        alt: typeof item?.alt === "string" && item.alt.trim().length > 0 ? item.alt.trim() : null,
+        caption: typeof item?.caption === "string" && item.caption.trim().length > 0 ? item.caption.trim() : null,
+      }))
+      .filter((item) => item.url.length > 0),
     relatedGroups: (doc.relatedGroups ?? []).filter(
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),

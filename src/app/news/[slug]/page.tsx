@@ -4,6 +4,7 @@ import {notFound} from "next/navigation";
 import {ArticleCitations} from "@/components/news/article-citations";
 import {NandatteRelatedChart} from "@/components/news/nandatte-related-chart";
 import {RelatedGroupsSidebar} from "@/components/news/related-groups-sidebar";
+import {SanityGallery} from "@/components/news/sanity-gallery";
 import {SanityArticleBody} from "@/components/news/sanity-article-body";
 import {getNewsRelatedGroupsInfo} from "@/lib/news/related-groups";
 import {buildArticleMetadata, stripHtmlForText} from "@/lib/news/seo";
@@ -370,6 +371,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
             <SanityArticleBody value={article.body} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
+            {article.galleryImages.length > 0 ? <SanityGallery images={article.galleryImages} /> : null}
             <ArticleCitations
               citationSourceArticle={article.citationSourceArticle}
               citedByArticles={article.citedByArticles}
