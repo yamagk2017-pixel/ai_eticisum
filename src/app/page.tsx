@@ -153,6 +153,20 @@ function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
   };
 }
 
+function buildRelatedEventSubtitle(event: HomeRelatedEvent): string {
+  const now = new Date();
+  const eventDateTs = Date.parse(event.eventDate);
+  const streamingDeadlineTs = event.streamingDeadline ? Date.parse(event.streamingDeadline) : NaN;
+  const isEventPast = Number.isFinite(eventDateTs) ? eventDateTs < now.getTime() : false;
+  const hasStreamingDeadline = Number.isFinite(streamingDeadlineTs);
+
+  if (isEventPast && hasStreamingDeadline && event.streamingDeadline) {
+    return `配信期限 ${formatEventDate(event.streamingDeadline)} まで`;
+  }
+
+  return `${formatEventDate(event.eventDate)}${event.eventTimeText ? ` ${event.eventTimeText}` : ""}`;
+}
+
 function formatMonthDayUpdateLabel(value: string | null) {
   if (!value) return "最新1件";
   const ts = Date.parse(value);
@@ -945,7 +959,7 @@ export default async function Home() {
     ? renderNewsLatestCard({
         key: "related-event",
         title: "イベント",
-        subtitle: `${formatEventDate(relatedEventTop.eventDate)}${relatedEventTop.eventTimeText ? ` ${relatedEventTop.eventTimeText}` : ""}`,
+        subtitle: buildRelatedEventSubtitle(relatedEventTop),
         article: toNewsArticleFromRelatedEvent(relatedEventTop),
         inlineArticleTitle: true,
         hideHeading: true,

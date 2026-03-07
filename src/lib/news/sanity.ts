@@ -56,6 +56,7 @@ export type HomeRelatedEvent = {
   eventDate: string;
   eventTimeText: string | null;
   ticketSalesUrl: string | null;
+  streamingDeadline: string | null;
   featuredImageUrl: string | null;
 };
 
@@ -643,6 +644,8 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
         eventTimeText: typeof doc.eventTimeText === "string" && doc.eventTimeText.trim() ? doc.eventTimeText.trim() : null,
         ticketSalesUrl:
           typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim() ? doc.ticketSalesUrl.trim() : null,
+        streamingDeadline:
+          typeof doc.streamingDeadline === "string" && doc.streamingDeadline.trim() ? doc.streamingDeadline.trim() : null,
         featuredImageUrl: doc.heroImageUrl ?? null,
       } satisfies HomeRelatedEvent;
     })
