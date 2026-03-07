@@ -9,14 +9,9 @@ type RankingRow = {
   group_id: string;
   vote_count: number;
   last_vote_at: string | null;
-};
-
-type GroupRow = {
-  id: string;
-  name_ja: string | null;
-  slug: string | null;
-  artist_image_url: string | null;
-  image_url?: string | null;
+  name?: string | null;
+  slug?: string | null;
+  imageUrl?: string | null;
 };
 
 type RankItem = RankingRow & {
@@ -31,6 +26,7 @@ type RankingsProps = {
   prioritize?: "vote" | "recent";
   splitListColumns?: boolean;
   limit?: number;
+  loggedInLimit?: number;
   layout?: "side-by-side" | "stacked";
 };
 
@@ -54,58 +50,49 @@ export function Rankings({
   prioritize = "vote",
   splitListColumns = false,
   limit = 5,
+  loggedInLimit,
   layout = "side-by-side",
 }: RankingsProps = {}) {
   const [voteTop, setVoteTop] = useState<RankItem[]>([]);
   const [recentTop, setRecentTop] = useState<RankItem[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const [message, setMessage] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const maxFetchLimit = Math.max(limit, loggedInLimit ?? limit);
 
   useEffect(() => {
     const run = async () => {
       setStatus("loading");
       const supabase = createClient();
-      const [voteRes, recentRes] = await Promise.all([
-        supabase.schema("nandatte").rpc("get_vote_top5"),
-        supabase.schema("nandatte").rpc("get_recent_vote_top5"),
-      ]);
+      const { data: authData } = await supabase.auth.getUser();
+      setIsLoggedIn(!!authData.user);
+      const response = await fetch(`/api/nandatte/rankings?limit=${maxFetchLimit}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as {
+        voteTop?: RankingRow[];
+        recentTop?: RankingRow[];
+        error?: string;
+      };
 
-      if (voteRes.error || recentRes.error) {
+      if (!response.ok) {
         setStatus("error");
-        setMessage(voteRes.error?.message ?? recentRes.error?.message ?? "Unknown error");
+        setMessage(payload.error ?? "Unknown error");
         return;
       }
 
-      const voteRows = (voteRes.data ?? []) as RankingRow[];
-      const recentRows = (recentRes.data ?? []) as RankingRow[];
-      const groupIds = Array.from(new Set([...voteRows, ...recentRows].map((row) => row.group_id)));
-
-      let groups: GroupRow[] = [];
-      if (groupIds.length > 0) {
-        const groupsRes = await supabase
-          .schema("imd")
-          .from("groups")
-          .select("id,name_ja,slug,artist_image_url")
-          .in("id", groupIds);
-
-        if (!groupsRes.error) {
-          groups = (groupsRes.data ?? []) as GroupRow[];
-        }
-      }
-
-      const groupMap = new Map(groups.map((group) => [group.id, group]));
       const toRankItem = (row: RankingRow): RankItem => {
-        const group = groupMap.get(row.group_id);
         return {
           ...row,
-          name: group?.name_ja ?? row.group_id,
-          slug: group?.slug ?? null,
-          imageUrl: group?.artist_image_url ?? null,
+          name: row.name ?? row.group_id,
+          slug: row.slug ?? null,
+          imageUrl: row.imageUrl ?? null,
         };
       };
 
-      setVoteTop(voteRows.map(toRankItem));
-      setRecentTop(recentRows.map(toRankItem));
+      setVoteTop((payload.voteTop ?? []).map(toRankItem));
+      setRecentTop((payload.recentTop ?? []).map(toRankItem));
       setStatus("idle");
     };
 
@@ -113,10 +100,11 @@ export function Rankings({
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, []);
+  }, [maxFetchLimit]);
 
-  const voteList = useMemo(() => voteTop.slice(0, limit), [limit, voteTop]);
-  const recentList = useMemo(() => recentTop.slice(0, limit), [limit, recentTop]);
+  const effectiveLimit = loggedInLimit && isLoggedIn ? loggedInLimit : limit;
+  const voteList = useMemo(() => voteTop.slice(0, effectiveLimit), [effectiveLimit, voteTop]);
+  const recentList = useMemo(() => recentTop.slice(0, effectiveLimit), [effectiveLimit, recentTop]);
 
   const sections =
     prioritize === "recent"

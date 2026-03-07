@@ -37,7 +37,13 @@ export default async function NandatteRankingPage({ searchParams }: PageProps) {
           </h1>
         </header>
 
-        <Rankings prioritize={prioritize} splitListColumns limit={10} layout="stacked" />
+        <Rankings
+          prioritize={prioritize}
+          splitListColumns
+          limit={10}
+          loggedInLimit={20}
+          layout="stacked"
+        />
       </main>
     </div>
   );
