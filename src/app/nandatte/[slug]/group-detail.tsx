@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
 import { createClient } from "@/lib/supabase/client";
@@ -83,6 +83,8 @@ type Props = {
   slug: string;
 };
 
+const POST_AUTH_REDIRECT_KEY = "musicite-post-auth-redirect";
+
 function normalizeFreeword(input: string) {
   return input
     .trim()
@@ -94,6 +96,7 @@ function normalizeFreeword(input: string) {
 
 export function GroupDetail({ slug }: Props) {
   const params = useParams<{ slug?: string }>();
+  const router = useRouter();
   const rawSlug =
     slug ??
     (typeof params.slug === "string"
@@ -251,15 +254,25 @@ export function GroupDetail({ slug }: Props) {
       setAuthReady(true);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       setUserEmail(session?.user?.email ?? null);
       setUserId(session?.user?.id ?? null);
+
+      if (event === "SIGNED_IN") {
+        const nextPath = window.localStorage.getItem(POST_AUTH_REDIRECT_KEY);
+        if (!nextPath) return;
+        window.localStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        if (nextPath !== currentPath) {
+          router.replace(nextPath);
+        }
+      }
     });
 
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   const fetchMetricsAndCounts = async (groupId: string) => {
     setMetricsReady(false);
@@ -718,10 +731,11 @@ export function GroupDetail({ slug }: Props) {
   const handleSignIn = async () => {
     setVoteMessage("");
     const supabase = createClient();
-    const redirectTo = window.location.href;
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.localStorage.setItem(POST_AUTH_REDIRECT_KEY, currentPath);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo },
+      options: { redirectTo: `${window.location.origin}/` },
     });
 
     if (error) {

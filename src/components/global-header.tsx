@@ -35,6 +35,8 @@ const navItems: NavItem[] = [
   { href: "/buzzttara", label: "バズッタラ", match: (pathname) => pathname.startsWith("/buzzttara") },
 ];
 
+const POST_AUTH_REDIRECT_KEY = "musicite-post-auth-redirect";
+
 export function GlobalHeader() {
   const pathname = usePathname();
   if (pathname?.startsWith("/studio")) return null;
@@ -62,15 +64,25 @@ export function GlobalHeader() {
 
     syncUser().catch(() => null);
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       const email = session?.user?.email ?? null;
       setUserLabel(email ? email.split("@")[0] ?? email : null);
+
+      if (event === "SIGNED_IN") {
+        const nextPath = window.localStorage.getItem(POST_AUTH_REDIRECT_KEY);
+        if (!nextPath) return;
+        window.localStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+        if (nextPath !== currentPath) {
+          router.replace(nextPath);
+        }
+      }
     });
 
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const current = document.documentElement.dataset.theme ?? null;
@@ -132,9 +144,11 @@ export function GlobalHeader() {
     setAuthBusy(true);
     try {
       const supabase = createClient();
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.localStorage.setItem(POST_AUTH_REDIRECT_KEY, currentPath);
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.href },
+        options: { redirectTo: `${window.location.origin}/` },
       });
     } finally {
       setAuthBusy(false);
