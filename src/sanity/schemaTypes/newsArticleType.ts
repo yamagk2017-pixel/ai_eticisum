@@ -54,6 +54,33 @@ export const newsArticleType = defineType({
       ],
       validation: (rule) => rule.required(),
     }),
+    defineField({
+      name: "galleryImages",
+      title: "Gallery Images",
+      type: "array",
+      options: {
+        layout: "grid",
+      },
+      of: [
+        defineArrayMember({
+          type: "image",
+          options: {hotspot: true},
+          fields: [
+            defineField({
+              name: "alt",
+              title: "Alt Text",
+              type: "string",
+            }),
+            defineField({
+              name: "caption",
+              title: "Caption",
+              type: "string",
+            }),
+          ],
+        }),
+      ],
+      description: "本文とは別に表示するギャラリー画像。複数画像をまとめてドラッグ＆ドロップ可能。",
+    }),
     citationSourceArticleField,
     defineField({
       name: "excerpt",
