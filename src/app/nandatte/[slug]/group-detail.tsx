@@ -83,6 +83,15 @@ type Props = {
   slug: string;
 };
 
+function normalizeFreeword(input: string) {
+  return input
+    .trim()
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function GroupDetail({ slug }: Props) {
   const params = useParams<{ slug?: string }>();
   const rawSlug =
@@ -535,10 +544,11 @@ export function GroupDetail({ slug }: Props) {
     }
 
     const trimmedFreeword = newFreeword.trim();
+    const normalizedFreeword = normalizeFreeword(newFreeword);
     const pendingItems: SelectedItem[] = [...selectedItems];
 
-    if (trimmedFreeword) {
-      if (trimmedFreeword.length > 10) {
+    if (normalizedFreeword) {
+      if (normalizedFreeword.length > 10) {
         setVoteStatus("error");
         setVoteMessage("フリーワードは10文字以内にしてください。");
         return;
@@ -554,7 +564,7 @@ export function GroupDetail({ slug }: Props) {
         .schema("nandatte")
         .from("metric_freewords")
         .select("id,text")
-        .eq("normalized_text", trimmedFreeword)
+        .eq("normalized_text", normalizedFreeword)
         .maybeSingle();
 
       let freewordId = existingFreeword?.id ?? null;
@@ -566,7 +576,7 @@ export function GroupDetail({ slug }: Props) {
           .from("metric_freewords")
           .insert({
             text: trimmedFreeword,
-            normalized_text: trimmedFreeword,
+            normalized_text: normalizedFreeword,
             created_by: authData.user.id,
           })
           .select("id,text")
@@ -628,6 +638,19 @@ export function GroupDetail({ slug }: Props) {
 
     const voteId = voteRow.id as string;
 
+    const { data: previousVoteItems } = await supabase
+      .schema("nandatte")
+      .from("vote_items")
+      .select("freeword_id")
+      .eq("vote_id", voteId);
+    const previousFreewordIds = Array.from(
+      new Set(
+        (previousVoteItems ?? [])
+          .map((row) => row.freeword_id)
+          .filter((id): id is string => typeof id === "string" && id.length > 0)
+      )
+    );
+
     const { error: deleteError } = await supabase
       .schema("nandatte")
       .from("vote_items")
@@ -663,6 +686,26 @@ export function GroupDetail({ slug }: Props) {
       setVoteStatus("error");
       setVoteMessage(insertItemsError.message);
       return;
+    }
+
+    for (const freewordId of previousFreewordIds) {
+      const { data: refRow, error: refError } = await supabase
+        .schema("nandatte")
+        .from("vote_items")
+        .select("id")
+        .eq("freeword_id", freewordId)
+        .limit(1)
+        .maybeSingle();
+
+      if (refError || refRow?.id) {
+        continue;
+      }
+
+      await supabase
+        .schema("nandatte")
+        .from("metric_freewords")
+        .delete()
+        .eq("id", freewordId);
     }
 
     setVoteStatus("success");
@@ -739,7 +782,7 @@ export function GroupDetail({ slug }: Props) {
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
               <span>総投票数 {totalVotes ?? 0}</span>
               <span>投票ランキング {voteRank ?? "-"}</span>
-              <span>イマキテ総合順位 {rankDisplay}</span>
+              <span>イマキテ最新順位 {rankDisplay}</span>
             </div>
 
             <h1 className="font-mincho-jp text-5xl font-normal leading-tight tracking-tight sm:text-6xl lg:text-7xl">
@@ -859,7 +902,7 @@ export function GroupDetail({ slug }: Props) {
                     <button
                       type="button"
                       onClick={handleSignOut}
-                      className="rounded-full border border-zinc-700 px-4 py-1 text-xs text-zinc-300 hover:border-zinc-500"
+                      className="rounded-full border border-[var(--ui-border)] px-4 py-1 text-xs text-[var(--ui-text)] hover:border-[var(--ui-text-subtle)]"
                     >
                       ログアウト
                     </button>
