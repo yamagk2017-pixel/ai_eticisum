@@ -1,4 +1,28 @@
 import {PortableText, type PortableTextComponents} from "@portabletext/react";
+import {urlForSanityImage} from "@/lib/sanity/image";
+
+type BodyImageValue = {
+  asset?: {
+    _ref?: string;
+    url?: string;
+  };
+  alt?: string;
+  caption?: string;
+  align?: "left" | "center" | "right";
+  wrap?: "none" | "left" | "right";
+};
+
+function resolveImageUrl(value: BodyImageValue) {
+  if (typeof value?.asset?.url === "string" && value.asset.url.trim().length > 0) {
+    return value.asset.url.trim();
+  }
+  try {
+    const built = urlForSanityImage(value).auto("format").url();
+    return typeof built === "string" && built.trim().length > 0 ? built : null;
+  } catch {
+    return null;
+  }
+}
 
 const components: PortableTextComponents = {
   block: {
@@ -25,6 +49,11 @@ const components: PortableTextComponents = {
         {children}
       </blockquote>
     ),
+    well3: ({children}) => (
+      <div className="well3 my-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-3 text-[17px] leading-[2.1] text-[var(--ui-text)]">
+        {children}
+      </div>
+    ),
   },
   list: {
     bullet: ({children}) => <ul className="my-4 list-disc space-y-2 pl-8 text-[var(--ui-text)]">{children}</ul>,
@@ -47,11 +76,36 @@ const components: PortableTextComponents = {
     },
   },
   types: {
+    horizontalRule: () => <hr className="my-8 border-0 border-t border-[var(--ui-border)]" />,
     image: ({value}) => {
-      const url = value?.asset?._ref ? undefined : value?.asset?.url;
+      const imageValue = (value ?? {}) as BodyImageValue;
+      const url = resolveImageUrl(imageValue);
       if (!url) return null;
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={url} alt={value?.alt ?? ""} className="my-6 h-auto w-full rounded-xl" />;
+
+      const wrap = imageValue.wrap ?? "none";
+      const align = imageValue.align ?? "center";
+      const figureClasses = ["my-6"];
+      if (wrap === "left") {
+        figureClasses.push("sm:float-left", "sm:mr-4", "sm:mb-2", "sm:max-w-[55%]");
+      } else if (wrap === "right") {
+        figureClasses.push("sm:float-right", "sm:ml-4", "sm:mb-2", "sm:max-w-[55%]");
+      } else if (align === "left") {
+        figureClasses.push("mr-auto", "max-w-full");
+      } else if (align === "right") {
+        figureClasses.push("ml-auto", "max-w-full");
+      } else {
+        figureClasses.push("mx-auto", "max-w-full");
+      }
+
+      return (
+        <figure className={figureClasses.join(" ")}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt={imageValue.alt ?? ""} className="h-auto w-full rounded-xl border border-[var(--ui-border)]" />
+          {imageValue.caption ? (
+            <figcaption className="mt-2 text-xs leading-5 text-[var(--ui-text-subtle)]">{imageValue.caption}</figcaption>
+          ) : null}
+        </figure>
+      );
     },
   },
 };
@@ -60,7 +114,11 @@ export function SanityArticleBody({value, className}: {value: unknown; className
   if (!Array.isArray(value)) return null;
 
   return (
-    <div className={["news-article-body overflow-wrap-anywhere text-[var(--ui-text)]", className].filter(Boolean).join(" ")}>
+    <div
+      className={["news-article-body overflow-wrap-anywhere text-[var(--ui-text)] after:block after:clear-both after:content-['']", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <PortableText value={value} components={components} />
     </div>
   );

@@ -176,10 +176,74 @@ export const eventAnnouncementType = defineType({
       title: "Body (Portable Text)",
       type: "array",
       of: [
-        defineArrayMember({type: "block"}),
+        defineArrayMember({
+          type: "block",
+          styles: [
+            {title: "Normal", value: "normal"},
+            {title: "H2", value: "h2"},
+            {title: "H3", value: "h3"},
+            {title: "Quote", value: "blockquote"},
+            {title: "囲み罫線", value: "well3"},
+          ],
+        }),
+        defineArrayMember({
+          type: "object",
+          name: "horizontalRule",
+          title: "区切り線",
+          fields: [
+            defineField({
+              name: "kind",
+              title: "Kind",
+              type: "string",
+              initialValue: "hr",
+              readOnly: true,
+              hidden: true,
+            }),
+          ],
+        }),
         defineArrayMember({
           type: "image",
           options: {hotspot: true},
+          fields: [
+            defineField({
+              name: "alt",
+              title: "Alt Text",
+              type: "string",
+            }),
+            defineField({
+              name: "caption",
+              title: "Caption",
+              type: "string",
+            }),
+            defineField({
+              name: "align",
+              title: "Alignment",
+              type: "string",
+              options: {
+                list: [
+                  {title: "Center", value: "center"},
+                  {title: "Left", value: "left"},
+                  {title: "Right", value: "right"},
+                ],
+                layout: "radio",
+              },
+              initialValue: "center",
+            }),
+            defineField({
+              name: "wrap",
+              title: "Wrap",
+              type: "string",
+              options: {
+                list: [
+                  {title: "なし", value: "none"},
+                  {title: "左回り込み", value: "left"},
+                  {title: "右回り込み", value: "right"},
+                ],
+                layout: "radio",
+              },
+              initialValue: "none",
+            }),
+          ],
         }),
       ],
       validation: (rule) => rule.required(),
