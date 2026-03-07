@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
 import { createClient } from "@/lib/supabase/client";
@@ -80,6 +80,11 @@ export default function BuzzttaraTweetDetailPage() {
   const [group, setGroup] = useState<GroupInfo | null>(null);
   const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
   const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
+  const [likeSaving, setLikeSaving] = useState(false);
+  const [tagSavingIds, setTagSavingIds] = useState<Record<string, boolean>>({});
+  const [tweetLikeLocked, setTweetLikeLocked] = useState(false);
+  const [tagLikeLockedIds, setTagLikeLockedIds] = useState<Record<string, boolean>>({});
+  const countedViewTweetIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!tweetIdParam) return;
@@ -184,6 +189,79 @@ export default function BuzzttaraTweetDetailPage() {
     });
   }, [tweetIdParam]);
 
+  useEffect(() => {
+    if (!tweet?.id) return;
+    if (countedViewTweetIdsRef.current.has(tweet.id)) return;
+    countedViewTweetIdsRef.current.add(tweet.id);
+
+    const run = async () => {
+      const supabase = createClient();
+      const nextViewCount = (tweet.viewCount ?? 0) + 1;
+      setTweet((prev) => (prev ? { ...prev, viewCount: nextViewCount } : prev));
+      const { error } = await supabase.from("tweets").update({ view_count: nextViewCount }).eq("id", tweet.id);
+      if (error) {
+        setTweet((prev) => (prev ? { ...prev, viewCount: tweet.viewCount } : prev));
+      }
+    };
+
+    run().catch(() => {
+      setTweet((prev) => (prev ? { ...prev, viewCount: tweet.viewCount } : prev));
+    });
+  }, [tweet?.id, tweet?.viewCount]);
+
+  const handleLikeClick = async () => {
+    if (!tweet || likeSaving || tweetLikeLocked) return;
+    setLikeSaving(true);
+    try {
+      const res = await fetch("/api/buzzttara/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tweetId: tweet.id, type: "tweet_like" }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; added?: boolean; count?: number | null };
+      if (res.ok && payload.ok) {
+        setTweetLikeLocked(true);
+        if (payload.added && typeof payload.count === "number") {
+          setTweet((prev) => (prev ? { ...prev, likeCount: payload.count ?? prev.likeCount } : prev));
+        }
+      }
+    } catch {
+      // Keep UI unchanged on network failures.
+    }
+    setLikeSaving(false);
+  };
+
+  const handleTagLikeClick = async (tweetTagId: string) => {
+    if (!tweet || tagSavingIds[tweetTagId] || tagLikeLockedIds[tweetTagId]) return;
+
+    setTagSavingIds((prev) => ({ ...prev, [tweetTagId]: true }));
+    try {
+      const res = await fetch("/api/buzzttara/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tweetId: tweet.id, type: "tag_like", tweetTagId }),
+      });
+      const payload = (await res.json()) as { ok?: boolean; added?: boolean; count?: number | null };
+      if (res.ok && payload.ok) {
+        setTagLikeLockedIds((prev) => ({ ...prev, [tweetTagId]: true }));
+        if (payload.added && typeof payload.count === "number") {
+          setTweet((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              tags: prev.tags.map((tag) =>
+                tag.id === tweetTagId ? { ...tag, likeCount: payload.count ?? tag.likeCount } : tag
+              ),
+            };
+          });
+        }
+      }
+    } catch {
+      // Keep UI unchanged on network failures.
+    }
+    setTagSavingIds((prev) => ({ ...prev, [tweetTagId]: false }));
+  };
+
   const serviceMap = (() => {
     const map = new Map<string, ExternalIdRow>();
     for (const row of externalIds) {
@@ -277,18 +355,26 @@ export default function BuzzttaraTweetDetailPage() {
                 <span className="rounded-full border border-zinc-400 px-2 py-1">
                   view {formatCount(tweet.viewCount)}
                 </span>
-                <span className="rounded-full border border-zinc-400 px-2 py-1">
+                <button
+                  type="button"
+                  onClick={handleLikeClick}
+                  disabled={likeSaving || tweetLikeLocked}
+                  className="rounded-full border border-zinc-400 px-2 py-1 hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   いいね {formatCount(tweet.likeCount)}
-                </span>
+                </button>
                 {tweet.tags
                   .filter((tag) => tag.name !== "SEXY" && tag.name !== "Wow")
                   .map((tag) => (
-                    <span
+                    <button
+                      type="button"
+                      onClick={() => handleTagLikeClick(tag.id)}
+                      disabled={!!tagSavingIds[tag.id] || !!tagLikeLockedIds[tag.id]}
                       key={tag.id}
-                      className="rounded-full border border-zinc-400 bg-transparent px-2 py-1 text-[var(--ui-text-muted)]"
+                      className="rounded-full border border-zinc-400 bg-transparent px-2 py-1 text-[var(--ui-text-muted)] hover:border-zinc-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {(tag.icon ?? "") + " " + (tag.name ?? "tag")} ({formatCount(tag.likeCount)})
-                    </span>
+                    </button>
                   ))}
               </div>
             </section>
