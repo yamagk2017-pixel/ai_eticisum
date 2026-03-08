@@ -1,4 +1,10 @@
 import { BuzzList } from "./buzz-list";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title:
+    "バズッタラ 100万view以上のポストをアーカイブ | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」",
+};
 
 export default function BuzzttaraPage() {
   return (

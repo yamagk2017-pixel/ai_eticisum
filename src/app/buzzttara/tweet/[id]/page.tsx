@@ -87,6 +87,13 @@ export default function BuzzttaraTweetDetailPage() {
   const countedViewTweetIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!tweet) return;
+    const memberName = tweet.idolName;
+    const groupName = group?.name_ja ?? "グループ名";
+    document.title = `${memberName}（${groupName}）の バズッタラ | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」`;
+  }, [tweet, group?.name_ja]);
+
+  useEffect(() => {
     if (!tweetIdParam) return;
 
     const run = async () => {
