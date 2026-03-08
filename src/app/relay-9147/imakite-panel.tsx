@@ -46,6 +46,7 @@ export function ImakitePanel() {
   });
   const [captureStatus, setCaptureStatus] = useState<Status>("idle");
   const [captureMessage, setCaptureMessage] = useState<string>("");
+  const [post1Draft, setPost1Draft] = useState<string>("");
 
   const postTexts = useMemo(() => {
     const topRows = rows.slice().sort((a, b) => a.rank - b.rank);
@@ -88,6 +89,10 @@ https://www.musicite.net/imakite`;
 
     return { post1, post2, post3 };
   }, [rows, selectedDate]);
+
+  useEffect(() => {
+    setPost1Draft(postTexts.post1);
+  }, [postTexts.post1]);
 
   const copyText = async (key: "post1" | "post2" | "post3", text: string) => {
     if (!text) {
@@ -311,7 +316,7 @@ https://www.musicite.net/imakite`;
                 <p className="text-sm font-semibold text-[var(--ui-text)]">1ツイート目（1位発表）</p>
                 <button
                   type="button"
-                  onClick={() => copyText("post1", postTexts.post1)}
+                  onClick={() => copyText("post1", post1Draft)}
                   className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text)] hover:border-zinc-500"
                 >
                   {copyStatus.post1 === "success"
@@ -321,9 +326,11 @@ https://www.musicite.net/imakite`;
                       : "本文をコピー"}
                 </button>
               </div>
-              <pre className="mt-3 whitespace-pre-wrap break-words rounded-lg border border-[var(--ui-border)] p-3 text-sm text-[var(--ui-text)]">
-                {postTexts.post1}
-              </pre>
+              <textarea
+                className="mt-3 min-h-[320px] w-full resize-y rounded-lg border border-[var(--ui-border)] bg-transparent p-3 text-sm text-[var(--ui-text)]"
+                value={post1Draft}
+                onChange={(event) => setPost1Draft(event.target.value)}
+              />
               </article>
 
               <article className="p-4">
