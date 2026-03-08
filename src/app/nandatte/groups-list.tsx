@@ -242,7 +242,7 @@ export function GroupsList() {
             type="button"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage <= 1}
-            className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 disabled:opacity-40"
+            className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-1 text-xs text-[var(--ui-text)] disabled:opacity-40"
           >
             前へ
           </button>
@@ -253,7 +253,7 @@ export function GroupsList() {
             type="button"
             onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
             disabled={currentPage >= pageCount}
-            className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-200 disabled:opacity-40"
+            className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-1 text-xs text-[var(--ui-text)] disabled:opacity-40"
           >
             次へ
           </button>
