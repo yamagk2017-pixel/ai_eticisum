@@ -13,6 +13,7 @@ import type {NewsArticle} from "@/lib/news/types";
 import {hasSanityStudioEnv} from "@/sanity/env";
 
 export const dynamic = "force-dynamic";
+const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type Params = {slug: string} | Promise<{slug: string}>;
 
@@ -78,6 +79,7 @@ export async function generateMetadata({params}: {params: Params}): Promise<Meta
     return buildArticleMetadata(toSeoArticleShape(article), {
       fallbackTitle: "News",
       canonicalStrategy: "self",
+      siteName: NEWS_DETAIL_SITE_NAME,
     });
   } catch {
     return {title: "News"};

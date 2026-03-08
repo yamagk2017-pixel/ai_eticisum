@@ -1,9 +1,11 @@
 import Link from "next/link";
+import type {Metadata} from "next";
 import { getNewsPage } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 import { hasSanityStudioEnv } from "@/sanity/env";
 
 export const dynamic = "force-dynamic";
+const NEWS_LIST_TITLE_SUFFIX = " | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type SearchParams =
   | Record<string, string | string[] | undefined>
@@ -19,6 +21,10 @@ function parsePageParam(value: string | null): number {
   const num = Number(value);
   if (!Number.isFinite(num)) return 1;
   return Math.max(1, Math.trunc(num));
+}
+
+function slugToLabel(slug: string): string {
+  return slug.replace(/[-_]+/g, " ").trim() || slug;
 }
 
 function buildNewsHref(params: { page?: number; category?: string; tag?: string }) {
@@ -127,13 +133,22 @@ export default async function NewsIndexPage({
     }
   }
 
+  const categoryName =
+    categorySlug
+      ? pageResult.items
+          .flatMap((item) => item.categories)
+          .find((category) => category.slug === categorySlug)
+          ?.name ?? slugToLabel(categorySlug)
+      : null;
+  const pageHeading = categoryName ? `${categoryName}の一覧` : "アイドルニュース";
+
   const rangeStart = pageResult.items.length > 0 ? (pageResult.page - 1) * pageResult.pageSize + 1 : 0;
   const rangeEnd = pageResult.items.length > 0 ? rangeStart + pageResult.items.length - 1 : 0;
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12 sm:px-12">
       <div className="mb-8">
-        <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">アイドルニュース</h1>
+        <h1 className="font-mincho-jp text-3xl font-semibold tracking-tight sm:text-4xl">{pageHeading}</h1>
         <p className="mt-3 text-sm text-[var(--ui-text-subtle)]">
           公開順：{rangeStart}〜{rangeEnd}（{pageResult.page}／{pageResult.totalPages}）
         </p>
@@ -249,4 +264,43 @@ export default async function NewsIndexPage({
       )}
     </main>
   );
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+}): Promise<Metadata> {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const categoryParam = firstParam(resolvedSearchParams.category);
+  const categorySlug = categoryParam?.trim() || undefined;
+
+  if (!categorySlug) {
+    return {
+      title: `アイドルニュースの一覧${NEWS_LIST_TITLE_SUFFIX}`,
+    };
+  }
+
+  let categoryName = slugToLabel(categorySlug);
+  const hasAnyNewsSource = hasWpApiBaseUrlConfigured() || hasSanityStudioEnv();
+
+  if (hasAnyNewsSource) {
+    try {
+      const result = await getNewsPage({
+        page: 1,
+        pageSize: 20,
+        categorySlug,
+      });
+      const matched = result.items
+        .flatMap((item) => item.categories)
+        .find((category) => category.slug === categorySlug);
+      if (matched?.name) categoryName = matched.name;
+    } catch {
+      // Use slug fallback when metadata prefetch fails.
+    }
+  }
+
+  return {
+    title: `${categoryName}の一覧${NEWS_LIST_TITLE_SUFFIX}`,
+  };
 }

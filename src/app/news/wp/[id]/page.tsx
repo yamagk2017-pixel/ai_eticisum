@@ -13,6 +13,7 @@ import { hasSanityStudioEnv } from "@/sanity/env";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 
 export const dynamic = "force-dynamic";
+const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type Params =
   | { id: string }
@@ -92,6 +93,7 @@ export async function generateMetadata({
   return buildArticleMetadata(article, {
     fallbackTitle: "News",
     canonicalStrategy: "source-url",
+    siteName: NEWS_DETAIL_SITE_NAME,
   });
 }
 
