@@ -1,6 +1,7 @@
 import {defineConfig} from "sanity";
 import {structureTool} from "sanity/structure";
 import {schemaTypes} from "./src/sanity/schemaTypes";
+import {deskStructure} from "./src/sanity/desk-structure";
 import {getSanityConfigValues} from "./src/sanity/env";
 
 const {projectId, dataset} = getSanityConfigValues();
@@ -11,7 +12,7 @@ export default defineConfig({
   projectId,
   dataset,
   basePath: "/studio",
-  plugins: [structureTool()],
+  plugins: [structureTool({structure: deskStructure})],
   schema: {
     types: schemaTypes,
   },
