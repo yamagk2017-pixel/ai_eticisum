@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { ImakitePanel } from "./imakite-panel";
 import { BuzzttaraPanel } from "./buzzttara-panel";
+import { NandattePanel } from "./nandatte-panel";
 
-type Tab = "imakite" | "buzzttara";
+type Tab = "imakite" | "buzzttara" | "nandatte";
 
 export default function Relay9147Page() {
   const [tab, setTab] = useState<Tab>("imakite");
@@ -24,7 +25,7 @@ export default function Relay9147Page() {
               ポータルへ戻る
             </Link>
           </div>
-          <p className="text-sm text-[var(--ui-text-muted)]">IMAKITE と BUZZTTARA を単一画面で管理します。</p>
+          <p className="text-sm text-[var(--ui-text-muted)]">IMAKITE、NANDATTE、BUZZTTARA を単一画面で管理します。</p>
         </header>
 
         <div className="flex flex-wrap gap-2">
@@ -41,6 +42,17 @@ export default function Relay9147Page() {
           </button>
           <button
             type="button"
+            onClick={() => setTab("nandatte")}
+              className={`rounded-full px-4 py-2 text-xs ${
+                tab === "nandatte"
+                ? "bg-[var(--ui-accent)] text-[var(--ui-accent-contrast)]"
+                : "border border-[var(--ui-border)] text-[var(--ui-text)] hover:border-zinc-500"
+              }`}
+            >
+              NANDATTE
+          </button>
+          <button
+            type="button"
             onClick={() => setTab("buzzttara")}
               className={`rounded-full px-4 py-2 text-xs ${
                 tab === "buzzttara"
@@ -54,6 +66,7 @@ export default function Relay9147Page() {
 
         {tab === "imakite" && <ImakitePanel />}
         {tab === "buzzttara" && <BuzzttaraPanel />}
+        {tab === "nandatte" && <NandattePanel />}
       </main>
     </div>
   );
