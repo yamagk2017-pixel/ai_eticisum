@@ -15,7 +15,7 @@ export default function NandattePage() {
             <h1 className="font-mincho-jp text-3xl font-semibold leading-tight sm:text-5xl">ナンダッテ</h1>
           </div>
           <p className="max-w-4xl text-base text-[var(--ui-text-muted)] sm:text-lg">
-            登録アイドル600組以上！ファンの投票で作っていくリアルなアイドルディクショナリー
+            登録アイドル600組以上！ファンの投票で作っていくリアルなアイドルチャート
           </p>
         </header>
 
