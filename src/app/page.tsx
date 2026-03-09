@@ -659,7 +659,7 @@ export default async function Home() {
             <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
               ナンダッテ
             </Link>
-            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルディクショナリー</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルチャート</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
@@ -711,7 +711,7 @@ export default async function Home() {
             <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
               ナンダッテ
             </Link>
-            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルディクショナリー</span>
+            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルチャート</span>
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
