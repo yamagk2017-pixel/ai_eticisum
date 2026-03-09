@@ -106,8 +106,13 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
   const eventInfo = article.eventInfo;
+  const isRadioAnnouncement = article.type === "radioAnnouncement";
   const ticketHref = toSafeHref(eventInfo?.ticketSalesUrl ?? null);
   const streamingHref = toSafeHref(eventInfo?.streamingUrl ?? null);
+  const archiveHref = toSafeHref(eventInfo?.archiveUrl ?? null);
+  const afterTalkHref = toSafeHref(eventInfo?.afterTalkUrl ?? null);
+  const hasArchiveUrl = Boolean(eventInfo?.archiveUrl);
+  const hasAfterTalkUrl = Boolean(eventInfo?.afterTalkUrl);
   const hasStreamingInfo = Boolean(
     eventInfo?.streamingUrl || eventInfo?.streamingDeadline || eventInfo?.streamingPrice
   );
@@ -275,74 +280,166 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
 
             {eventInfo ? (
               <section className="mt-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-                <h2 className="text-sm font-semibold text-[var(--ui-text)]">イベント情報</h2>
+                <h2 className="text-sm font-semibold text-[var(--ui-text)]">
+                  {isRadioAnnouncement ? "番組概要" : "イベント情報"}
+                </h2>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
                   <dt className="font-semibold text-[var(--ui-text-subtle)]">タイトル</dt>
                   <dd className="break-words">{stripHtmlForText(article.titleHtml)}</dd>
 
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">日にち</dt>
-                  <dd>{formatDateOnly(eventInfo.eventDate)}</dd>
+                  <dt className="font-semibold text-[var(--ui-text-subtle)]">
+                    {isRadioAnnouncement ? "放送日" : "日にち"}
+                  </dt>
+                  <dd>{formatDateOnly(isRadioAnnouncement ? eventInfo.broadcastDate : eventInfo.eventDate)}</dd>
 
                   <dt className="font-semibold text-[var(--ui-text-subtle)]">時間</dt>
                   <dd>{eventInfo.eventTimeText ?? "-"}</dd>
 
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">出演</dt>
-                  <dd className="break-words">
-                    {performerItems.length > 0 ? (
-                      performerItems.map((item, index) => (
-                        <span key={`${item.kind}-${index}`}>
-                          {index > 0 ? " / " : null}
-                          {item.kind === "group" ? (
-                            item.href ? (
-                              <Link href={item.href} className="underline underline-offset-2">
-                                {item.groupName}
-                              </Link>
-                            ) : (
-                              item.groupName
-                            )
-                          ) : item.kind === "representative" ? (
-                            <>
-                              {item.name}
-                              {item.groupName ? (
+                  {isRadioAnnouncement ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">パーソナリティ</dt>
+                      <dd className="break-words">{eventInfo.personality ?? "-"}</dd>
+                    </>
+                  ) : null}
+
+                  {isRadioAnnouncement ? (
+                    performerItems.length > 0 ? (
+                      <>
+                        <dt className="font-semibold text-[var(--ui-text-subtle)]">出演</dt>
+                        <dd className="break-words">
+                          {performerItems.map((item, index) => (
+                            <span key={`${item.kind}-${index}`}>
+                              {index > 0 ? " / " : null}
+                              {item.kind === "group" ? (
+                                item.href ? (
+                                  <Link href={item.href} className="underline underline-offset-2">
+                                    {item.groupName}
+                                  </Link>
+                                ) : (
+                                  item.groupName
+                                )
+                              ) : item.kind === "representative" ? (
                                 <>
-                                  （
-                                  {item.groupHref ? (
-                                    <Link href={item.groupHref} className="underline underline-offset-2">
-                                      {item.groupName}
-                                    </Link>
-                                  ) : (
-                                    item.groupName
-                                  )}
-                                  ）
+                                  {item.name}
+                                  {item.groupName ? (
+                                    <>
+                                      （
+                                      {item.groupHref ? (
+                                        <Link href={item.groupHref} className="underline underline-offset-2">
+                                          {item.groupName}
+                                        </Link>
+                                      ) : (
+                                        item.groupName
+                                      )}
+                                      ）
+                                    </>
+                                  ) : null}
                                 </>
-                              ) : null}
-                            </>
-                          ) : (
-                            item.name
-                          )}
-                        </span>
-                      ))
-                    ) : (
-                      "-"
-                    )}
-                  </dd>
+                              ) : (
+                                item.name
+                              )}
+                            </span>
+                          ))}
+                        </dd>
+                      </>
+                    ) : null
+                  ) : (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">出演</dt>
+                      <dd className="break-words">
+                        {performerItems.length > 0 ? (
+                          performerItems.map((item, index) => (
+                            <span key={`${item.kind}-${index}`}>
+                              {index > 0 ? " / " : null}
+                              {item.kind === "group" ? (
+                                item.href ? (
+                                  <Link href={item.href} className="underline underline-offset-2">
+                                    {item.groupName}
+                                  </Link>
+                                ) : (
+                                  item.groupName
+                                )
+                              ) : item.kind === "representative" ? (
+                                <>
+                                  {item.name}
+                                  {item.groupName ? (
+                                    <>
+                                      （
+                                      {item.groupHref ? (
+                                        <Link href={item.groupHref} className="underline underline-offset-2">
+                                          {item.groupName}
+                                        </Link>
+                                      ) : (
+                                        item.groupName
+                                      )}
+                                      ）
+                                    </>
+                                  ) : null}
+                                </>
+                              ) : (
+                                item.name
+                              )}
+                            </span>
+                          ))
+                        ) : (
+                          "-"
+                        )}
+                      </dd>
+                    </>
+                  )}
 
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">料金</dt>
-                  <dd className="break-words">{eventInfo.eventPrice ?? "-"}</dd>
+                  {isRadioAnnouncement ? (
+                    <>
+                      {hasArchiveUrl ? (
+                        <>
+                          <dt className="font-semibold text-[var(--ui-text-subtle)]">アーカイブURL</dt>
+                          <dd className="break-all">
+                            {archiveHref ? (
+                              <a href={archiveHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                                {eventInfo.archiveUrl}
+                              </a>
+                            ) : (
+                              eventInfo.archiveUrl
+                            )}
+                          </dd>
+                        </>
+                      ) : null}
 
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">チケット販売URL</dt>
-                  <dd className="break-all">
-                    {ticketHref ? (
-                      <a href={ticketHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                        {eventInfo.ticketSalesUrl}
-                      </a>
-                    ) : (
-                      eventInfo.ticketSalesUrl ?? "-"
-                    )}
-                  </dd>
+                      {hasAfterTalkUrl ? (
+                        <>
+                          <dt className="font-semibold text-[var(--ui-text-subtle)]">アフタートークURL</dt>
+                          <dd className="break-all">
+                            {afterTalkHref ? (
+                              <a href={afterTalkHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                                {eventInfo.afterTalkUrl}
+                              </a>
+                            ) : (
+                              eventInfo.afterTalkUrl
+                            )}
+                          </dd>
+                        </>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">料金</dt>
+                      <dd className="break-words">{eventInfo.eventPrice ?? "-"}</dd>
+
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">チケット販売URL</dt>
+                      <dd className="break-all">
+                        {ticketHref ? (
+                          <a href={ticketHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                            {eventInfo.ticketSalesUrl}
+                          </a>
+                        ) : (
+                          eventInfo.ticketSalesUrl ?? "-"
+                        )}
+                      </dd>
+                    </>
+                  )}
                 </dl>
 
-                {hasStreamingInfo ? (
+                {!isRadioAnnouncement && hasStreamingInfo ? (
                   <>
                     <h2 className="mt-5 text-sm font-semibold text-[var(--ui-text)]">配信情報</h2>
                     <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">

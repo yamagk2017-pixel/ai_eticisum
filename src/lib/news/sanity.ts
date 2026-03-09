@@ -81,7 +81,9 @@ export type SanityNewsArticleDetail = {
   relatedGroups: SanityRelatedGroup[];
   eventInfo: {
     eventDate: string | null;
+    broadcastDate: string | null;
     eventTimeText: string | null;
+    personality: string | null;
     eventPrice: string | null;
     representativePerformers: Array<{
       name: string;
@@ -91,6 +93,8 @@ export type SanityNewsArticleDetail = {
     legacyExternalPerformers: string[];
     ticketSalesUrl: string | null;
     streamingUrl: string | null;
+    archiveUrl: string | null;
+    afterTalkUrl: string | null;
     streamingDeadline: string | null;
     streamingPrice: string | null;
   } | null;
@@ -183,7 +187,9 @@ const bySlugQuery = groq`
       displayOrder
     },
     eventDate,
+    broadcastDate,
     eventTimeText,
+    personality,
     eventPrice,
     "representativePerformers": representativePerformers[]{
       name,
@@ -195,6 +201,8 @@ const bySlugQuery = groq`
     externalPerformers,
     ticketSalesUrl,
     streamingUrl,
+    archiveUrl,
+    afterTalkUrl,
     streamingDeadline,
     streamingPrice,
     "citationSourceArticle": citationSourceArticle->{
@@ -504,7 +512,9 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     tags?: SanityRefTag[] | null;
     relatedGroups?: SanityRelatedGroup[] | null;
     eventDate?: string | null;
+    broadcastDate?: string | null;
     eventTimeText?: string | null;
+    personality?: string | null;
     eventPrice?: string | null;
     representativePerformers?:
       | Array<{
@@ -518,6 +528,8 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     externalPerformers?: string[] | null;
     ticketSalesUrl?: string | null;
     streamingUrl?: string | null;
+    archiveUrl?: string | null;
+    afterTalkUrl?: string | null;
     streamingDeadline?: string | null;
     streamingPrice?: string | null;
     citationSourceArticle?: SanityRelatedArticleDoc | null;
@@ -559,10 +571,15 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
       (item): item is SanityRelatedGroup => Boolean(item?.groupNameJa)
     ),
     eventInfo:
-      doc._type === "eventAnnouncement"
+      doc._type === "eventAnnouncement" || doc._type === "radioAnnouncement"
         ? {
             eventDate: doc.eventDate ?? null,
+            broadcastDate: doc.broadcastDate ?? null,
             eventTimeText: doc.eventTimeText ?? null,
+            personality:
+              typeof doc.personality === "string" && doc.personality.trim().length > 0
+                ? doc.personality.trim()
+                : null,
             eventPrice:
               typeof doc.eventPrice === "string" && doc.eventPrice.trim().length > 0 ? doc.eventPrice.trim() : null,
             representativePerformers: (doc.representativePerformers ?? [])
@@ -588,6 +605,12 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
             streamingUrl:
               typeof doc.streamingUrl === "string" && doc.streamingUrl.trim().length > 0
                 ? doc.streamingUrl.trim()
+                : null,
+            archiveUrl:
+              typeof doc.archiveUrl === "string" && doc.archiveUrl.trim().length > 0 ? doc.archiveUrl.trim() : null,
+            afterTalkUrl:
+              typeof doc.afterTalkUrl === "string" && doc.afterTalkUrl.trim().length > 0
+                ? doc.afterTalkUrl.trim()
                 : null,
             streamingDeadline:
               typeof doc.streamingDeadline === "string" && doc.streamingDeadline.trim().length > 0

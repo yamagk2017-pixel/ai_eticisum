@@ -113,13 +113,13 @@ export const radioAnnouncementType = defineType({
     }),
     defineField({
       name: "archiveUrl",
-      title: "アーカイブ",
+      title: "アーカイブURL",
       type: "url",
       fieldset: "programInfo",
     }),
     defineField({
       name: "afterTalkUrl",
-      title: "アフタートークURL（テキスト）",
+      title: "アフタートークURL",
       type: "url",
       fieldset: "programInfo",
     }),
