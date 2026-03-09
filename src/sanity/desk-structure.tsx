@@ -7,11 +7,11 @@ export const deskStructure: StructureResolver = (S) =>
     .items([
       S.listItem()
         .id("docx-press-release-import")
-        .title("DOCX原稿インポート")
+        .title("原稿インポート")
         .child(
           S.component()
             .id("docx-press-release-import-pane")
-            .title("DOCX原稿インポート")
+            .title("原稿インポート")
             .component(DocxPressReleaseImportTool)
         ),
       ...S.documentTypeListItems(),
