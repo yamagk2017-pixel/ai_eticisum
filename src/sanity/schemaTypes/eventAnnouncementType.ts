@@ -2,7 +2,6 @@ import {defineArrayMember, defineField, defineType} from "sanity";
 import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
 import {
-  categoryReferencesField,
   citationSourceArticleField,
   relatedGroupArrayMembers,
   seoFields,
@@ -170,7 +169,29 @@ export const eventAnnouncementType = defineType({
       options: {hotspot: true},
       validation: (rule) => rule.required(),
     }),
-    categoryReferencesField,
+    defineField({
+      name: "categories",
+      title: "Categories",
+      type: "array",
+      of: [
+        defineArrayMember({
+          type: "reference",
+          to: [{type: "newsCategory"}],
+        }),
+      ],
+      initialValue: async (_params, context) => {
+        try {
+          const client = context.getClient({apiVersion: "2024-01-01"});
+          const category = await client.fetch<{_id: string} | null>(
+            `*[_type == "newsCategory" && slug.current == "ev"][0]{_id}`
+          );
+          if (!category?._id) return [];
+          return [{_type: "reference", _ref: category._id}];
+        } catch {
+          return [];
+        }
+      },
+    }),
     tagReferencesField,
     defineField({
       name: "body",
