@@ -3,6 +3,7 @@ import {structureTool} from "sanity/structure";
 import {schemaTypes} from "./src/sanity/schemaTypes";
 import {deskStructure} from "./src/sanity/desk-structure";
 import {getSanityConfigValues} from "./src/sanity/env";
+import "./src/sanity/studio.css";
 
 const {projectId, dataset} = getSanityConfigValues();
 

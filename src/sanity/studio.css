@@ -1,0 +1,10 @@
+/* Sanity Studio Portable Text editor heading size tuning */
+[data-slate-editor] h2 {
+  font-size: 1.45rem !important;
+  line-height: 1.35 !important;
+}
+
+[data-slate-editor] h3 {
+  font-size: 1.15rem !important;
+  line-height: 1.4 !important;
+}

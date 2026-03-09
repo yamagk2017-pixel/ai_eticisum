@@ -264,6 +264,22 @@ export const eventAnnouncementType = defineType({
               type: "string",
             }),
             defineField({
+              name: "displaySize",
+              title: "表示サイズ",
+              type: "string",
+              options: {
+                list: [
+                  {title: "極小", value: "xsmall"},
+                  {title: "小", value: "small"},
+                  {title: "中", value: "medium"},
+                  {title: "大", value: "large"},
+                  {title: "幅いっぱい", value: "full"},
+                ],
+                layout: "radio",
+              },
+              initialValue: "medium",
+            }),
+            defineField({
               name: "linkUrl",
               title: "リンクURL",
               type: "url",
@@ -280,7 +296,6 @@ export const eventAnnouncementType = defineType({
                 layout: "radio",
               },
               initialValue: "_self",
-              hidden: ({parent}) => !parent?.linkUrl,
             }),
             defineField({
               name: "align",
