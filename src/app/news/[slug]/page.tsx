@@ -38,6 +38,18 @@ function formatDateOnly(value: string | null) {
   }).format(new Date(time));
 }
 
+function formatDateOnlyWithWeekday(value: string | null) {
+  if (!value) return "-";
+  const time = Date.parse(value);
+  if (Number.isNaN(time)) return value;
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  }).format(new Date(time));
+}
+
 function toSafeHref(url: string | null) {
   if (!url) return null;
   const trimmed = url.trim();
@@ -290,7 +302,11 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                   <dt className="font-semibold text-[var(--ui-text-subtle)]">
                     {isRadioAnnouncement ? "放送日" : "日にち"}
                   </dt>
-                  <dd>{formatDateOnly(isRadioAnnouncement ? eventInfo.broadcastDate : eventInfo.eventDate)}</dd>
+                  <dd>
+                    {isRadioAnnouncement
+                      ? formatDateOnlyWithWeekday(eventInfo.broadcastDate)
+                      : formatDateOnly(eventInfo.eventDate)}
+                  </dd>
 
                   <dt className="font-semibold text-[var(--ui-text-subtle)]">時間</dt>
                   <dd>{eventInfo.eventTimeText ?? "-"}</dd>
