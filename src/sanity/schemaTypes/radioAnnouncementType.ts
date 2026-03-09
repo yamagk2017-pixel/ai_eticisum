@@ -8,14 +8,14 @@ import {
   tagReferencesField,
 } from "./shared";
 
-export const eventAnnouncementType = defineType({
-  name: "eventAnnouncement",
-  title: "Event Announcement (PT)",
+export const radioAnnouncementType = defineType({
+  name: "radioAnnouncement",
+  title: "Radio Announcement (PT)",
   type: "document",
   fieldsets: [
     {
-      name: "eventInfo",
-      title: "イベント情報（上部表示）",
+      name: "programInfo",
+      title: "番組概要",
       options: {collapsible: false},
     },
   ],
@@ -24,24 +24,30 @@ export const eventAnnouncementType = defineType({
       name: "title",
       title: "タイトル",
       type: "string",
-      fieldset: "eventInfo",
+      fieldset: "programInfo",
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: "eventDate",
-      title: "日にち",
+      name: "broadcastDate",
+      title: "放送日",
       type: "date",
       options: {dateFormat: "YYYY-MM-DD"},
-      fieldset: "eventInfo",
+      fieldset: "programInfo",
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: "eventTimeText",
       title: "時間",
       type: "string",
-      fieldset: "eventInfo",
-      description: "例: OPEN 18:00 / START 18:30",
+      fieldset: "programInfo",
+      description: "例: 20:00 - 20:30",
       validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "personality",
+      title: "パーソナリティ",
+      type: "string",
+      fieldset: "programInfo",
     }),
     defineField({
       name: "relatedGroups",
@@ -49,14 +55,14 @@ export const eventAnnouncementType = defineType({
       description: "ライブ出演など、グループ単位で出演する場合に登録します。複数可。",
       type: "array",
       of: relatedGroupArrayMembers,
-      fieldset: "eventInfo",
+      fieldset: "programInfo",
     }),
     defineField({
       name: "representativePerformers",
       title: "代表者出演（複数可）",
       description: "トークイベントなど、個人名で表示したい出演者を登録します。",
       type: "array",
-      fieldset: "eventInfo",
+      fieldset: "programInfo",
       of: [
         defineArrayMember({
           type: "object",
@@ -106,47 +112,16 @@ export const eventAnnouncementType = defineType({
       ],
     }),
     defineField({
-      name: "eventPrice",
-      title: "料金",
-      type: "string",
-      fieldset: "eventInfo",
-      description: "例: 前売3,000円 / 当日3,500円（+1D）",
+      name: "archiveUrl",
+      title: "アーカイブ",
+      type: "url",
+      fieldset: "programInfo",
     }),
     defineField({
-      name: "ticketSalesUrl",
-      title: "チケット販売URL",
-      type: "string",
-      fieldset: "eventInfo",
-    }),
-    defineField({
-      name: "streamingUrl",
-      title: "配信URL",
-      type: "string",
-      fieldset: "eventInfo",
-    }),
-    defineField({
-      name: "streamingDeadline",
-      title: "視聴期限",
-      type: "date",
-      options: {dateFormat: "YYYY-MM-DD"},
-      fieldset: "eventInfo",
-      description: "配信がある場合のみ入力",
-    }),
-    defineField({
-      name: "streamingPrice",
-      title: "配信料金",
-      type: "string",
-      fieldset: "eventInfo",
-      description: "例: 視聴チケット 2,000円",
-    }),
-    defineField({
-      name: "isMyRelatedEvent",
-      title: "私の主催/関連イベント",
-      type: "boolean",
-      fieldset: "eventInfo",
-      initialValue: false,
-      description:
-        "ONにすると、トップページの「イベント」枠に表示対象になります（開催日または視聴期限を過ぎると自動で非表示）。",
+      name: "afterTalkUrl",
+      title: "アフタートークURL（テキスト）",
+      type: "url",
+      fieldset: "programInfo",
     }),
     defineField({
       name: "slug",
@@ -183,7 +158,7 @@ export const eventAnnouncementType = defineType({
         try {
           const client = context.getClient({apiVersion: "2024-01-01"});
           const category = await client.fetch<{_id: string} | null>(
-            `*[_type == "newsCategory" && slug.current == "ev"][0]{_id}`
+            `*[_type == "newsCategory" && (title == "アイドル第四会議室" || slug.current == "i4c")][0]{_id}`
           );
           if (!category?._id) return [];
           return [{_type: "reference", _ref: category._id}];
@@ -356,20 +331,19 @@ export const eventAnnouncementType = defineType({
     select: {
       title: "title",
       media: "heroImage",
-      eventDate: "eventDate",
+      broadcastDate: "broadcastDate",
       eventTimeText: "eventTimeText",
       relatedGroups: "relatedGroups",
-      isMyRelatedEvent: "isMyRelatedEvent",
     },
-    prepare({title, media, eventDate, eventTimeText, relatedGroups, isMyRelatedEvent}) {
+    prepare({title, media, broadcastDate, eventTimeText, relatedGroups}) {
       const mainPerformer =
         Array.isArray(relatedGroups) && relatedGroups[0]?.groupNameJa ? relatedGroups[0].groupNameJa : "出演者未設定";
-      const dateText = eventDate ?? "日付未設定";
+      const dateText = broadcastDate ?? "放送日未設定";
       const timeText = eventTimeText ?? "時間未設定";
       return {
         title,
         media,
-        subtitle: `${isMyRelatedEvent ? "[関連] " : ""}${dateText} ${timeText} / ${mainPerformer}`,
+        subtitle: `${dateText} ${timeText} / ${mainPerformer}`,
       };
     },
   },

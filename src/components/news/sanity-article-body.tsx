@@ -8,6 +8,8 @@ type BodyImageValue = {
   };
   alt?: string;
   caption?: string;
+  linkUrl?: string;
+  linkTarget?: "_self" | "_blank";
   align?: "left" | "center" | "right";
   wrap?: "none" | "left" | "right";
 };
@@ -95,6 +97,12 @@ const components: PortableTextComponents = {
       const imageValue = (value ?? {}) as BodyImageValue;
       const url = resolveImageUrl(imageValue);
       if (!url) return null;
+      const linkUrl =
+        typeof imageValue.linkUrl === "string" && imageValue.linkUrl.trim().length > 0
+          ? imageValue.linkUrl.trim()
+          : null;
+      const linkTarget = imageValue.linkTarget === "_blank" ? "_blank" : "_self";
+      const linkRel = linkTarget === "_blank" ? "noopener noreferrer" : undefined;
 
       const wrap = imageValue.wrap ?? "none";
       const align = imageValue.align ?? "center";
@@ -110,11 +118,20 @@ const components: PortableTextComponents = {
       } else {
         figureClasses.push("mx-auto", "max-w-full");
       }
+      // eslint-disable-next-line @next/next/no-img-element
+      const imageElement = (
+        <img src={url} alt={imageValue.alt ?? ""} className="h-auto w-full rounded-xl border border-[var(--ui-border)]" />
+      );
 
       return (
         <figure className={figureClasses.join(" ")}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={imageValue.alt ?? ""} className="h-auto w-full rounded-xl border border-[var(--ui-border)]" />
+          {linkUrl ? (
+            <a href={linkUrl} target={linkTarget} rel={linkRel}>
+              {imageElement}
+            </a>
+          ) : (
+            imageElement
+          )}
           {imageValue.caption ? (
             <figcaption className="mt-2 text-xs leading-5 text-[var(--ui-text-subtle)]">{imageValue.caption}</figcaption>
           ) : null}

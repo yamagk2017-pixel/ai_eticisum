@@ -89,7 +89,12 @@ export const citationSourceArticleField = defineField({
   name: "citationSourceArticle",
   title: "Citation Source Article",
   type: "reference",
-  to: [{type: "newsArticle"}, {type: "eventAnnouncement"}, {type: "wpImportedArticle"}],
+  to: [
+    {type: "newsArticle"},
+    {type: "eventAnnouncement"},
+    {type: "radioAnnouncement"},
+    {type: "wpImportedArticle"},
+  ],
   options: {
     disableNew: true,
   },

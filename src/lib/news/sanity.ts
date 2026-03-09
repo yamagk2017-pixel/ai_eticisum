@@ -10,7 +10,7 @@ type SanityRefTag = {
 };
 
 type SanityRelatedArticleDoc = {
-  _type?: "newsArticle" | "eventAnnouncement" | "wpImportedArticle";
+  _type?: "newsArticle" | "eventAnnouncement" | "radioAnnouncement" | "wpImportedArticle";
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
@@ -22,7 +22,7 @@ type SanityRelatedArticleDoc = {
 };
 
 type SanityNewsArticleListDoc = {
-  _type?: "newsArticle" | "eventAnnouncement" | "wpImportedArticle";
+  _type?: "newsArticle" | "eventAnnouncement" | "radioAnnouncement" | "wpImportedArticle";
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
@@ -61,7 +61,7 @@ export type HomeRelatedEvent = {
 };
 
 export type SanityNewsArticleDetail = {
-  type: "newsArticle" | "eventAnnouncement";
+  type: "newsArticle" | "eventAnnouncement" | "radioAnnouncement";
   id: string;
   slug: string;
   path: string;
@@ -100,9 +100,9 @@ export type SanityNewsArticleDetail = {
 
 const listQuery = groq`
   *[
-    _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
+    _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
     (
-      (_type in ["newsArticle", "eventAnnouncement"] && defined(slug.current)) ||
+      (_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     !(_id in path("drafts.**")) &&
@@ -140,9 +140,9 @@ const listQuery = groq`
 
 const countQuery = groq`
   count(*[
-    _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
+    _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
     (
-      (_type in ["newsArticle", "eventAnnouncement"] && defined(slug.current)) ||
+      (_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     !(_id in path("drafts.**")) &&
@@ -153,7 +153,7 @@ const countQuery = groq`
 `;
 
 const bySlugQuery = groq`
-  *[_type in ["newsArticle", "eventAnnouncement"] && slug.current == $slug][0]{
+  *[_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && slug.current == $slug][0]{
     _type,
     _id,
     title,
@@ -217,7 +217,7 @@ const bySlugQuery = groq`
       }
     },
     "citedByArticles": *[
-      _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
+      _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
@@ -319,7 +319,7 @@ const wpImportedByPostIdQuery = groq`
       }
     },
     "citedByArticles": *[
-      _type in ["newsArticle", "eventAnnouncement", "wpImportedArticle"] &&
+      _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
@@ -485,7 +485,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
   if (!trimmed) return null;
 
   const doc = await sanityClient.fetch<{
-    _type?: "newsArticle" | "eventAnnouncement";
+    _type?: "newsArticle" | "eventAnnouncement" | "radioAnnouncement";
     _id: string;
     title?: string | null;
     slug?: {current?: string | null} | null;
@@ -531,7 +531,12 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
   const title = (doc.title ?? "").trim() || "(untitled)";
 
   return {
-    type: doc._type === "eventAnnouncement" ? "eventAnnouncement" : "newsArticle",
+    type:
+      doc._type === "eventAnnouncement"
+        ? "eventAnnouncement"
+        : doc._type === "radioAnnouncement"
+          ? "radioAnnouncement"
+          : "newsArticle",
     id: doc._id,
     slug: currentSlug,
     path: `/news/${currentSlug}`,

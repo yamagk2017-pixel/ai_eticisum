@@ -113,6 +113,25 @@ export const newsArticleType = defineType({
               type: "string",
             }),
             defineField({
+              name: "linkUrl",
+              title: "リンクURL",
+              type: "url",
+            }),
+            defineField({
+              name: "linkTarget",
+              title: "リンクの開き方",
+              type: "string",
+              options: {
+                list: [
+                  {title: "同一タブ", value: "_self"},
+                  {title: "新しいタブ", value: "_blank"},
+                ],
+                layout: "radio",
+              },
+              initialValue: "_self",
+              hidden: ({parent}) => !parent?.linkUrl,
+            }),
+            defineField({
               name: "align",
               title: "Alignment",
               type: "string",
