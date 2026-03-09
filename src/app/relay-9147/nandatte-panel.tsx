@@ -33,19 +33,19 @@ function buildTexts(voteTop: RankingItem[], recentTop: RankingItem[]) {
   const rankingLines = fillLines(voteTop, "ランキング");
 
   return {
-    updates: `📕 ${dateLabel}付 #ナンダッテ 最新アップデート
+    updates: `📕 オタクが作るリアルアイドルチャート「ナンダッテ」
+${dateLabel}付の最新アップデートは…
 
 ${updatesLines}
 
-ナンダッテはファンの投票で作るアイドルリアルディクショナリー
-最新データはIDOL CROSSINGで！
+なんだって！詳細は以下のページから
 https://www.musicite.net/nandatte`,
-    ranking: `🏆 ${dateLabel}付 #ナンダッテ 投票ランキング
+    ranking: `🏆 オタクが作るリアルアイドルチャート「ナンダッテ」
+${dateLabel}付の投票ランキングは…
 
 ${rankingLines}
 
-ナンダッテはファンの投票で作るアイドルリアルディクショナリー
-最新データはIDOL CROSSINGで！
+なんだって！詳細は以下のページから
 https://www.musicite.net/nandatte`,
   };
 }
