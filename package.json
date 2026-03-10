@@ -25,6 +25,7 @@
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.2",
     "@thednp/dommatrix": "^3.0.2",
+    "@vercel/analytics": "^1.6.1",
     "mammoth": "^1.11.0",
     "next": "16.1.6",
     "next-sanity": "^12.1.0",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Shippori_Mincho } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import Link from "next/link";
 import { GlobalHeader } from "@/components/global-header";
 import { THEME_STORAGE_KEY } from "@/lib/theme/mode";
@@ -87,6 +88,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
