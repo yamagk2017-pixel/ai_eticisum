@@ -247,11 +247,11 @@ const components: PortableTextComponents = {
       const figureClasses = ["my-6"];
 
       const floatingWidthBySize: Record<NonNullable<BodyImageValue["displaySize"]>, string> = {
-        xsmall: "sm:w-[25%]",
-        small: "sm:w-[35%]",
-        medium: "sm:w-[55%]",
-        large: "sm:w-[70%]",
-        full: "sm:w-full",
+        xsmall: "max-w-[25%]",
+        small: "max-w-[35%]",
+        medium: "max-w-[55%]",
+        large: "max-w-[70%]",
+        full: "max-w-full",
       };
       const centeredWidthBySize: Record<NonNullable<BodyImageValue["displaySize"]>, string> = {
         xsmall: "max-w-xs",
@@ -261,10 +261,12 @@ const components: PortableTextComponents = {
         full: "max-w-full",
       };
 
+      const isFloating = wrap === "left" || wrap === "right";
+
       if (wrap === "left") {
-        figureClasses.push("sm:float-left", "sm:mr-4", "sm:mb-2", floatingWidthBySize[displaySize], "w-full");
+        figureClasses.push("float-left", "mr-4", "mb-1", floatingWidthBySize[displaySize], "w-fit");
       } else if (wrap === "right") {
-        figureClasses.push("sm:float-right", "sm:ml-4", "sm:mb-2", floatingWidthBySize[displaySize], "w-full");
+        figureClasses.push("float-right", "ml-4", "mb-1", floatingWidthBySize[displaySize], "w-fit");
       } else if (align === "left") {
         figureClasses.push("mr-auto", centeredWidthBySize[displaySize], "w-full");
       } else if (align === "right") {
@@ -272,9 +274,13 @@ const components: PortableTextComponents = {
       } else {
         figureClasses.push("mx-auto", centeredWidthBySize[displaySize], "w-full");
       }
-      // eslint-disable-next-line @next/next/no-img-element
       const imageElement = (
-        <img src={url} alt={imageValue.alt ?? ""} className="h-auto w-full rounded-xl border border-[var(--ui-border)]" />
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt={imageValue.alt ?? ""}
+          className={isFloating ? "h-auto max-w-full rounded-xl border border-[var(--ui-border)]" : "h-auto w-full rounded-xl border border-[var(--ui-border)]"}
+        />
       );
 
       return (
