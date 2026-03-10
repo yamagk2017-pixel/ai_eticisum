@@ -22,7 +22,13 @@ export const eventAnnouncementType = defineType({
   fields: [
     defineField({
       name: "title",
-      title: "タイトル",
+      title: "記事タイトル",
+      type: "string",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "eventTitle",
+      title: "イベントタイトル",
       type: "string",
       fieldset: "eventInfo",
       validation: (rule) => rule.required(),
@@ -33,7 +39,22 @@ export const eventAnnouncementType = defineType({
       type: "date",
       options: {dateFormat: "YYYY-MM-DD"},
       fieldset: "eventInfo",
-      validation: (rule) => rule.required(),
+      description: "単日開催の場合はこの項目のみ入力",
+    }),
+    defineField({
+      name: "eventEndDate",
+      title: "終了日（複数日開催用）",
+      type: "date",
+      options: {dateFormat: "YYYY-MM-DD"},
+      fieldset: "eventInfo",
+      description: "複数日開催の場合のみ入力",
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          if (!value) return true;
+          const parent = context.parent as {eventDate?: string} | undefined;
+          if (!parent?.eventDate) return true;
+          return value >= parent.eventDate ? true : "終了日は開始日以降にしてください";
+        }),
     }),
     defineField({
       name: "eventTimeText",
@@ -41,7 +62,27 @@ export const eventAnnouncementType = defineType({
       type: "string",
       fieldset: "eventInfo",
       description: "例: OPEN 18:00 / START 18:30",
-      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "venue",
+      title: "会場",
+      type: "string",
+      fieldset: "eventInfo",
+      description: "例: SHIBUYA CLUB QUATTRO",
+    }),
+    defineField({
+      name: "officialSiteUrl",
+      title: "公式サイト",
+      type: "string",
+      fieldset: "eventInfo",
+      description: "イベント公式ページや主催公式サイトURL",
+    }),
+    defineField({
+      name: "organizer",
+      title: "主催者",
+      type: "string",
+      fieldset: "eventInfo",
+      description: "例: 株式会社○○ / 実行委員会",
     }),
     defineField({
       name: "relatedGroups",

@@ -50,6 +50,13 @@ function formatDateOnlyWithWeekday(value: string | null) {
   }).format(new Date(time));
 }
 
+function formatEventDateRange(startDate: string | null, endDate: string | null) {
+  if (startDate && endDate) return `${formatDateOnly(startDate)}〜${formatDateOnly(endDate)}`;
+  if (startDate) return formatDateOnly(startDate);
+  if (endDate) return formatDateOnly(endDate);
+  return "-";
+}
+
 function toSafeHref(url: string | null) {
   if (!url) return null;
   const trimmed = url.trim();
@@ -120,6 +127,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   const eventInfo = article.eventInfo;
   const isRadioAnnouncement = article.type === "radioAnnouncement";
   const ticketHref = toSafeHref(eventInfo?.ticketSalesUrl ?? null);
+  const officialSiteHref = toSafeHref(eventInfo?.officialSiteUrl ?? null);
   const streamingHref = toSafeHref(eventInfo?.streamingUrl ?? null);
   const archiveHref = toSafeHref(eventInfo?.archiveUrl ?? null);
   const afterTalkHref = toSafeHref(eventInfo?.afterTalkUrl ?? null);
@@ -296,25 +304,67 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                   {isRadioAnnouncement ? "番組概要" : "イベント情報"}
                 </h2>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">タイトル</dt>
-                  <dd className="break-words">{stripHtmlForText(article.titleHtml)}</dd>
+                  {eventInfo.eventTitle ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">タイトル</dt>
+                      <dd className="break-words">{eventInfo.eventTitle}</dd>
+                    </>
+                  ) : null}
 
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">
-                    {isRadioAnnouncement ? "放送日" : "日にち"}
-                  </dt>
-                  <dd>
-                    {isRadioAnnouncement
-                      ? formatDateOnlyWithWeekday(eventInfo.broadcastDate)
-                      : formatDateOnly(eventInfo.eventDate)}
-                  </dd>
-
-                  <dt className="font-semibold text-[var(--ui-text-subtle)]">時間</dt>
-                  <dd>{eventInfo.eventTimeText ?? "-"}</dd>
+                  {!isRadioAnnouncement && eventInfo.venue ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">会場</dt>
+                      <dd className="break-words">{eventInfo.venue}</dd>
+                    </>
+                  ) : null}
 
                   {isRadioAnnouncement ? (
+                    eventInfo.broadcastDate ? (
+                      <>
+                        <dt className="font-semibold text-[var(--ui-text-subtle)]">放送日</dt>
+                        <dd>{formatDateOnlyWithWeekday(eventInfo.broadcastDate)}</dd>
+                      </>
+                    ) : null
+                  ) : eventInfo.eventDate || eventInfo.eventEndDate ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">日にち</dt>
+                      <dd>{formatEventDateRange(eventInfo.eventDate, eventInfo.eventEndDate)}</dd>
+                    </>
+                  ) : null}
+
+                  {eventInfo.eventTimeText ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">時間</dt>
+                      <dd>{eventInfo.eventTimeText}</dd>
+                    </>
+                  ) : null}
+
+                  {isRadioAnnouncement && eventInfo.personality ? (
                     <>
                       <dt className="font-semibold text-[var(--ui-text-subtle)]">パーソナリティ</dt>
-                      <dd className="break-words">{eventInfo.personality ?? "-"}</dd>
+                      <dd className="break-words">{eventInfo.personality}</dd>
+                    </>
+                  ) : null}
+
+                  {!isRadioAnnouncement && eventInfo.organizer ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">主催者</dt>
+                      <dd className="break-words">{eventInfo.organizer}</dd>
+                    </>
+                  ) : null}
+
+                  {!isRadioAnnouncement && eventInfo.officialSiteUrl ? (
+                    <>
+                      <dt className="font-semibold text-[var(--ui-text-subtle)]">公式サイト</dt>
+                      <dd className="break-all">
+                        {officialSiteHref ? (
+                          <a href={officialSiteHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                            {eventInfo.officialSiteUrl}
+                          </a>
+                        ) : (
+                          eventInfo.officialSiteUrl
+                        )}
+                      </dd>
                     </>
                   ) : null}
 
@@ -360,48 +410,46 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                       </>
                     ) : null
                   ) : (
-                    <>
+                    performerItems.length > 0 ? (
+                      <>
                       <dt className="font-semibold text-[var(--ui-text-subtle)]">出演</dt>
                       <dd className="break-words">
-                        {performerItems.length > 0 ? (
-                          performerItems.map((item, index) => (
-                            <span key={`${item.kind}-${index}`}>
-                              {index > 0 ? " / " : null}
-                              {item.kind === "group" ? (
-                                item.href ? (
-                                  <Link href={item.href} className="underline underline-offset-2">
-                                    {item.groupName}
-                                  </Link>
-                                ) : (
-                                  item.groupName
-                                )
-                              ) : item.kind === "representative" ? (
-                                <>
-                                  {item.name}
-                                  {item.groupName ? (
-                                    <>
-                                      （
-                                      {item.groupHref ? (
-                                        <Link href={item.groupHref} className="underline underline-offset-2">
-                                          {item.groupName}
-                                        </Link>
-                                      ) : (
-                                        item.groupName
-                                      )}
-                                      ）
-                                    </>
-                                  ) : null}
-                                </>
+                        {performerItems.map((item, index) => (
+                          <span key={`${item.kind}-${index}`}>
+                            {index > 0 ? " / " : null}
+                            {item.kind === "group" ? (
+                              item.href ? (
+                                <Link href={item.href} className="underline underline-offset-2">
+                                  {item.groupName}
+                                </Link>
                               ) : (
-                                item.name
-                              )}
-                            </span>
-                          ))
-                        ) : (
-                          "-"
-                        )}
+                                item.groupName
+                              )
+                            ) : item.kind === "representative" ? (
+                              <>
+                                {item.name}
+                                {item.groupName ? (
+                                  <>
+                                    （
+                                    {item.groupHref ? (
+                                      <Link href={item.groupHref} className="underline underline-offset-2">
+                                        {item.groupName}
+                                      </Link>
+                                    ) : (
+                                      item.groupName
+                                    )}
+                                    ）
+                                  </>
+                                ) : null}
+                              </>
+                            ) : (
+                              item.name
+                            )}
+                          </span>
+                        ))}
                       </dd>
-                    </>
+                      </>
+                    ) : null
                   )}
 
                   {isRadioAnnouncement ? (
@@ -436,11 +484,17 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                         </>
                       ) : null}
                     </>
-                  ) : (
+                  ) : null}
+
+                  {!isRadioAnnouncement && eventInfo.eventPrice ? (
                     <>
                       <dt className="font-semibold text-[var(--ui-text-subtle)]">料金</dt>
-                      <dd className="break-words">{eventInfo.eventPrice ?? "-"}</dd>
+                      <dd className="break-words">{eventInfo.eventPrice}</dd>
+                    </>
+                  ) : null}
 
+                  {!isRadioAnnouncement && eventInfo.ticketSalesUrl ? (
+                    <>
                       <dt className="font-semibold text-[var(--ui-text-subtle)]">チケット販売URL</dt>
                       <dd className="break-all">
                         {ticketHref ? (
@@ -448,33 +502,45 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                             {eventInfo.ticketSalesUrl}
                           </a>
                         ) : (
-                          eventInfo.ticketSalesUrl ?? "-"
+                          eventInfo.ticketSalesUrl
                         )}
                       </dd>
                     </>
-                  )}
+                  ) : null}
                 </dl>
 
                 {!isRadioAnnouncement && hasStreamingInfo ? (
                   <>
                     <h2 className="mt-5 text-sm font-semibold text-[var(--ui-text)]">配信情報</h2>
                     <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
-                      <dt className="font-semibold text-[var(--ui-text-subtle)]">配信URL</dt>
-                      <dd className="break-all">
-                        {streamingHref ? (
-                          <a href={streamingHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                            {eventInfo.streamingUrl}
-                          </a>
-                        ) : (
-                          eventInfo.streamingUrl ?? "-"
-                        )}
-                      </dd>
+                      {eventInfo.streamingUrl ? (
+                        <>
+                          <dt className="font-semibold text-[var(--ui-text-subtle)]">配信URL</dt>
+                          <dd className="break-all">
+                            {streamingHref ? (
+                              <a href={streamingHref} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+                                {eventInfo.streamingUrl}
+                              </a>
+                            ) : (
+                              eventInfo.streamingUrl
+                            )}
+                          </dd>
+                        </>
+                      ) : null}
 
-                      <dt className="font-semibold text-[var(--ui-text-subtle)]">視聴期限</dt>
-                      <dd>{eventInfo.streamingDeadline ? `〜${formatDateOnly(eventInfo.streamingDeadline)}` : "-"}</dd>
+                      {eventInfo.streamingDeadline ? (
+                        <>
+                          <dt className="font-semibold text-[var(--ui-text-subtle)]">視聴期限</dt>
+                          <dd>{`〜${formatDateOnly(eventInfo.streamingDeadline)}`}</dd>
+                        </>
+                      ) : null}
 
-                      <dt className="font-semibold text-[var(--ui-text-subtle)]">配信料金</dt>
-                      <dd className="break-words">{eventInfo.streamingPrice ?? "-"}</dd>
+                      {eventInfo.streamingPrice ? (
+                        <>
+                          <dt className="font-semibold text-[var(--ui-text-subtle)]">配信料金</dt>
+                          <dd className="break-words">{eventInfo.streamingPrice}</dd>
+                        </>
+                      ) : null}
                     </dl>
                   </>
                 ) : null}

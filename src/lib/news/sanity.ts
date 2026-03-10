@@ -40,6 +40,7 @@ type SanityRelatedEventHomeDoc = {
   title?: string | null;
   slug?: {current?: string | null} | null;
   eventDate?: string | null;
+  eventEndDate?: string | null;
   eventTimeText?: string | null;
   streamingUrl?: string | null;
   streamingDeadline?: string | null;
@@ -53,7 +54,8 @@ export type HomeRelatedEvent = {
   id: string;
   title: string;
   path: string;
-  eventDate: string;
+  eventDate: string | null;
+  eventEndDate: string | null;
   eventTimeText: string | null;
   ticketSalesUrl: string | null;
   streamingDeadline: string | null;
@@ -80,11 +82,15 @@ export type SanityNewsArticleDetail = {
   }>;
   relatedGroups: SanityRelatedGroup[];
   eventInfo: {
+    eventTitle: string | null;
     eventDate: string | null;
+    eventEndDate: string | null;
     broadcastDate: string | null;
     eventTimeText: string | null;
     personality: string | null;
     eventPrice: string | null;
+    officialSiteUrl: string | null;
+    organizer: string | null;
     representativePerformers: Array<{
       name: string;
       groupNameJa: string | null;
@@ -187,10 +193,14 @@ const bySlugQuery = groq`
       displayOrder
     },
     eventDate,
+    eventEndDate,
+    eventTitle,
     broadcastDate,
     eventTimeText,
     personality,
     eventPrice,
+    officialSiteUrl,
+    organizer,
     "representativePerformers": representativePerformers[]{
       name,
       "group": group{
@@ -257,9 +267,9 @@ const relatedEventsForHomeQuery = groq`
     _type == "eventAnnouncement" &&
     isMyRelatedEvent == true &&
     defined(slug.current) &&
-    defined(eventDate) &&
     (
-      eventDate >= $today ||
+      (defined(eventDate) && eventDate >= $today) ||
+      (defined(eventEndDate) && eventEndDate >= $today) ||
       (
         defined(streamingUrl) &&
         defined(streamingDeadline) &&
@@ -274,6 +284,7 @@ const relatedEventsForHomeQuery = groq`
     title,
     slug,
     eventDate,
+    eventEndDate,
     eventTimeText,
     streamingUrl,
     streamingDeadline,
@@ -512,10 +523,14 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     tags?: SanityRefTag[] | null;
     relatedGroups?: SanityRelatedGroup[] | null;
     eventDate?: string | null;
+    eventEndDate?: string | null;
+    eventTitle?: string | null;
     broadcastDate?: string | null;
     eventTimeText?: string | null;
     personality?: string | null;
     eventPrice?: string | null;
+    officialSiteUrl?: string | null;
+    organizer?: string | null;
     representativePerformers?:
       | Array<{
           name?: string | null;
@@ -574,6 +589,11 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
       doc._type === "eventAnnouncement" || doc._type === "radioAnnouncement"
         ? {
             eventDate: doc.eventDate ?? null,
+            eventEndDate: doc.eventEndDate ?? null,
+            eventTitle:
+              typeof doc.eventTitle === "string" && doc.eventTitle.trim().length > 0
+                ? doc.eventTitle.trim()
+                : null,
             broadcastDate: doc.broadcastDate ?? null,
             eventTimeText: doc.eventTimeText ?? null,
             personality:
@@ -582,6 +602,12 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
                 : null,
             eventPrice:
               typeof doc.eventPrice === "string" && doc.eventPrice.trim().length > 0 ? doc.eventPrice.trim() : null,
+            officialSiteUrl:
+              typeof doc.officialSiteUrl === "string" && doc.officialSiteUrl.trim().length > 0
+                ? doc.officialSiteUrl.trim()
+                : null,
+            organizer:
+              typeof doc.organizer === "string" && doc.organizer.trim().length > 0 ? doc.organizer.trim() : null,
             representativePerformers: (doc.representativePerformers ?? [])
               .map((item) => ({
                 name: typeof item?.name === "string" ? item.name.trim() : "",
@@ -686,13 +712,15 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
   return docs
     .map((doc) => {
       const slug = doc.slug?.current?.trim();
-      const eventDate = doc.eventDate?.trim();
-      if (!slug || !eventDate) return null;
+      const eventDate = typeof doc.eventDate === "string" && doc.eventDate.trim() ? doc.eventDate.trim() : null;
+      const eventEndDate = typeof doc.eventEndDate === "string" && doc.eventEndDate.trim() ? doc.eventEndDate.trim() : null;
+      if (!slug) return null;
       return {
         id: doc._id,
         title: (doc.title ?? "").trim() || "(untitled)",
         path: `/news/${slug}`,
         eventDate,
+        eventEndDate,
         eventTimeText: typeof doc.eventTimeText === "string" && doc.eventTimeText.trim() ? doc.eventTimeText.trim() : null,
         ticketSalesUrl:
           typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim() ? doc.ticketSalesUrl.trim() : null,
