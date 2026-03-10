@@ -363,7 +363,7 @@ function chooseTitle(lines: string[]) {
   return null;
 }
 
-export async function parsePressReleasePdf(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+async function parsePressReleasePdfWithPdfjs(buffer: Buffer): Promise<ParsedPressReleasePdf> {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   // Stabilize worker resolution in Next server bundle.
   pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/legacy/build/pdf.worker.mjs";
@@ -496,4 +496,73 @@ export async function parsePressReleasePdf(buffer: Buffer): Promise<ParsedPressR
     plainText: normalizeWhitespace(bodySourceLines.join("\n\n")),
     diagnostics,
   };
+}
+
+async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+  const pdfParseModule = await import("pdf-parse");
+  const {PDFParse} = pdfParseModule;
+  PDFParse.setWorker();
+  const parser = new PDFParse({data: buffer});
+  const parsed = await parser.getText();
+  await parser.destroy();
+  const rawText = normalizeWhitespace(parsed.text ?? "");
+  if (!rawText) {
+    throw new Error("PDFから本文を抽出できませんでした。");
+  }
+
+  const lines = splitBySentenceOrBreaks(rawText);
+  const title = chooseTitle(lines) ?? "PDFインポート（要編集）";
+
+  const withoutTitle =
+    title === "PDFインポート（要編集）"
+      ? lines
+      : (() => {
+          let removed = false;
+          return lines.filter((line) => {
+            if (!removed && line === title) {
+              removed = true;
+              return false;
+            }
+            return true;
+          });
+        })();
+
+  const bodySourceLines = forceParagraphize(withoutTitle.length > 0 ? withoutTitle : lines);
+  const body = bodySourceLines
+    .map((line) => toPortableTextBlock(line))
+    .filter((line): line is PortableTextBlock => line !== null);
+
+  if (body.length === 0) {
+    throw new Error("PDFから本文を抽出できませんでした。");
+  }
+
+  return {
+    title,
+    body,
+    plainText: normalizeWhitespace(bodySourceLines.join("\n\n")),
+    diagnostics: {
+      totalPages: parsed.total ?? 0,
+      rawLineCount: lines.length,
+      repeatedHeaderFooterCount: 0,
+      metadataFilteredLineCount: 0,
+      filteredLineCount: lines.length,
+      bodyCandidateLineCount: lines.length,
+      bodyFinalLineCount: bodySourceLines.length,
+      bodyBlockCount: body.length,
+      usedFallback: true,
+      fallbackReason: "pdfjs_dommatrix_fallback_pdf_parse",
+    },
+  };
+}
+
+export async function parsePressReleasePdf(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+  try {
+    return await parsePressReleasePdfWithPdfjs(buffer);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!/DOMMatrix is not defined/i.test(message)) {
+      throw error;
+    }
+    return parsePressReleasePdfWithPdfParse(buffer);
+  }
 }
