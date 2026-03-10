@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
 import {parsePressReleaseDocx} from "@/lib/sanity/press-release-docx";
-import {parsePressReleasePdf} from "@/lib/sanity/press-release-pdf";
 
 export const runtime = "nodejs";
 
@@ -23,8 +22,15 @@ export async function POST(request: Request) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    if (isPdf && process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        {error: "PDFインポートは現在ローカル環境のみ対応です。DOCXを使用してください。"},
+        {status: 400}
+      );
+    }
+
     const parsed = isPdf
-      ? await parsePressReleasePdf(buffer)
+      ? await (await import("@/lib/sanity/press-release-pdf")).parsePressReleasePdf(buffer)
       : await parsePressReleaseDocx(buffer);
 
     return NextResponse.json({
