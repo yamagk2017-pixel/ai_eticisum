@@ -85,6 +85,7 @@ export type SanityNewsArticleDetail = {
     eventTitle: string | null;
     eventDate: string | null;
     eventEndDate: string | null;
+    venue: string | null;
     broadcastDate: string | null;
     eventTimeText: string | null;
     personality: string | null;
@@ -195,6 +196,7 @@ const bySlugQuery = groq`
     eventDate,
     eventEndDate,
     eventTitle,
+    venue,
     broadcastDate,
     eventTimeText,
     personality,
@@ -525,6 +527,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     eventDate?: string | null;
     eventEndDate?: string | null;
     eventTitle?: string | null;
+    venue?: string | null;
     broadcastDate?: string | null;
     eventTimeText?: string | null;
     personality?: string | null;
@@ -594,6 +597,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
               typeof doc.eventTitle === "string" && doc.eventTitle.trim().length > 0
                 ? doc.eventTitle.trim()
                 : null,
+            venue: typeof doc.venue === "string" && doc.venue.trim().length > 0 ? doc.venue.trim() : null,
             broadcastDate: doc.broadcastDate ?? null,
             eventTimeText: doc.eventTimeText ?? null,
             personality:
