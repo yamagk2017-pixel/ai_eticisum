@@ -271,8 +271,9 @@ async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedP
   await ensureDomMatrixPolyfill();
   const pdfParseModule = await import("pdf-parse");
   const {PDFParse} = pdfParseModule;
-  PDFParse.setWorker();
-  const parser = new PDFParse({data: buffer});
+  const parser = new PDFParse({data: buffer, disableWorker: true} as unknown as ConstructorParameters<
+    typeof PDFParse
+  >[0]);
   const parsed = await parser.getText();
   await parser.destroy();
   const rawText = normalizeWhitespace(parsed.text ?? "");
