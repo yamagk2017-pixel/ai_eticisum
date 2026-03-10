@@ -1,4 +1,5 @@
 import {defineField, defineType} from "sanity";
+import {LegacyHtmlWithImageInput} from "@/sanity/components/legacy-html-with-image-input";
 import {
   citationSourceArticleField,
   categoryReferencesField,
@@ -45,6 +46,9 @@ export const wpImportedArticleType = defineType({
       title: "Legacy Body HTML",
       type: "text",
       rows: 20,
+      components: {
+        input: LegacyHtmlWithImageInput,
+      },
       validation: (rule) => rule.required(),
       description: "WP移行記事の本文HTML。初期はPortable Text変換を行わず保持する。",
     }),
