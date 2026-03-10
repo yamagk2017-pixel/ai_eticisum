@@ -1,16 +1,6 @@
 import {randomUUID} from "node:crypto";
 import type {ParsedPressReleaseDocx, PortableTextBlock} from "./press-release-docx";
 
-type PdfTextItem = {
-  str?: string;
-  transform?: number[];
-};
-
-type LineCandidate = {
-  text: string;
-  yRatio: number;
-};
-
 type InlinePart = {
   text: string;
   href?: string;
@@ -110,19 +100,6 @@ function isFrontMatterLine(text: string) {
   return patterns.some((pattern) => pattern.test(normalized));
 }
 
-function isFooterLine(text: string) {
-  const normalized = normalizeWhitespace(text);
-  if (!normalized) return true;
-
-  const patterns = [
-    /^e-?mail[:：]/i,
-    /@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/,
-    /(お問い合わせ|報道関係|担当|広報|PR)\s*[:：]/,
-    /(\d{2,4}-\d{2,4}-\d{3,4})/,
-  ];
-  return patterns.some((pattern) => pattern.test(normalized));
-}
-
 function isMetadataLine(text: string) {
   const normalized = normalizeWhitespace(text);
   if (!normalized) return true;
@@ -142,21 +119,6 @@ function isMetadataLine(text: string) {
   ];
 
   return patterns.some((pattern) => pattern.test(normalized));
-}
-
-function splitOverlongSingleLine(lines: string[]) {
-  if (lines.length !== 1) return lines;
-  const only = normalizeWhitespace(lines[0]);
-  if (only.length < 180) return lines;
-
-  const chunks = only
-    .split(/(?<=[。！？])/)
-    .map((part) => normalizeWhitespace(part))
-    .filter(Boolean);
-
-  // If sentence split failed, keep original behavior.
-  if (chunks.length <= 1) return lines;
-  return chunks;
 }
 
 function forceParagraphize(lines: string[]) {
@@ -241,15 +203,6 @@ function splitBySentenceOrBreaks(text: string) {
   return chunks.filter(Boolean);
 }
 
-function buildFallbackLinesFromItems(items: PdfTextItem[]) {
-  const raw = items
-    .map((item) => (typeof item.str === "string" ? item.str : ""))
-    .join(" ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return splitBySentenceOrBreaks(raw);
-}
-
 function splitTextWithUrls(value: string): InlinePart[] {
   const normalized = normalizeWhitespace(value);
   if (!normalized) return [];
@@ -300,65 +253,6 @@ function toPortableTextBlock(text: string): PortableTextBlock | null {
   };
 }
 
-function groupItemsToLines(items: PdfTextItem[], pageHeight: number): LineCandidate[] {
-  const buckets = new Map<number, {y: number; tokens: Array<{x: number; text: string}>}>();
-  for (const raw of items) {
-    const token = typeof raw.str === "string" ? normalizeWhitespace(raw.str) : "";
-    if (!token) continue;
-    const transform = Array.isArray(raw.transform) ? raw.transform : [];
-    const x = typeof transform[4] === "number" ? transform[4] : 0;
-    const y = typeof transform[5] === "number" ? transform[5] : 0;
-    const bucketKey = Math.round(y / 2) * 2;
-    const found = buckets.get(bucketKey);
-    if (found) {
-      found.tokens.push({x, text: token});
-      continue;
-    }
-    buckets.set(bucketKey, {y, tokens: [{x, text: token}]});
-  }
-
-  const lines = Array.from(buckets.values())
-    .map((bucket) => {
-      const text = bucket.tokens
-        .sort((a, b) => a.x - b.x)
-        .map((token) => token.text)
-        .join("");
-      const normalized = normalizeWhitespace(text);
-      if (!normalized) return null;
-      const safeHeight = pageHeight > 0 ? pageHeight : 1;
-      return {
-        text: normalized,
-        yRatio: Math.max(0, Math.min(1, bucket.y / safeHeight)),
-      };
-    })
-    .filter((line): line is LineCandidate => line !== null)
-    .sort((a, b) => b.yRatio - a.yRatio);
-
-  return lines;
-}
-
-function detectRepeatedHeaderFooterLines(pages: LineCandidate[][]) {
-  const counts = new Map<string, number>();
-
-  for (const lines of pages) {
-    const uniques = new Set<string>();
-    for (const line of lines) {
-      const isHeaderFooterZone = line.yRatio >= 0.88 || line.yRatio <= 0.12;
-      if (!isHeaderFooterZone) continue;
-      uniques.add(line.text);
-    }
-    for (const text of uniques) {
-      counts.set(text, (counts.get(text) ?? 0) + 1);
-    }
-  }
-
-  const repeated = new Set<string>();
-  for (const [text, count] of counts.entries()) {
-    if (count >= 2) repeated.add(text);
-  }
-  return repeated;
-}
-
 function chooseTitle(lines: string[]) {
   for (const line of lines) {
     const text = normalizeWhitespace(line);
@@ -371,142 +265,6 @@ function chooseTitle(lines: string[]) {
     return text.slice(0, 200);
   }
   return null;
-}
-
-async function parsePressReleasePdfWithPdfjs(buffer: Buffer): Promise<ParsedPressReleasePdf> {
-  await ensureDomMatrixPolyfill();
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  // Stabilize worker resolution in Next server bundle.
-  pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/legacy/build/pdf.worker.mjs";
-  const loadingTask = pdfjs.getDocument({data: new Uint8Array(buffer)});
-  const pdf = await loadingTask.promise;
-
-  const pageLines: LineCandidate[][] = [];
-  const itemFallbackLines: string[] = [];
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
-    const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({scale: 1});
-    const content = await page.getTextContent();
-    const lines = groupItemsToLines(content.items as PdfTextItem[], viewport.height);
-    pageLines.push(lines);
-    itemFallbackLines.push(...buildFallbackLinesFromItems(content.items as PdfTextItem[]));
-  }
-
-  const repeatedHeaderFooter = detectRepeatedHeaderFooterLines(pageLines);
-  const rawLines = pageLines.map((lines) =>
-    lines
-      .map((line) => normalizeWhitespace(line.text))
-      .filter((text) => text && !repeatedHeaderFooter.has(text))
-  );
-  const filteredLines = rawLines.map((lines) => lines.filter((text) => !isMetadataLine(text)));
-
-  const rawFlatLines = splitOverlongSingleLine(rawLines.flat().filter(Boolean));
-  const filteredFlatLines = splitOverlongSingleLine(filteredLines.flat().filter(Boolean));
-  const itemFallbackFlatLines = splitOverlongSingleLine(itemFallbackLines);
-  if (rawFlatLines.length === 0 && itemFallbackFlatLines.length === 0) {
-    throw new Error("PDFから本文を抽出できませんでした。");
-  }
-
-  const firstPageLines = filteredLines[0] ?? [];
-  const firstPageRawLines = rawLines[0] ?? [];
-
-  let usedFallback = false;
-  let fallbackReason: string | undefined;
-  const bodyCandidateLines =
-    filteredFlatLines.length > 0
-      ? filteredFlatLines
-      : rawFlatLines.length > 1
-      ? rawFlatLines
-      : itemFallbackFlatLines.length > 0
-      ? itemFallbackFlatLines
-      : rawFlatLines;
-  const title =
-    chooseTitle(firstPageLines) ??
-    chooseTitle(firstPageRawLines) ??
-    chooseTitle(bodyCandidateLines) ??
-    "PDFインポート（要編集）";
-  if (filteredFlatLines.length === 0) {
-    usedFallback = true;
-    fallbackReason =
-      itemFallbackFlatLines.length > 0 && rawFlatLines.length <= 1
-        ? "all_lines_filtered_as_metadata_using_item_stream"
-        : "all_lines_filtered_as_metadata";
-  }
-
-  const titleRemovedLines =
-    title === "PDFインポート（要編集）"
-      ? bodyCandidateLines
-      : (() => {
-          let removed = false;
-          return bodyCandidateLines.filter((line) => {
-            if (!removed && line === title) {
-              removed = true;
-              return false;
-            }
-            return true;
-          });
-        })();
-
-  // Remove header-like lines from the beginning and footer-like lines from the end.
-  const bodyCoreLines = [...titleRemovedLines];
-  while (bodyCoreLines.length > 0) {
-    const head = bodyCoreLines[0];
-    if (!head) break;
-    if (isEmbargoDateLine(head) || isFrontMatterLine(head) || isMetadataLine(head)) {
-      bodyCoreLines.shift();
-      continue;
-    }
-    break;
-  }
-
-  while (bodyCoreLines.length > 0) {
-    const tail = bodyCoreLines[bodyCoreLines.length - 1];
-    if (!tail) break;
-    if (isFooterLine(tail) || isMetadataLine(tail)) {
-      bodyCoreLines.pop();
-      continue;
-    }
-    break;
-  }
-
-  const bodySourceLines = forceParagraphize(bodyCoreLines.length > 0 ? bodyCoreLines : titleRemovedLines);
-
-  const body = bodySourceLines
-    .map((line) => toPortableTextBlock(line))
-    .filter((line): line is PortableTextBlock => line !== null);
-
-  let finalBody = body;
-  if (finalBody.length === 0) {
-    usedFallback = true;
-    fallbackReason = fallbackReason ?? "body_empty_after_front_footer_trim";
-    finalBody = forceParagraphize(titleRemovedLines)
-      .map((line) => toPortableTextBlock(line))
-      .filter((line): line is PortableTextBlock => line !== null);
-  }
-
-  if (finalBody.length === 0) {
-    throw new Error("PDFから本文を抽出できませんでした。");
-  }
-
-  const diagnostics: PdfParseDiagnostics = {
-    totalPages: pdf.numPages,
-    rawLineCount: rawFlatLines.length,
-    repeatedHeaderFooterCount: repeatedHeaderFooter.size,
-    metadataFilteredLineCount: rawFlatLines.length - filteredFlatLines.length,
-    filteredLineCount: filteredFlatLines.length,
-    bodyCandidateLineCount: bodyCandidateLines.length,
-    bodyFinalLineCount: bodySourceLines.length,
-    bodyBlockCount: finalBody.length,
-    usedFallback,
-    fallbackReason,
-  };
-
-  return {
-    title,
-    body: finalBody,
-    plainText: normalizeWhitespace(bodySourceLines.join("\n\n")),
-    diagnostics,
-  };
 }
 
 async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedPressReleasePdf> {
@@ -562,19 +320,11 @@ async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedP
       bodyFinalLineCount: bodySourceLines.length,
       bodyBlockCount: body.length,
       usedFallback: true,
-      fallbackReason: "pdfjs_dommatrix_fallback_pdf_parse",
+      fallbackReason: "pdf_parse_primary",
     },
   };
 }
 
 export async function parsePressReleasePdf(buffer: Buffer): Promise<ParsedPressReleasePdf> {
-  try {
-    return await parsePressReleasePdfWithPdfjs(buffer);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!/DOMMatrix is not defined/i.test(message)) {
-      throw error;
-    }
-    return parsePressReleasePdfWithPdfParse(buffer);
-  }
+  return parsePressReleasePdfWithPdfParse(buffer);
 }
