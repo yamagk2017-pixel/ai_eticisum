@@ -46,6 +46,16 @@ export type ParsedPressReleasePdf = ParsedPressReleaseDocx & {
   diagnostics: PdfParseDiagnostics;
 };
 
+async function ensureDomMatrixPolyfill() {
+  if (typeof globalThis.DOMMatrix !== "undefined") return;
+
+  const domMatrixModule = await import("@thednp/dommatrix");
+  const DOMMatrixClass = domMatrixModule.default as unknown as typeof DOMMatrix;
+
+  // pdfjs checks global DOMMatrix in some runtimes (e.g. Vercel Node).
+  (globalThis as typeof globalThis & {DOMMatrix?: typeof DOMMatrix}).DOMMatrix = DOMMatrixClass;
+}
+
 function createKey() {
   return randomUUID().replace(/-/g, "").slice(0, 12);
 }
@@ -364,6 +374,7 @@ function chooseTitle(lines: string[]) {
 }
 
 async function parsePressReleasePdfWithPdfjs(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+  await ensureDomMatrixPolyfill();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   // Stabilize worker resolution in Next server bundle.
   pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/legacy/build/pdf.worker.mjs";
@@ -499,6 +510,7 @@ async function parsePressReleasePdfWithPdfjs(buffer: Buffer): Promise<ParsedPres
 }
 
 async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+  await ensureDomMatrixPolyfill();
   const pdfParseModule = await import("pdf-parse");
   const {PDFParse} = pdfParseModule;
   PDFParse.setWorker();
