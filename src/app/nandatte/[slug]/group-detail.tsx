@@ -385,33 +385,21 @@ export function GroupDetail({ slug }: Props) {
       }));
   }, [sortedCounts]);
 
-  const fixedMetricCountMap = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const row of sortedCounts) {
-      if (row.kind === "fixed" && row.metric_id) {
-        map.set(row.metric_id, row.count);
-      }
-    }
-    return map;
-  }, [sortedCounts]);
-
   const selectableMetricChips = useMemo(() => {
     const fixedChips = fixedMetrics.slice(0, 5).map((metric) => ({
       kind: "fixed" as const,
       id: metric.id,
       label: metric.label,
-      count: fixedMetricCountMap.get(metric.id) ?? 0,
     }));
 
     const freewordChips = freewordCounts.map((freeword) => ({
       kind: "freeword" as const,
       id: freeword.id,
       label: freeword.text,
-      count: freeword.count,
     }));
 
     return [...fixedChips, ...freewordChips];
-  }, [fixedMetrics, fixedMetricCountMap, freewordCounts]);
+  }, [fixedMetrics, freewordCounts]);
 
   const serviceMap = useMemo(() => {
     const map = new Map<string, ExternalIdRow>();
@@ -980,7 +968,6 @@ export function GroupDetail({ slug }: Props) {
                             <span className="font-medium text-[var(--ui-link)]">F</span>
                           )}
                           <span>{chip.label}</span>
-                          <span className="text-xs text-[var(--ui-text-subtle)]">{chip.count}</span>
                         </button>
                       );
                     })}
