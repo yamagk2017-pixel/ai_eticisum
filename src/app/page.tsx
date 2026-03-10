@@ -123,7 +123,8 @@ function formatShortDate(value: string | null) {
   return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(new Date(ts));
 }
 
-function formatEventDate(value: string) {
+function formatEventDate(value: string | null) {
+  if (!value) return "-";
   const ts = Date.parse(value);
   if (Number.isNaN(ts)) return value;
   return new Intl.DateTimeFormat("ja-JP", {
@@ -142,7 +143,7 @@ function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
     id: syntheticId,
     slug: event.path.split("/").filter(Boolean).pop() ?? String(syntheticId),
     url: null,
-    publishedAt: event.eventDate,
+    publishedAt: event.eventDate ?? event.eventEndDate,
     titleHtml: event.title,
     excerptHtml: "",
     contentHtml: "",
@@ -155,7 +156,8 @@ function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
 
 function buildRelatedEventSubtitle(event: HomeRelatedEvent): string {
   const now = new Date();
-  const eventDateTs = Date.parse(event.eventDate);
+  const baseDate = event.eventEndDate ?? event.eventDate;
+  const eventDateTs = baseDate ? Date.parse(baseDate) : NaN;
   const streamingDeadlineTs = event.streamingDeadline ? Date.parse(event.streamingDeadline) : NaN;
   const isEventPast = Number.isFinite(eventDateTs) ? eventDateTs < now.getTime() : false;
   const hasStreamingDeadline = Number.isFinite(streamingDeadlineTs);
@@ -164,7 +166,11 @@ function buildRelatedEventSubtitle(event: HomeRelatedEvent): string {
     return `配信期限 ${formatEventDate(event.streamingDeadline)} まで`;
   }
 
-  return `${formatEventDate(event.eventDate)}${event.eventTimeText ? ` ${event.eventTimeText}` : ""}`;
+  const dateText =
+    event.eventDate && event.eventEndDate
+      ? `${formatEventDate(event.eventDate)}〜${formatEventDate(event.eventEndDate)}`
+      : formatEventDate(event.eventDate ?? event.eventEndDate);
+  return `${dateText}${event.eventTimeText ? ` ${event.eventTimeText}` : ""}`;
 }
 
 function formatMonthDayUpdateLabel(value: string | null) {
