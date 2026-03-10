@@ -39,7 +39,8 @@ const POST_AUTH_REDIRECT_KEY = "musicite-post-auth-redirect";
 
 export function GlobalHeader() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/studio")) return null;
+  const currentPathname = pathname ?? "";
+  const isStudioRoute = currentPathname.startsWith("/studio");
 
   const router = useRouter();
   const [userLabel, setUserLabel] = useState<string | null>(null);
@@ -124,7 +125,9 @@ export function GlobalHeader() {
     setMobileNavOpen(false);
     setMenuOpen(false);
     setSearchOpen(false);
-  }, [pathname]);
+  }, [currentPathname]);
+
+  if (isStudioRoute) return null;
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -176,7 +179,7 @@ export function GlobalHeader() {
         <nav className="hidden min-w-0 flex-1 overflow-x-auto md:block">
           <ul className="flex min-w-max items-center gap-2">
             {navItems.map((item) => {
-              const active = item.match ? item.match(pathname) : pathname === item.href;
+              const active = item.match ? item.match(currentPathname) : currentPathname === item.href;
               return (
                 <li key={item.href}>
                   <Link

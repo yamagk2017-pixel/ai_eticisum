@@ -81,8 +81,8 @@ export function SanityGallery({images}: {images: GalleryImage[]}) {
             className="relative min-h-[220px] w-[92vw] max-w-[1200px] max-h-[92vh] overflow-auto rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-0 text-[var(--ui-text)]"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             {!modalImageError ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={activeImageUrl ?? ""}
                 alt={activeImage.alt ?? ""}
