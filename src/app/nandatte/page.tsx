@@ -4,12 +4,13 @@ import { Rankings } from "./rankings";
 
 type VoteSummaryRow = {
   user_id: string | null;
+  group_id: string | null;
 };
 
 async function getNandatteVoteSummary() {
   const supabase = createServerClient();
   const voterIds = new Set<string>();
-  let voteCount = 0;
+  const groupIds = new Set<string>();
   const pageSize = 1000;
   let from = 0;
 
@@ -27,8 +28,8 @@ async function getNandatteVoteSummary() {
     const rows = (data ?? []) as VoteSummaryRow[];
     for (const row of rows) {
       if (row.user_id) voterIds.add(row.user_id);
+      if (row.group_id) groupIds.add(row.group_id);
     }
-    voteCount += rows.length;
 
     if (rows.length < pageSize) {
       break;
@@ -38,14 +39,14 @@ async function getNandatteVoteSummary() {
 
   return {
     voterCount: voterIds.size,
-    voteCount,
+    groupCount: groupIds.size,
   };
 }
 
 export default async function NandattePage() {
   const summary = await getNandatteVoteSummary().catch(() => ({
     voterCount: 0,
-    voteCount: 0,
+    groupCount: 0,
   }));
 
   return (
@@ -61,7 +62,7 @@ export default async function NandattePage() {
             <h1 className="font-mincho-jp text-3xl font-semibold leading-tight sm:text-5xl">ナンダッテ</h1>
           </div>
           <p className="max-w-4xl text-base text-[var(--ui-text-muted)] sm:text-lg">
-            {summary.voterCount.toLocaleString("ja-JP")} 人のオタクが {summary.voteCount.toLocaleString("ja-JP")} 組のグループに投稿中！みんなで作るリアルなアイドルチャート
+            {summary.voterCount.toLocaleString("ja-JP")} 人のオタクが {summary.groupCount.toLocaleString("ja-JP")} 組のグループに投稿中！みんなで作るリアルなアイドルチャート
           </p>
         </header>
 
