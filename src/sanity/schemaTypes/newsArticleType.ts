@@ -1,17 +1,29 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
 import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
 import {
-  citationSourceArticleField,
-  categoryReferencesField,
+  createCategoryReferencesField,
+  createCitationSourceArticleField,
+  createSeoFields,
+  createTagReferencesField,
   relatedGroupsField,
-  seoFields,
-  tagReferencesField,
 } from "./shared";
 
 export const newsArticleType = defineType({
   name: "newsArticle",
   title: "News Article (Sanity / New)",
   type: "document",
+  fieldsets: [
+    {
+      name: "taxonomy",
+      title: "Categories / Tags",
+      options: {columns: 2},
+    },
+    {
+      name: "advanced",
+      title: "Excerpt以下（低優先）",
+      options: {collapsible: true, collapsed: true},
+    },
+  ],
   fields: [
     defineField({
       name: "title",
@@ -39,9 +51,6 @@ export const newsArticleType = defineType({
       options: {hotspot: true},
       validation: (rule) => rule.required(),
     }),
-    categoryReferencesField,
-    tagReferencesField,
-    relatedGroupsField,
     defineField({
       name: "body",
       title: "Body (Portable Text)",
@@ -126,7 +135,7 @@ export const newsArticleType = defineType({
                 ],
                 layout: "radio",
               },
-              initialValue: "medium",
+              initialValue: "small",
             }),
             defineField({
               name: "linkUrl",
@@ -179,6 +188,9 @@ export const newsArticleType = defineType({
       ],
       validation: (rule) => rule.required(),
     }),
+    createCategoryReferencesField({fieldset: "taxonomy"}),
+    createTagReferencesField({fieldset: "taxonomy"}),
+    relatedGroupsField,
     defineField({
       name: "galleryImages",
       title: "Gallery Images",
@@ -206,15 +218,16 @@ export const newsArticleType = defineType({
       ],
       description: "本文とは別に表示するギャラリー画像。複数画像をまとめてドラッグ＆ドロップ可能。",
     }),
-    citationSourceArticleField,
+    createCitationSourceArticleField(),
     defineField({
       name: "excerpt",
       title: "Excerpt",
       type: "text",
+      fieldset: "advanced",
       rows: 3,
       description: "任意・低優先。未入力時は本文冒頭を利用。",
     }),
-    ...seoFields,
+    ...createSeoFields({fieldset: "advanced"}),
   ],
   preview: {
     select: {

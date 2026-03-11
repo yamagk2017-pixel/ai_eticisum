@@ -8,3 +8,88 @@
   font-size: 1.15rem !important;
   line-height: 1.4 !important;
 }
+
+/* Emphasize document form headings (field labels + fieldset headers) */
+[data-testid^="field-"] > div > div > label,
+[data-testid^="field-"] > div > label,
+[data-testid^="field-"] [data-ui="Label"],
+[data-testid^="field-"] [data-ui="Heading"],
+[data-testid^="fieldset-"] [data-ui="Heading"],
+legend {
+  font-size: 1.2rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+}
+
+/* Force specific top-level headings that were not affected */
+[data-testid="field-slug"] label,
+[data-testid="field-publishedAt"] label,
+[data-testid="field-heroImage"] label,
+[data-testid="field-body"] label,
+[data-testid="field-galleryImages"] label,
+[data-testid="field-citationSourceArticle"] label,
+[data-testid="field-slug"] [data-ui="Heading"],
+[data-testid="field-publishedAt"] [data-ui="Heading"],
+[data-testid="field-heroImage"] [data-ui="Heading"],
+[data-testid="field-body"] [data-ui="Heading"],
+[data-testid="field-galleryImages"] [data-ui="Heading"],
+[data-testid="field-citationSourceArticle"] [data-ui="Heading"] {
+  font-size: 1.22rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+}
+
+/* Hero image field header often renders via button/header wrappers */
+[data-testid="field-heroImage"] button [data-ui="Label"],
+[data-testid="field-heroImage"] [role="button"] [data-ui="Label"],
+[data-testid="field-heroImage"] button > span:first-child,
+[data-testid="field-heroImage"] [role="button"] > span:first-child,
+[data-testid="field-heroImage"] button > div:first-child span:first-child,
+[data-testid="field-heroImage"] legend,
+[data-testid="field-heroImage"] > div > div > label {
+  font-size: 1.22rem !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+}
+
+/* Keep Hero image preview compact (smaller visual block height) */
+[data-testid="field-heroImage"] img,
+[data-testid="field-heroImage"] picture img,
+[data-testid="field-heroImage"] [data-sanity-preview-media] img {
+  max-height: 110px !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* Keep embedded body image previews compact */
+[data-testid="field-body"] [data-sanity-preview-media] img,
+[data-testid="field-body"] [data-sanity-preview-media] picture img {
+  max-height: 88px !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* Shrink the outer media box in Portable Text body image blocks */
+[data-testid="field-body"] [data-sanity-preview-media],
+[data-testid="field-body"] [data-sanity-preview-media] > div,
+[data-testid="field-body"] [data-sanity-preview-media] [style*="padding-top"] {
+  max-height: 96px !important;
+  min-height: 96px !important;
+  height: 96px !important;
+  padding-top: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Revert Slug / Published At heading size to default */
+[data-testid="field-slug"] label,
+[data-testid="field-slug"] [data-ui="Label"],
+[data-testid="field-slug"] [data-ui="Heading"],
+[data-testid="field-slug"] [data-ui="Text"],
+[data-testid="field-publishedAt"] label,
+[data-testid="field-publishedAt"] [data-ui="Label"],
+[data-testid="field-publishedAt"] [data-ui="Heading"],
+[data-testid="field-publishedAt"] [data-ui="Text"] {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+}

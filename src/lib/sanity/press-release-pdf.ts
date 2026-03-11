@@ -168,44 +168,6 @@ function forceParagraphize(lines: string[]) {
   return hardChunks.filter(Boolean);
 }
 
-function compactBodyLines(lines: string[]) {
-  const cleaned = lines.map((line) => normalizeJapaneseSpacing(normalizeWhitespace(line))).filter(Boolean);
-  if (cleaned.length <= 1) return cleaned;
-
-  const results: string[] = [];
-  let current = "";
-
-  const startsNewBlock = (line: string) =>
-    /^(?:[・●■◆▼▷▶※]|[-*]|[0-9０-９]+[.)．])/.test(line) ||
-    /^https?:\/\//i.test(line) ||
-    /^【.+】$/.test(line) ||
-    /^［.+］$/.test(line);
-
-  for (const line of cleaned) {
-    if (!current) {
-      current = line;
-      continue;
-    }
-
-    const shouldBreak =
-      startsNewBlock(line) ||
-      startsNewBlock(current) ||
-      /[。！？.!?]$/.test(current) ||
-      current.length >= 80;
-
-    if (shouldBreak) {
-      results.push(current);
-      current = line;
-      continue;
-    }
-
-    current = normalizeJapaneseSpacing(`${current}${line}`);
-  }
-
-  if (current) results.push(current);
-  return results.filter(Boolean);
-}
-
 function splitBySentenceOrBreaks(text: string) {
   const normalized = normalizeJapaneseSpacing(normalizeWhitespace(text));
   if (!normalized) return [];
@@ -347,7 +309,9 @@ async function parsePressReleasePdfLocal(buffer: Buffer): Promise<ParsedPressRel
           });
         })();
 
-  const bodySourceLines = compactBodyLines(forceParagraphize(withoutTitle.length > 0 ? withoutTitle : lines));
+  const bodySourceLines = forceParagraphize(withoutTitle.length > 0 ? withoutTitle : lines)
+    .map((line) => normalizeJapaneseSpacing(normalizeWhitespace(line)))
+    .filter(Boolean);
   const body = bodySourceLines
     .map((line) => toPortableTextBlock(line))
     .filter((line): line is PortableTextBlock => line !== null);

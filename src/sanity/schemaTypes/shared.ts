@@ -1,29 +1,40 @@
 import {defineArrayMember, defineField} from "sanity";
 import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 
-export const categoryReferencesField = defineField({
-  name: "categories",
-  title: "Categories",
-  type: "array",
-  of: [
-    defineArrayMember({
-      type: "reference",
-      to: [{type: "newsCategory"}],
-    }),
-  ],
-});
+type OptionalFieldset = {fieldset?: string};
 
-export const tagReferencesField = defineField({
-  name: "tags",
-  title: "Tags",
-  type: "array",
-  of: [
-    defineArrayMember({
-      type: "reference",
-      to: [{type: "newsTag"}],
-    }),
-  ],
-});
+export function createCategoryReferencesField(options: OptionalFieldset = {}) {
+  return defineField({
+    name: "categories",
+    title: "Categories",
+    type: "array",
+    fieldset: options.fieldset,
+    of: [
+      defineArrayMember({
+        type: "reference",
+        to: [{type: "newsCategory"}],
+      }),
+    ],
+  });
+}
+
+export function createTagReferencesField(options: OptionalFieldset = {}) {
+  return defineField({
+    name: "tags",
+    title: "Tags",
+    type: "array",
+    fieldset: options.fieldset,
+    of: [
+      defineArrayMember({
+        type: "reference",
+        to: [{type: "newsTag"}],
+      }),
+    ],
+  });
+}
+
+export const categoryReferencesField = createCategoryReferencesField();
+export const tagReferencesField = createTagReferencesField();
 
 export const relatedGroupArrayMembers = [
   defineArrayMember({
@@ -85,41 +96,52 @@ export const relatedGroupsField = defineField({
   of: relatedGroupArrayMembers,
 });
 
-export const citationSourceArticleField = defineField({
-  name: "citationSourceArticle",
-  title: "Citation Source Article",
-  type: "reference",
-  to: [
-    {type: "newsArticle"},
-    {type: "eventAnnouncement"},
-    {type: "radioAnnouncement"},
-    {type: "wpImportedArticle"},
-  ],
-  options: {
-    disableNew: true,
-  },
-  description: "この記事が引用・参照した元記事を紐付けます（任意）。",
-});
+export function createCitationSourceArticleField(options: OptionalFieldset = {}) {
+  return defineField({
+    name: "citationSourceArticle",
+    title: "Citation Source Article",
+    type: "reference",
+    fieldset: options.fieldset,
+    to: [
+      {type: "newsArticle"},
+      {type: "eventAnnouncement"},
+      {type: "radioAnnouncement"},
+      {type: "wpImportedArticle"},
+    ],
+    options: {
+      disableNew: true,
+    },
+    description: "この記事が引用・参照した元記事を紐付けます（任意）。",
+  });
+}
 
-export const seoFields = [
-  defineField({
-    name: "seoTitle",
-    title: "SEO Title",
-    type: "string",
-    description: "未入力時は title を使用",
-  }),
-  defineField({
-    name: "seoDescription",
-    title: "SEO Description",
-    type: "text",
-    rows: 3,
-    description: "任意。未入力時は本文冒頭を利用",
-  }),
-  defineField({
-    name: "ogImage",
-    title: "OG Image",
-    type: "image",
-    options: {hotspot: true},
-    description: "未入力時は heroImage を使用",
-  }),
-];
+export function createSeoFields(options: OptionalFieldset = {}) {
+  return [
+    defineField({
+      name: "seoTitle",
+      title: "SEO Title",
+      type: "string",
+      fieldset: options.fieldset,
+      description: "未入力時は title を使用",
+    }),
+    defineField({
+      name: "seoDescription",
+      title: "SEO Description",
+      type: "text",
+      rows: 3,
+      fieldset: options.fieldset,
+      description: "任意。未入力時は本文冒頭を利用",
+    }),
+    defineField({
+      name: "ogImage",
+      title: "OG Image",
+      type: "image",
+      fieldset: options.fieldset,
+      options: {hotspot: true},
+      description: "未入力時は heroImage を使用",
+    }),
+  ];
+}
+
+export const citationSourceArticleField = createCitationSourceArticleField();
+export const seoFields = createSeoFields();

@@ -2,10 +2,10 @@ import {defineArrayMember, defineField, defineType} from "sanity";
 import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
 import {
-  citationSourceArticleField,
+  createCitationSourceArticleField,
+  createSeoFields,
+  createTagReferencesField,
   relatedGroupArrayMembers,
-  seoFields,
-  tagReferencesField,
 } from "./shared";
 
 export const eventAnnouncementType = defineType({
@@ -17,6 +17,16 @@ export const eventAnnouncementType = defineType({
       name: "eventInfo",
       title: "イベント情報（上部表示）",
       options: {collapsible: false},
+    },
+    {
+      name: "taxonomy",
+      title: "Categories / Tags",
+      options: {columns: 2},
+    },
+    {
+      name: "advanced",
+      title: "Excerpt以下（低優先）",
+      options: {collapsible: true, collapsed: true},
     },
   ],
   fields: [
@@ -211,30 +221,6 @@ export const eventAnnouncementType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: "categories",
-      title: "Categories",
-      type: "array",
-      of: [
-        defineArrayMember({
-          type: "reference",
-          to: [{type: "newsCategory"}],
-        }),
-      ],
-      initialValue: async (_params, context) => {
-        try {
-          const client = context.getClient({apiVersion: "2024-01-01"});
-          const category = await client.fetch<{_id: string} | null>(
-            `*[_type == "newsCategory" && slug.current == "ev"][0]{_id}`
-          );
-          if (!category?._id) return [];
-          return [{_type: "reference", _ref: category._id}];
-        } catch {
-          return [];
-        }
-      },
-    }),
-    tagReferencesField,
-    defineField({
       name: "body",
       title: "Body (Portable Text)",
       type: "array",
@@ -318,7 +304,7 @@ export const eventAnnouncementType = defineType({
                 ],
                 layout: "radio",
               },
-              initialValue: "medium",
+              initialValue: "small",
             }),
             defineField({
               name: "linkUrl",
@@ -372,6 +358,31 @@ export const eventAnnouncementType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "categories",
+      title: "Categories",
+      type: "array",
+      fieldset: "taxonomy",
+      of: [
+        defineArrayMember({
+          type: "reference",
+          to: [{type: "newsCategory"}],
+        }),
+      ],
+      initialValue: async (_params, context) => {
+        try {
+          const client = context.getClient({apiVersion: "2024-01-01"});
+          const category = await client.fetch<{_id: string} | null>(
+            `*[_type == "newsCategory" && slug.current == "ev"][0]{_id}`
+          );
+          if (!category?._id) return [];
+          return [{_type: "reference", _ref: category._id}];
+        } catch {
+          return [];
+        }
+      },
+    }),
+    createTagReferencesField({fieldset: "taxonomy"}),
+    defineField({
       name: "galleryImages",
       title: "Gallery Images",
       type: "array",
@@ -398,15 +409,16 @@ export const eventAnnouncementType = defineType({
       ],
       description: "本文とは別に表示するギャラリー画像。複数画像をまとめてドラッグ＆ドロップ可能。",
     }),
+    createCitationSourceArticleField(),
     defineField({
       name: "excerpt",
       title: "Excerpt",
       type: "text",
+      fieldset: "advanced",
       rows: 3,
       description: "任意。未入力時は本文冒頭を利用。",
     }),
-    citationSourceArticleField,
-    ...seoFields,
+    ...createSeoFields({fieldset: "advanced"}),
   ],
   preview: {
     select: {
