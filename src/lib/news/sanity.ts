@@ -116,6 +116,8 @@ const listQuery = groq`
       (_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
+    defined(publishedAt) &&
+    publishedAt <= now() &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
@@ -156,6 +158,8 @@ const countQuery = groq`
       (_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && defined(slug.current)) ||
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
+    defined(publishedAt) &&
+    publishedAt <= now() &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
@@ -164,7 +168,12 @@ const countQuery = groq`
 `;
 
 const bySlugQuery = groq`
-  *[_type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] && slug.current == $slug][0]{
+  *[
+    _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] &&
+    slug.current == $slug &&
+    defined(publishedAt) &&
+    publishedAt <= now()
+  ][0]{
     _type,
     _id,
     title,
@@ -238,6 +247,8 @@ const bySlugQuery = groq`
     },
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
+      defined(publishedAt) &&
+      publishedAt <= now() &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
@@ -269,6 +280,8 @@ const relatedEventsForHomeQuery = groq`
     _type == "eventAnnouncement" &&
     isMyRelatedEvent == true &&
     defined(slug.current) &&
+    defined(publishedAt) &&
+    publishedAt <= now() &&
     (
       (defined(eventDate) && eventDate >= $today) ||
       (defined(eventEndDate) && eventEndDate >= $today) ||
@@ -296,7 +309,12 @@ const relatedEventsForHomeQuery = groq`
 `;
 
 const wpImportedByPostIdQuery = groq`
-  *[_type == "wpImportedArticle" && wpPostId == $wpPostId][0]{
+  *[
+    _type == "wpImportedArticle" &&
+    wpPostId == $wpPostId &&
+    defined(publishedAt) &&
+    publishedAt <= now()
+  ][0]{
     _id,
     title,
     publishedAt,
@@ -341,6 +359,8 @@ const wpImportedByPostIdQuery = groq`
     },
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
+      defined(publishedAt) &&
+      publishedAt <= now() &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
