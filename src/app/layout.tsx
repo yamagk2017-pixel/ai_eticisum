@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Shippori_Mincho } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import Link from "next/link";
 import { GlobalHeader } from "@/components/global-header";
+import { FilteredSpeedInsights } from "@/components/speed-insights";
 import { THEME_STORAGE_KEY } from "@/lib/theme/mode";
 import "./globals.css";
 
@@ -90,7 +90,7 @@ export default function RootLayout({
           </div>
         </footer>
         <Analytics />
-        <SpeedInsights />
+        <FilteredSpeedInsights />
       </body>
     </html>
   );
