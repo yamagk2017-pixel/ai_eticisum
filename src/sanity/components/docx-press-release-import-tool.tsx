@@ -223,12 +223,6 @@ export function DocxPressReleaseImportTool() {
     }
   }
 
-  const pdfLowConfidence =
-    parsed?.sourceType === "pdf" &&
-    !!parsed.diagnostics &&
-    parsed.diagnostics.rawLineCount <= 1 &&
-    parsed.diagnostics.bodyBlockCount <= 1;
-
   return (
     <div style={{padding: 24}}>
       <div style={{display: "grid", gap: 28}}>
@@ -361,26 +355,9 @@ export function DocxPressReleaseImportTool() {
 
         <div style={{padding: 0}}>
           <div style={{fontWeight: 700, marginBottom: 8}}>タイトル（編集可）</div>
-          {parsed ? <div style={{fontSize: 13, color: "#6b7280", marginBottom: 6}}>解析元: {parsed.sourceType === "pdf" ? "PDF" : "DOCX"}</div> : null}
-          {parsed?.sourceType === "pdf" && parsed.diagnostics ? (
-            <div style={{fontSize: 12, color: "#71717a", marginBottom: 8}}>
-              lines(raw/filter/final): {parsed.diagnostics.rawLineCount} / {parsed.diagnostics.filteredLineCount} / {parsed.diagnostics.bodyFinalLineCount}
-              {parsed.diagnostics.usedFallback ? `（fallback: ${parsed.diagnostics.fallbackReason ?? "enabled"}）` : ""}
-            </div>
-          ) : null}
-          {pdfLowConfidence ? (
-            <div
-              style={{
-                border: "1px solid #f59e0b",
-                background: "#fffbeb",
-                color: "#92400e",
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 10,
-                fontSize: 13,
-              }}
-            >
-              このPDFは自動抽出対象外です。手動編集して下書きを作成してください。
+          {parsed ? (
+            <div style={{fontSize: 13, color: "#6b7280", marginBottom: 6}}>
+              解析元: {parsed.sourceType === "pdf" ? "PDF" : "DOCX"}
             </div>
           ) : null}
           <input

@@ -1,5 +1,6 @@
 import {randomUUID} from "node:crypto";
 import type {ParsedPressReleaseDocx, PortableTextBlock} from "./press-release-docx";
+import PDFParser from "pdf2json";
 
 type InlinePart = {
   text: string;
@@ -36,16 +37,6 @@ export type ParsedPressReleasePdf = ParsedPressReleaseDocx & {
   diagnostics: PdfParseDiagnostics;
 };
 
-async function ensureDomMatrixPolyfill() {
-  if (typeof globalThis.DOMMatrix !== "undefined") return;
-
-  const domMatrixModule = await import("@thednp/dommatrix");
-  const DOMMatrixClass = domMatrixModule.default as unknown as typeof DOMMatrix;
-
-  // pdfjs checks global DOMMatrix in some runtimes (e.g. Vercel Node).
-  (globalThis as typeof globalThis & {DOMMatrix?: typeof DOMMatrix}).DOMMatrix = DOMMatrixClass;
-}
-
 function createKey() {
   return randomUUID().replace(/-/g, "").slice(0, 12);
 }
@@ -56,6 +47,26 @@ function normalizeWhitespace(value: string) {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function normalizeJapaneseSpacing(value: string) {
+  const urls: string[] = [];
+  const protectedText = value.replace(/https?:\/\/[^\s)]+[^\s.,)]/g, (match) => {
+    const token = `__URL_${urls.length}__`;
+    urls.push(match);
+    return token;
+  });
+
+  const compacted = protectedText
+    .replace(
+      /([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー々〆ヵヶ])\s+([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー々〆ヵヶ])/gu,
+      "$1$2"
+    )
+    .replace(/\s+([、。！？：；）」』】])/g, "$1")
+    .replace(/([（「『【])\s+/g, "$1")
+    .replace(/\s{2,}/g, " ");
+
+  return compacted.replace(/__URL_(\d+)__/g, (_, indexText) => urls[Number(indexText)] ?? "");
 }
 
 function isEmbargoDateLine(value: string) {
@@ -157,8 +168,46 @@ function forceParagraphize(lines: string[]) {
   return hardChunks.filter(Boolean);
 }
 
+function compactBodyLines(lines: string[]) {
+  const cleaned = lines.map((line) => normalizeJapaneseSpacing(normalizeWhitespace(line))).filter(Boolean);
+  if (cleaned.length <= 1) return cleaned;
+
+  const results: string[] = [];
+  let current = "";
+
+  const startsNewBlock = (line: string) =>
+    /^(?:[・●■◆▼▷▶※]|[-*]|[0-9０-９]+[.)．])/.test(line) ||
+    /^https?:\/\//i.test(line) ||
+    /^【.+】$/.test(line) ||
+    /^［.+］$/.test(line);
+
+  for (const line of cleaned) {
+    if (!current) {
+      current = line;
+      continue;
+    }
+
+    const shouldBreak =
+      startsNewBlock(line) ||
+      startsNewBlock(current) ||
+      /[。！？.!?]$/.test(current) ||
+      current.length >= 80;
+
+    if (shouldBreak) {
+      results.push(current);
+      current = line;
+      continue;
+    }
+
+    current = normalizeJapaneseSpacing(`${current}${line}`);
+  }
+
+  if (current) results.push(current);
+  return results.filter(Boolean);
+}
+
 function splitBySentenceOrBreaks(text: string) {
-  const normalized = normalizeWhitespace(text);
+  const normalized = normalizeJapaneseSpacing(normalizeWhitespace(text));
   if (!normalized) return [];
 
   const byBreaks = normalized
@@ -204,7 +253,7 @@ function splitBySentenceOrBreaks(text: string) {
 }
 
 function splitTextWithUrls(value: string): InlinePart[] {
-  const normalized = normalizeWhitespace(value);
+  const normalized = normalizeJapaneseSpacing(normalizeWhitespace(value));
   if (!normalized) return [];
 
   const urlPattern = /(https?:\/\/[^\s)]+[^\s.,)])/g;
@@ -267,29 +316,29 @@ function chooseTitle(lines: string[]) {
   return null;
 }
 
-async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedPressReleasePdf> {
-  await ensureDomMatrixPolyfill();
-  const pdfParseModule = await import("pdf-parse");
-  const {PDFParse} = pdfParseModule;
-  const parser = new PDFParse({data: buffer, disableWorker: true} as unknown as ConstructorParameters<
-    typeof PDFParse
-  >[0]);
-  const parsed = await parser.getText();
-  await parser.destroy();
-  const rawText = normalizeWhitespace(parsed.text ?? "");
-  if (!rawText) {
+async function parsePressReleasePdfLocal(buffer: Buffer): Promise<ParsedPressReleasePdf> {
+  const parsed = await parsePdfTextWithPdf2Json(buffer);
+  const rawLines = parsed.pageLines.flat().map((line) => normalizeJapaneseSpacing(normalizeWhitespace(line))).filter(Boolean);
+  if (rawLines.length === 0) {
     throw new Error("PDFから本文を抽出できませんでした。");
   }
 
-  const lines = splitBySentenceOrBreaks(rawText);
-  const title = chooseTitle(lines) ?? "PDFインポート（要編集）";
+  const repeatedHeaderFooter = detectRepeatedHeaderFooterLines(parsed.pageLines);
+  const linesWithoutRepeated = rawLines.filter((line) => !repeatedHeaderFooter.has(line));
+  const filteredLines = linesWithoutRepeated.filter(
+    (line) => !isMetadataLine(line) && !isFrontMatterLine(line) && !isEmbargoDateLine(line)
+  );
+
+  const lines = filteredLines.length > 0 ? filteredLines : linesWithoutRepeated;
+  const expandedLines = lines.flatMap((line) => splitBySentenceOrBreaks(line));
+  const title = chooseTitle(expandedLines) ?? "PDFインポート（要編集）";
 
   const withoutTitle =
     title === "PDFインポート（要編集）"
-      ? lines
+      ? expandedLines
       : (() => {
           let removed = false;
-          return lines.filter((line) => {
+          return expandedLines.filter((line) => {
             if (!removed && line === title) {
               removed = true;
               return false;
@@ -298,7 +347,7 @@ async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedP
           });
         })();
 
-  const bodySourceLines = forceParagraphize(withoutTitle.length > 0 ? withoutTitle : lines);
+  const bodySourceLines = compactBodyLines(forceParagraphize(withoutTitle.length > 0 ? withoutTitle : lines));
   const body = bodySourceLines
     .map((line) => toPortableTextBlock(line))
     .filter((line): line is PortableTextBlock => line !== null);
@@ -312,20 +361,103 @@ async function parsePressReleasePdfWithPdfParse(buffer: Buffer): Promise<ParsedP
     body,
     plainText: normalizeWhitespace(bodySourceLines.join("\n\n")),
     diagnostics: {
-      totalPages: parsed.total ?? 0,
-      rawLineCount: lines.length,
-      repeatedHeaderFooterCount: 0,
-      metadataFilteredLineCount: 0,
+      totalPages: parsed.totalPages,
+      rawLineCount: rawLines.length,
+      repeatedHeaderFooterCount: repeatedHeaderFooter.size,
+      metadataFilteredLineCount: linesWithoutRepeated.length - filteredLines.length,
       filteredLineCount: lines.length,
-      bodyCandidateLineCount: lines.length,
+      bodyCandidateLineCount: expandedLines.length,
       bodyFinalLineCount: bodySourceLines.length,
       bodyBlockCount: body.length,
-      usedFallback: true,
-      fallbackReason: "pdf_parse_primary",
+      usedFallback: filteredLines.length === 0,
+      fallbackReason: filteredLines.length === 0 ? "all_lines_filtered_as_metadata" : undefined,
     },
   };
 }
 
 export async function parsePressReleasePdf(buffer: Buffer): Promise<ParsedPressReleasePdf> {
-  return parsePressReleasePdfWithPdfParse(buffer);
+  return parsePressReleasePdfLocal(buffer);
+}
+function decodePdf2JsonText(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function detectRepeatedHeaderFooterLines(pageLines: string[][]) {
+  const counts = new Map<string, number>();
+  for (const lines of pageLines) {
+    const unique = new Set(lines.filter((line) => line.length > 0 && line.length <= 120));
+    for (const line of unique) {
+      counts.set(line, (counts.get(line) ?? 0) + 1);
+    }
+  }
+  const repeated = new Set<string>();
+  for (const [line, count] of counts.entries()) {
+    if (count >= 2) repeated.add(line);
+  }
+  return repeated;
+}
+
+async function parsePdfTextWithPdf2Json(buffer: Buffer): Promise<{totalPages: number; pageLines: string[][]}> {
+  return new Promise((resolve, reject) => {
+    const parser = new PDFParser();
+    parser.on("pdfParser_dataError", (error: unknown) => {
+      const message =
+        typeof error === "object" && error !== null && "parserError" in error
+          ? String((error as {parserError?: unknown}).parserError ?? "PDF parse failed")
+          : "PDF parse failed";
+      reject(new Error(message));
+    });
+    parser.on("pdfParser_dataReady", (data: unknown) => {
+      const pages =
+        typeof data === "object" &&
+        data !== null &&
+        "Pages" in data &&
+        Array.isArray((data as {Pages?: unknown[]}).Pages)
+          ? ((data as {Pages: Array<{Texts?: Array<{R?: Array<{T?: string}>}>}>}).Pages ?? [])
+          : [];
+
+      const pageLines = pages.map((page) => {
+        const texts = (page.Texts ?? [])
+          .map((textItem) => {
+            const y = typeof (textItem as {y?: unknown}).y === "number" ? (textItem as {y: number}).y : 0;
+            const x = typeof (textItem as {x?: unknown}).x === "number" ? (textItem as {x: number}).x : 0;
+            const text = (textItem.R ?? [])
+              .map((run) => (typeof run.T === "string" ? decodePdf2JsonText(run.T) : ""))
+              .join("")
+              .trim();
+            return {x, y, text};
+          })
+          .filter((item) => item.text.length > 0);
+
+        const buckets = new Map<number, Array<{x: number; text: string}>>();
+        for (const item of texts) {
+          const key = Math.round(item.y * 10) / 10;
+          const row = buckets.get(key) ?? [];
+          row.push({x: item.x, text: item.text});
+          buckets.set(key, row);
+        }
+
+        return Array.from(buckets.entries())
+          .sort((a, b) => a[0] - b[0])
+          .map(([, row]) =>
+            normalizeJapaneseSpacing(
+              normalizeWhitespace(
+                row
+                  .sort((a, b) => a.x - b.x)
+                  .map((item) => item.text)
+                  .join(" ")
+              )
+            )
+          )
+          .filter(Boolean);
+      });
+
+      resolve({totalPages: pages.length, pageLines});
+    });
+    parser.parseBuffer(buffer);
+  });
 }
