@@ -2,25 +2,7 @@ import {useMemo} from "react";
 import type {DocumentActionComponent} from "sanity";
 import {resolvePreviewPath, type PreviewDocumentLike} from "@/sanity/preview-path";
 
-const SECRET_STORAGE_KEY = "preview-share-secret";
 const DEFAULT_TTL_MINUTES = 60 * 24 * 5;
-
-function readSecretFromStorage() {
-  try {
-    const value = window.localStorage.getItem(SECRET_STORAGE_KEY);
-    return typeof value === "string" ? value.trim() : "";
-  } catch {
-    return "";
-  }
-}
-
-function saveSecretToStorage(secret: string) {
-  try {
-    window.localStorage.setItem(SECRET_STORAGE_KEY, secret);
-  } catch {
-    // no-op
-  }
-}
 
 export const CopyPreviewShareLinkAction: DocumentActionComponent = (props) => {
   const documentValue = (props.draft ?? props.published ?? null) as PreviewDocumentLike | null;
@@ -32,18 +14,13 @@ export const CopyPreviewShareLinkAction: DocumentActionComponent = (props) => {
     label: "共有URLをコピー",
     onHandle: async () => {
       try {
-        const existingSecret = readSecretFromStorage();
-        const secretInput = window.prompt(
-          "PREVIEW_SHARE_SECRET を入力してください（次回以降このブラウザに保存されます）",
-          existingSecret
-        );
+        const secretInput = window.prompt("PREVIEW_SHARE_SECRET を入力してください（この値は保存しません）", "");
         const secret = (secretInput ?? "").trim();
         if (!secret) {
           window.alert("PREVIEW_SHARE_SECRET が未入力のため中断しました。");
           props.onComplete();
           return;
         }
-        saveSecretToStorage(secret);
 
         const ttlInput = window.prompt("有効期限（分）", String(DEFAULT_TTL_MINUTES));
         const ttlMinutes = Number(ttlInput ?? DEFAULT_TTL_MINUTES);
@@ -71,4 +48,3 @@ export const CopyPreviewShareLinkAction: DocumentActionComponent = (props) => {
     },
   };
 };
-
