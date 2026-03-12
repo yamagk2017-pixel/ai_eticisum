@@ -280,7 +280,7 @@ const bySlugPreviewQuery = groq`
     _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] &&
     slug.current == $slug
   ]
-  | order(_id in path("drafts.**") desc, _updatedAt desc)[0]{
+  [0]{
     _type,
     _id,
     title,
@@ -495,7 +495,7 @@ const wpImportedByPostIdPreviewQuery = groq`
     _type == "wpImportedArticle" &&
     wpPostId == $wpPostId
   ]
-  | order(_id in path("drafts.**") desc, _updatedAt desc)[0]{
+  [0]{
     _id,
     title,
     publishedAt,
