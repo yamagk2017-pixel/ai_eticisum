@@ -153,7 +153,7 @@ html[data-theme="light"] .news-article-body .well3 :is(p, a, strong, em, span) {
 
 html[data-theme="pop"] .news-article-body h3,
 html[data-theme="light"] .news-article-body h3 {
-  color: #3f3f46 !important; /* zinc-700 */
+  color: var(--ui-text) !important;
 }
 
 .buzzttara-tweet-theme .react-tweet-theme {
