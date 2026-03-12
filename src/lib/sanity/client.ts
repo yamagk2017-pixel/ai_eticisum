@@ -14,3 +14,17 @@ export const sanityClient = createClient({
   useCdn: false,
   token: serverToken || undefined,
 });
+
+export const sanityPreviewClient = createClient({
+  projectId,
+  dataset,
+  apiVersion,
+  useCdn: false,
+  perspective: "previewDrafts",
+  token: serverToken || undefined,
+});
+
+export function getSanityClient(options?: {preview?: boolean}) {
+  if (options?.preview && serverToken) return sanityPreviewClient;
+  return sanityClient;
+}

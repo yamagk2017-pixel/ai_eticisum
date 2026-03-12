@@ -1,5 +1,5 @@
 import {groq} from "next-sanity";
-import {sanityClient} from "@/lib/sanity/client";
+import {getSanityClient} from "@/lib/sanity/client";
 import {hasSanityStudioEnv} from "@/sanity/env";
 import type {NewsArticle, NewsRelatedArticleRef, NewsRelatedGroupRef, NewsTag} from "./types";
 
@@ -275,6 +275,109 @@ const bySlugQuery = groq`
   }
 `;
 
+const bySlugPreviewQuery = groq`
+  *[
+    _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] &&
+    slug.current == $slug
+  ]
+  | order(_id in path("drafts.**") desc, _updatedAt desc)[0]{
+    _type,
+    _id,
+    title,
+    slug,
+    publishedAt,
+    excerpt,
+    body,
+    "galleryImages": galleryImages[]{
+      "url": asset->url,
+      alt,
+      caption
+    },
+    "heroImageUrl": heroImage.asset->url,
+    "categories": categories[]->{
+      _id,
+      title,
+      slug
+    },
+    "tags": tags[]->{
+      _id,
+      title,
+      slug
+    },
+    "relatedGroups": relatedGroups[]{
+      groupNameJa,
+      imdGroupId,
+      displayOrder
+    },
+    eventDate,
+    eventEndDate,
+    eventTitle,
+    venue,
+    broadcastDate,
+    eventTimeText,
+    personality,
+    eventPrice,
+    officialSiteUrl,
+    organizer,
+    "representativePerformers": representativePerformers[]{
+      name,
+      "group": group{
+        groupNameJa,
+        imdGroupId
+      }
+    },
+    externalPerformers,
+    ticketSalesUrl,
+    streamingUrl,
+    archiveUrl,
+    afterTalkUrl,
+    streamingDeadline,
+    streamingPrice,
+    "citationSourceArticle": citationSourceArticle->{
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
+    },
+    "citedByArticles": *[
+      _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
+      references(^._id) &&
+      _id != ^._id
+    ] | order(publishedAt desc){
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
+    }
+  }
+`;
+
 const relatedEventsForHomeQuery = groq`
   *[
     _type == "eventAnnouncement" &&
@@ -365,6 +468,80 @@ const wpImportedByPostIdQuery = groq`
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
       !defined(*[_id == ("drafts." + ^._id)][0]._id)
+    ] | order(publishedAt desc){
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
+    }
+  }
+`;
+
+const wpImportedByPostIdPreviewQuery = groq`
+  *[
+    _type == "wpImportedArticle" &&
+    wpPostId == $wpPostId
+  ]
+  | order(_id in path("drafts.**") desc, _updatedAt desc)[0]{
+    _id,
+    title,
+    publishedAt,
+    excerpt,
+    legacyBodyHtml,
+    originalWpUrl,
+    wpPostId,
+    "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+    "categories": categories[]->{
+      _id,
+      title,
+      slug
+    },
+    "tags": tags[]->{
+      _id,
+      title,
+      slug
+    },
+    "relatedGroups": relatedGroups[]{
+      groupNameJa,
+      imdGroupId,
+      displayOrder
+    },
+    "citationSourceArticle": citationSourceArticle->{
+      _type,
+      _id,
+      title,
+      slug,
+      wpPostId,
+      publishedAt,
+      "heroImageUrl": coalesce(heroImage.asset->url, heroImageExternalUrl),
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      },
+      "tags": tags[]->{
+        _id,
+        title,
+        slug
+      }
+    },
+    "citedByArticles": *[
+      _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
+      references(^._id) &&
+      _id != ^._id
     ] | order(publishedAt desc){
       _type,
       _id,
@@ -486,7 +663,7 @@ function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | n
 
 export async function getSanityNewsList(limit = 10): Promise<NewsArticle[]> {
   if (!hasSanityStudioEnv()) return [];
-  const docs = await sanityClient.fetch<SanityNewsArticleListDoc[]>(listQuery, {
+  const docs = await getSanityClient().fetch<SanityNewsArticleListDoc[]>(listQuery, {
     start: 0,
     end: limit,
     categorySlug: null,
@@ -510,8 +687,8 @@ export async function getSanityNewsPage(options: {
   const tagSlug = options.tagSlug?.trim() || null;
 
   const [docs, total] = await Promise.all([
-    sanityClient.fetch<SanityNewsArticleListDoc[]>(listQuery, {start, end, categorySlug, tagSlug}),
-    sanityClient.fetch<number>(countQuery, {categorySlug, tagSlug}),
+    getSanityClient().fetch<SanityNewsArticleListDoc[]>(listQuery, {start, end, categorySlug, tagSlug}),
+    getSanityClient().fetch<number>(countQuery, {categorySlug, tagSlug}),
   ]);
 
   return {
@@ -520,12 +697,17 @@ export async function getSanityNewsPage(options: {
   };
 }
 
-export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArticleDetail | null> {
+export async function getSanityNewsBySlug(
+  slug: string,
+  options?: {preview?: boolean}
+): Promise<SanityNewsArticleDetail | null> {
   if (!hasSanityStudioEnv()) return null;
   const trimmed = slug.trim();
   if (!trimmed) return null;
+  const preview = options?.preview === true;
+  const client = getSanityClient({preview});
 
-  const doc = await sanityClient.fetch<{
+  const doc = await client.fetch<{
     _type?: "newsArticle" | "eventAnnouncement" | "radioAnnouncement";
     _id: string;
     title?: string | null;
@@ -572,7 +754,7 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
     streamingPrice?: string | null;
     citationSourceArticle?: SanityRelatedArticleDoc | null;
     citedByArticles?: SanityRelatedArticleDoc[] | null;
-  } | null>(bySlugQuery, {slug: trimmed});
+  } | null>(preview ? bySlugPreviewQuery : bySlugQuery, {slug: trimmed});
 
   if (!doc) return null;
 
@@ -677,11 +859,16 @@ export async function getSanityNewsBySlug(slug: string): Promise<SanityNewsArtic
   };
 }
 
-export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promise<NewsArticle | null> {
+export async function getSanityWpImportedNewsByWpPostId(
+  wpPostId: number,
+  options?: {preview?: boolean}
+): Promise<NewsArticle | null> {
   if (!hasSanityStudioEnv()) return null;
   if (!Number.isFinite(wpPostId) || wpPostId <= 0) return null;
+  const preview = options?.preview === true;
+  const client = getSanityClient({preview});
 
-  const doc = await sanityClient.fetch<{
+  const doc = await client.fetch<{
     _id: string;
     title?: string | null;
     publishedAt?: string | null;
@@ -695,7 +882,7 @@ export async function getSanityWpImportedNewsByWpPostId(wpPostId: number): Promi
     relatedGroups?: SanityRelatedGroup[] | null;
     citationSourceArticle?: SanityRelatedArticleDoc | null;
     citedByArticles?: SanityRelatedArticleDoc[] | null;
-  } | null>(wpImportedByPostIdQuery, {wpPostId});
+  } | null>(preview ? wpImportedByPostIdPreviewQuery : wpImportedByPostIdQuery, {wpPostId});
 
   if (!doc || !Number.isFinite(doc.wpPostId)) return null;
   const title = (doc.title ?? "").trim() || "(untitled)";
@@ -728,7 +915,7 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
   const safeLimit = Math.max(1, Math.min(20, Math.trunc(limit || 3)));
   const today = new Date().toISOString().slice(0, 10);
 
-  const docs = await sanityClient.fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {
+  const docs = await getSanityClient().fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {
     limit: safeLimit,
     today,
   });

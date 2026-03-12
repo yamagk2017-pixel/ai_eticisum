@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleCitations } from "@/components/news/article-citations";
@@ -68,11 +69,11 @@ function TermPills({
   );
 }
 
-async function loadArticle(idParam: string) {
+async function loadArticle(idParam: string, options?: { preview?: boolean }) {
   if (!/^\d+$/.test(idParam)) return null;
   const id = Number(idParam);
   if (hasSanityStudioEnv()) {
-    const migrated = await getSanityWpImportedNewsByWpPostId(id);
+    const migrated = await getSanityWpImportedNewsByWpPostId(id, { preview: options?.preview === true });
     if (migrated) return migrated;
   }
   return getWpNewsById(id);
@@ -84,9 +85,10 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const resolved = await params;
+  const { isEnabled } = await draftMode();
   let article = null;
   try {
-    article = await loadArticle(resolved.id);
+    article = await loadArticle(resolved.id, { preview: isEnabled });
   } catch {
     return buildArticleMetadata(null, { fallbackTitle: "News" });
   }
@@ -103,13 +105,14 @@ export default async function WpNewsArticlePage({
   params: Params;
 }) {
   const resolved = await params;
+  const { isEnabled } = await draftMode();
   const hasWpBaseUrl = hasWpApiBaseUrlConfigured();
   const hasSanity = hasSanityStudioEnv();
   let article = null;
   let fetchErrorMessage: string | null = null;
 
   try {
-    article = await loadArticle(resolved.id);
+    article = await loadArticle(resolved.id, { preview: isEnabled });
   } catch (error) {
     if (error instanceof WpClientError) {
       fetchErrorMessage =

@@ -1,4 +1,5 @@
 import type {Metadata} from "next";
+import {draftMode} from "next/headers";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {ArticleCitations} from "@/components/news/article-citations";
@@ -94,7 +95,8 @@ function toSeoArticleShape(article: Awaited<ReturnType<typeof getSanityNewsBySlu
 export async function generateMetadata({params}: {params: Params}): Promise<Metadata> {
   const resolved = await params;
   try {
-    const article = await getSanityNewsBySlug(resolved.slug);
+    const {isEnabled} = await draftMode();
+    const article = await getSanityNewsBySlug(resolved.slug, {preview: isEnabled});
     return buildArticleMetadata(toSeoArticleShape(article), {
       fallbackTitle: "News",
       canonicalStrategy: "self",
@@ -107,6 +109,7 @@ export async function generateMetadata({params}: {params: Params}): Promise<Meta
 
 export default async function SanityNewsArticlePage({params}: {params: Params}) {
   const resolved = await params;
+  const {isEnabled} = await draftMode();
 
   if (!hasSanityStudioEnv()) {
     return (
@@ -120,7 +123,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
     );
   }
 
-  const article = await getSanityNewsBySlug(resolved.slug);
+  const article = await getSanityNewsBySlug(resolved.slug, {preview: isEnabled});
   if (!article) notFound();
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
