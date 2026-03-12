@@ -151,8 +151,8 @@ html[data-theme="light"] .news-article-body .well3 :is(p, a, strong, em, span) {
   color: inherit !important;
 }
 
-html[data-theme="pop"] .news-article-body h3,
-html[data-theme="light"] .news-article-body h3 {
+/* Keep article h3 color stable across initial render / theme toggles. */
+.news-article-body h3 {
   color: var(--ui-text) !important;
 }
 
