@@ -12,6 +12,7 @@ export const CopyPreviewShareLinkAction: DocumentActionComponent = (props) => {
 
   return {
     label: "共有URLをコピー",
+    group: ["paneActions"],
     onHandle: async () => {
       try {
         const secretInput = window.prompt("PREVIEW_SHARE_SECRET を入力してください（この値は保存しません）", "");
