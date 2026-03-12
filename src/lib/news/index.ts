@@ -43,10 +43,21 @@ function dedupeByPathPreferSource(items: NewsArticle[]): NewsArticle[] {
 export async function getNewsList(options: GetNewsListOptions = {}): Promise<NewsArticle[]> {
   const {limit = 10, categorySlug, tagSlug} = options;
 
-  const [wpArticles, sanityArticles] = await Promise.all([
+  const [wpResult, sanityResult] = await Promise.allSettled([
     getWpNewsList(limit),
     getSanityNewsList(limit),
   ]);
+
+  const wpArticles = wpResult.status === "fulfilled" ? wpResult.value : [];
+  const sanityArticles = sanityResult.status === "fulfilled" ? sanityResult.value : [];
+
+  if (wpResult.status === "rejected" && sanityResult.status === "rejected") {
+    throw wpResult.reason instanceof Error
+      ? wpResult.reason
+      : sanityResult.reason instanceof Error
+        ? sanityResult.reason
+        : new Error("Failed to fetch both WP and Sanity news sources");
+  }
 
   const filtered = dedupeByPathPreferSource([...wpArticles, ...sanityArticles]).filter((article) => {
     const categoryMatch = categorySlug
