@@ -2,6 +2,8 @@ import { createServerClient } from "@/lib/supabase/server";
 import { GroupsList } from "./groups-list";
 import { Rankings } from "./rankings";
 
+export const dynamic = "force-dynamic";
+
 type VoteSummaryRow = {
   user_id: string | null;
   group_id: string | null;
@@ -19,6 +21,7 @@ async function getNandatteVoteSummary() {
       .schema("nandatte")
       .from("votes")
       .select("user_id,group_id")
+      .order("id", { ascending: true })
       .range(from, from + pageSize - 1);
 
     if (error) {
