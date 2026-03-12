@@ -3,6 +3,8 @@ import {structureTool} from "sanity/structure";
 import {schemaTypes} from "./src/sanity/schemaTypes";
 import {deskStructure} from "./src/sanity/desk-structure";
 import {getSanityConfigValues} from "./src/sanity/env";
+import {resolvePreviewPath, type PreviewDocumentLike} from "./src/sanity/preview-path";
+import {CopyPreviewShareLinkAction} from "./src/sanity/document-actions/copy-preview-share-link-action";
 import "./src/sanity/studio.css";
 
 const {projectId, dataset} = getSanityConfigValues();
@@ -12,43 +14,6 @@ const previewOrigin =
     ? process.env.SANITY_STUDIO_PREVIEW_ORIGIN.trim().replace(/\/$/, "")
     : "https://www.musicite.net";
 
-type PreviewDocument = {
-  _type?: string;
-  slug?: {current?: string | null} | null;
-  wpPostId?: number | string | null;
-};
-
-function resolvePreviewPath(document: PreviewDocument): string | undefined {
-  const type = document._type;
-  if (!type) return undefined;
-
-  if (type === "newsArticle" || type === "eventAnnouncement" || type === "radioAnnouncement") {
-    const slug = document.slug?.current?.trim();
-    if (!slug) return undefined;
-    return `/news/${slug}`;
-  }
-
-  if (type === "wpImportedArticle") {
-    const idText = String(document.wpPostId ?? "").trim();
-    if (!/^\d+$/.test(idText)) return undefined;
-    return `/news/wp/${idText}`;
-  }
-
-  if (type === "newsCategory") {
-    const slug = document.slug?.current?.trim();
-    if (!slug) return undefined;
-    return `/news?category=${encodeURIComponent(slug)}`;
-  }
-
-  if (type === "newsTag") {
-    const slug = document.slug?.current?.trim();
-    if (!slug) return undefined;
-    return `/news?tag=${encodeURIComponent(slug)}`;
-  }
-
-  return undefined;
-}
-
 export default defineConfig({
   name: "default",
   title: "musicite AI Studio",
@@ -57,8 +22,20 @@ export default defineConfig({
   basePath: "/studio",
   plugins: [structureTool({structure: deskStructure})],
   document: {
+    actions: (prev, context) => {
+      const type = context.schemaType;
+      const supported =
+        type === "newsArticle" ||
+        type === "eventAnnouncement" ||
+        type === "radioAnnouncement" ||
+        type === "wpImportedArticle" ||
+        type === "newsCategory" ||
+        type === "newsTag";
+      if (!supported) return prev;
+      return [CopyPreviewShareLinkAction, ...prev];
+    },
     productionUrl: async (_prev, context) => {
-      const path = resolvePreviewPath((context.document ?? {}) as PreviewDocument);
+      const path = resolvePreviewPath((context.document ?? {}) as PreviewDocumentLike);
       if (!path) return undefined;
       const query = new URLSearchParams({path}).toString();
       return `${previewOrigin}/api/draft/enable?${query}`;
