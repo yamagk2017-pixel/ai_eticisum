@@ -10,9 +10,10 @@ function toSafePath(value: string | null) {
 }
 
 function getTtlMinutes(value: string | null) {
-  const n = Number(value ?? "60");
-  if (!Number.isFinite(n)) return 60;
-  return Math.min(60 * 24 * 7, Math.max(1, Math.trunc(n)));
+  const defaultMinutes = 60 * 24 * 5;
+  const n = Number(value ?? String(defaultMinutes));
+  if (!Number.isFinite(n)) return defaultMinutes;
+  return Math.min(60 * 24 * 30, Math.max(1, Math.trunc(n)));
 }
 
 function isAuthorized(url: URL) {
@@ -43,4 +44,3 @@ export async function GET(request: Request) {
     ttlMinutes,
   });
 }
-

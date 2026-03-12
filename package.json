@@ -16,6 +16,7 @@
     "sync:wp-taxonomies:apply": "node scripts/wp-sync-taxonomies-to-sanity.mjs --apply",
     "report:wp-poc-issues:merge": "node scripts/merge-wp-poc-issues.mjs",
     "capture:imakite": "node scripts/capture-imakite.mjs",
+    "preview:share-link": "node scripts/generate-preview-share-link.mjs",
     "replace:wp-image-host:dry-run": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp",
     "replace:wp-image-host:apply": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp --apply"
   },
