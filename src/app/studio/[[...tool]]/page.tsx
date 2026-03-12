@@ -4,6 +4,7 @@ import {StudioClient} from "./studio-client";
 export const dynamic = "force-static";
 
 export const metadata = {
+  title: "[Studio] musicite AI Studio",
   robots: {
     index: false,
     follow: false,
