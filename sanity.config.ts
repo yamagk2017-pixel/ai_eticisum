@@ -16,7 +16,7 @@ const previewOrigin =
 
 export default defineConfig({
   name: "default",
-  title: "musicite AI Studio",
+  title: "[Studio] musicite AI Studio",
   projectId,
   dataset,
   basePath: "/studio",
