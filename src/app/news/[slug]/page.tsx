@@ -387,7 +387,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                         <dd className="break-words">
                           {performerItems.map((item, index) => (
                             <span key={`${item.kind}-${index}`}>
-                              {index > 0 ? " / " : null}
+                              {index > 0 && item.kind !== "etc" ? " / " : null}
                               {item.kind === "group" ? (
                                 item.href ? (
                                   <Link href={item.href} className="underline underline-offset-2">
@@ -430,7 +430,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                       <dd className="break-words">
                         {performerItems.map((item, index) => (
                           <span key={`${item.kind}-${index}`}>
-                            {index > 0 ? " / " : null}
+                            {index > 0 && item.kind !== "etc" ? " / " : null}
                             {item.kind === "group" ? (
                               item.href ? (
                                 <Link href={item.href} className="underline underline-offset-2">
