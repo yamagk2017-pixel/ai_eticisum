@@ -28,17 +28,33 @@ type RankingsApiResponse = {
   error?: string;
 };
 
-type BaseRealtimeCardProps = {
-  pollIntervalMs?: number;
-};
-
-type HomeNandatteVoteRealtimeCardProps = BaseRealtimeCardProps & {
+type HomeNandatteVoteRealtimeCardProps = {
   initialVoteTop: NandatteSummaryItem[];
 };
 
-type HomeNandatteRecentRealtimeCardProps = BaseRealtimeCardProps & {
+type HomeNandatteRecentRealtimeCardProps = {
   initialRecentTop: NandatteSummaryItem[];
 };
+
+const onceKeys = new Set<string>();
+
+function shouldSkipOneShotFetch(key: string) {
+  if (typeof window === "undefined") return false;
+  if (onceKeys.has(key)) return true;
+
+  try {
+    if (window.sessionStorage.getItem(key) === "1") {
+      onceKeys.add(key);
+      return true;
+    }
+    window.sessionStorage.setItem(key, "1");
+  } catch {
+    // Ignore storage failures and fallback to in-memory guard.
+  }
+
+  onceKeys.add(key);
+  return false;
+}
 
 function formatShortDate(value: string | null) {
   if (!value) return "-";
@@ -60,11 +76,11 @@ function toSummaryItems(rows: RankingApiRow[] | undefined): NandatteSummaryItem[
 
 export function HomeNandatteVoteRealtimeCard({
   initialVoteTop,
-  pollIntervalMs = 15000,
 }: HomeNandatteVoteRealtimeCardProps) {
   const [voteTop, setVoteTop] = useState<NandatteSummaryItem[]>(initialVoteTop);
 
   useEffect(() => {
+    if (shouldSkipOneShotFetch("home-nandatte-vote-one-shot")) return;
     let cancelled = false;
     const fetchLatest = async () => {
       try {
@@ -81,15 +97,10 @@ export function HomeNandatteVoteRealtimeCard({
     };
 
     fetchLatest().catch(() => null);
-    const timer = setInterval(() => {
-      fetchLatest().catch(() => null);
-    }, pollIntervalMs);
-
     return () => {
       cancelled = true;
-      clearInterval(timer);
     };
-  }, [pollIntervalMs]);
+  }, []);
 
   const voteItems = useMemo(() => voteTop.slice(0, 3), [voteTop]);
 
@@ -144,11 +155,11 @@ export function HomeNandatteVoteRealtimeCard({
 
 export function HomeNandatteRecentRealtimeCard({
   initialRecentTop,
-  pollIntervalMs = 15000,
 }: HomeNandatteRecentRealtimeCardProps) {
   const [recentTop, setRecentTop] = useState<NandatteSummaryItem[]>(initialRecentTop);
 
   useEffect(() => {
+    if (shouldSkipOneShotFetch("home-nandatte-recent-one-shot")) return;
     let cancelled = false;
     const fetchLatest = async () => {
       try {
@@ -165,15 +176,10 @@ export function HomeNandatteRecentRealtimeCard({
     };
 
     fetchLatest().catch(() => null);
-    const timer = setInterval(() => {
-      fetchLatest().catch(() => null);
-    }, pollIntervalMs);
-
     return () => {
       cancelled = true;
-      clearInterval(timer);
     };
-  }, [pollIntervalMs]);
+  }, []);
 
   const recentItems = useMemo(() => recentTop.slice(0, 3), [recentTop]);
 
