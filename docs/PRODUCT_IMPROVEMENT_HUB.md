@@ -151,6 +151,14 @@
   - 参照: [NANDATTE_REQUIREMENTS.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/NANDATTE_REQUIREMENTS.md)
   - メモ: 小規模PoCで需要検証してから本実装判断
 
+- [ ] ニュース受付フォームからAI記事化までの運用フローを実装
+  - 種別: ops
+  - 対象: cross
+  - 期待効果: 記事投入リードタイム短縮と運用負荷の軽減
+  - 概算工数: L
+  - 参照: [FLASH_IDEAS_INBOX.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/FLASH_IDEAS_INBOX.md)
+  - メモ: フォーム投稿 -> AI整形 -> Sanity下書き -> プレビュー確認 -> 公開。整形不能時の再投稿依頼ルールを定義する
+
 ## 4. 参照ドキュメント（改善案・将来実装）
 - [HOMEPAGE_PERFORMANCE_PLAN.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/HOMEPAGE_PERFORMANCE_PLAN.md)
 - [NANDATTE_REQUIREMENTS.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/NANDATTE_REQUIREMENTS.md)
