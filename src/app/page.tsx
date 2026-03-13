@@ -1,14 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactElement } from "react";
+import { unstable_cache } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
+import { HomeNandatteRealtimeCards } from "@/app/nandatte/home-realtime-cards";
 import { getNewsList } from "@/lib/news";
 import { getSanityRelatedEventsForHome, type HomeRelatedEvent } from "@/lib/news/sanity";
 import type { NewsArticle } from "@/lib/news/types";
 import { createServerClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type RowRecord = Record<string, unknown>;
 
@@ -114,13 +116,6 @@ function formatPoint(value: number) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
-}
-
-function formatShortDate(value: string | null) {
-  if (!value) return "-";
-  const ts = Date.parse(value);
-  if (Number.isNaN(ts)) return value;
-  return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(new Date(ts));
 }
 
 function formatEventDate(value: string | null) {
@@ -477,7 +472,7 @@ async function getHomeSummaries() {
 
     const newsAndRelatedPromise = (async () => {
       try {
-        const [items, relatedEventItems] = await Promise.all([getNewsList({ limit: 40 }), getSanityRelatedEventsForHome(3)]);
+        const [items, relatedEventItems] = await Promise.all([getNewsList({ limit: 12 }), getSanityRelatedEventsForHome(3)]);
         const relatedEventPaths = new Set(relatedEventItems.map((event) => event.path));
         const hasCategory = (article: NewsArticle, slug: string) =>
           article.categories.some((category) => category.slug === slug);
@@ -522,8 +517,12 @@ async function getHomeSummaries() {
   }
 }
 
+const getCachedHomeSummaries = unstable_cache(getHomeSummaries, ["home-summaries-v1"], {
+  revalidate,
+});
+
 export default async function Home() {
-  const summaries = await getHomeSummaries();
+  const summaries = await getCachedHomeSummaries();
   const imakiteTop1 = summaries.imakite.items.find((item) => item.rank === 1) ?? summaries.imakite.items[0] ?? null;
   const imakiteRunnersUp = summaries.imakite.items.filter((item) => (imakiteTop1 ? item.rank !== imakiteTop1.rank : true));
   const toSortValue = (value: string | null) => {
@@ -536,6 +535,10 @@ export default async function Home() {
     if (!latest) return item.lastVoteAt;
     return toSortValue(item.lastVoteAt) > toSortValue(latest) ? item.lastVoteAt : latest;
   }, null);
+  const nandatteRecentLatest = summaries.nandatte.recentTop[0]?.lastVoteAt ?? null;
+  const nandatteLatest = toSortValue(nandatteVoteLatest) >= toSortValue(nandatteRecentLatest)
+    ? nandatteVoteLatest
+    : nandatteRecentLatest;
 
   const imakiteDailyCard = (
     <div className="mb-12 break-inside-avoid">
@@ -657,108 +660,11 @@ export default async function Home() {
       </div>
     ) : null;
 
-  const nandatteVoteCard = (
-    <div className="mb-12 break-inside-avoid">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
-              ナンダッテ
-            </Link>
-            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルチャート</span>
-          </div>
-          <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-2xl font-semibold">投票ランキング</h2>
-            <Link href="/nandatte/ranking?focus=vote" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
-              more...
-            </Link>
-          </div>
-        </div>
-      </div>
-      <ol className="mt-4 space-y-2 text-sm">
-        {summaries.nandatte.voteTop.length > 0 ? (
-          summaries.nandatte.voteTop.map((item, index) => (
-            <li key={`nandatte-vote-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      sizes="40px"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
-                  )}
-                </div>
-                <span className="truncate">
-                  <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
-                  {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
-                </span>
-              </div>
-              <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">{item.voteCount}票</span>
-            </li>
-          ))
-        ) : (
-          <li className="rounded-md text-xs text-[var(--ui-text-muted)]">データなし</li>
-        )}
-      </ol>
-    </div>
-  );
-
-  const nandatteRecentCard = (
-    <div className="mb-12 break-inside-avoid">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Link href="/nandatte" className="text-xs font-semibold tracking-[0.08em] text-emerald-500 underline">
-              ナンダッテ
-            </Link>
-            <span className="text-xs text-[var(--ui-text-muted)]">リアルなアイドルチャート</span>
-          </div>
-          <div className="mt-2 flex items-baseline gap-3">
-            <h2 className="font-mincho-jp text-2xl font-semibold">最新アップデート</h2>
-            <Link href="/nandatte/ranking?focus=recent" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
-              more...
-            </Link>
-          </div>
-        </div>
-      </div>
-      <ol className="mt-4 space-y-2 text-sm">
-        {summaries.nandatte.recentTop.length > 0 ? (
-          summaries.nandatte.recentTop.map((item, index) => (
-            <li key={`nandatte-recent-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      sizes="40px"
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
-                  )}
-                </div>
-                <span className="truncate">
-                  <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
-                  {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
-                </span>
-              </div>
-              <span className="shrink-0 text-xs text-[var(--ui-text-muted)]">{formatShortDate(item.lastVoteAt)}</span>
-            </li>
-          ))
-        ) : (
-          <li className="rounded-md text-xs text-[var(--ui-text-muted)]">データなし</li>
-        )}
-      </ol>
-    </div>
+  const nandatteRealtimeCards = (
+    <HomeNandatteRealtimeCards
+      initialVoteTop={summaries.nandatte.voteTop}
+      initialRecentTop={summaries.nandatte.recentTop}
+    />
   );
 
   const buzzCard = (
@@ -988,13 +894,7 @@ export default async function Home() {
       tiePriority: 0,
       node: imakiteWeeklyCard,
     },
-    { key: "nandatte-vote", sortValue: toSortValue(nandatteVoteLatest), tiePriority: 0, node: nandatteVoteCard },
-    {
-      key: "nandatte-recent",
-      sortValue: toSortValue(summaries.nandatte.recentTop[0]?.lastVoteAt ?? null),
-      tiePriority: 1,
-      node: nandatteRecentCard,
-    },
+    { key: "nandatte", sortValue: toSortValue(nandatteLatest), tiePriority: 1, node: nandatteRealtimeCards },
     {
       key: "buzzttara",
       sortValue: toSortValue(summaries.buzz.items[0]?.createdAt ?? null),

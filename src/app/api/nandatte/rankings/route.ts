@@ -104,10 +104,19 @@ export async function GET(request: Request) {
       };
     };
 
-    return NextResponse.json<RankingsApiResponse>({
-      voteTop: voteRows.map(toRankingItem),
-      recentTop: recentRows.map(toRankingItem),
-    });
+    return NextResponse.json<RankingsApiResponse>(
+      {
+        voteTop: voteRows.map(toRankingItem),
+        recentTop: recentRows.map(toRankingItem),
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json<RankingsApiResponse>(
       {
