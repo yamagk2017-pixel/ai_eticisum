@@ -68,14 +68,17 @@ async function callRankingRpc(
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const requestedLimit = Number(searchParams.get("limit") ?? "10");
+  const focus = searchParams.get("focus");
+  const mode: "both" | "vote" | "recent" =
+    focus === "vote" || focus === "recent" ? focus : "both";
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(50, Math.max(1, Math.floor(requestedLimit)))
     : 10;
 
   try {
     const [voteRows, recentRows] = await Promise.all([
-      callRankingRpc("vote", limit),
-      callRankingRpc("recent", limit),
+      mode === "recent" ? Promise.resolve([] as RankingRow[]) : callRankingRpc("vote", limit),
+      mode === "vote" ? Promise.resolve([] as RankingRow[]) : callRankingRpc("recent", limit),
     ]);
     const groupIds = Array.from(new Set([...voteRows, ...recentRows].map((row) => row.group_id)));
 

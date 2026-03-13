@@ -4,7 +4,10 @@ import type { ReactElement } from "react";
 import { unstable_cache } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { SafeTweetEmbed } from "@/app/buzzttara/safe-tweet-embed";
-import { HomeNandatteRealtimeCards } from "@/app/nandatte/home-realtime-cards";
+import {
+  HomeNandatteRecentRealtimeCard,
+  HomeNandatteVoteRealtimeCard,
+} from "@/app/nandatte/home-realtime-cards";
 import { getNewsList } from "@/lib/news";
 import { getSanityRelatedEventsForHome, type HomeRelatedEvent } from "@/lib/news/sanity";
 import type { NewsArticle } from "@/lib/news/types";
@@ -535,10 +538,11 @@ export default async function Home() {
     if (!latest) return item.lastVoteAt;
     return toSortValue(item.lastVoteAt) > toSortValue(latest) ? item.lastVoteAt : latest;
   }, null);
-  const nandatteRecentLatest = summaries.nandatte.recentTop[0]?.lastVoteAt ?? null;
-  const nandatteLatest = toSortValue(nandatteVoteLatest) >= toSortValue(nandatteRecentLatest)
-    ? nandatteVoteLatest
-    : nandatteRecentLatest;
+  const nandatteRecentLatest = summaries.nandatte.recentTop.reduce<string | null>((latest, item) => {
+    if (!item.lastVoteAt) return latest;
+    if (!latest) return item.lastVoteAt;
+    return toSortValue(item.lastVoteAt) > toSortValue(latest) ? item.lastVoteAt : latest;
+  }, null);
 
   const imakiteDailyCard = (
     <div className="mb-12 break-inside-avoid">
@@ -660,9 +664,13 @@ export default async function Home() {
       </div>
     ) : null;
 
-  const nandatteRealtimeCards = (
-    <HomeNandatteRealtimeCards
+  const nandatteVoteRealtimeCard = (
+    <HomeNandatteVoteRealtimeCard
       initialVoteTop={summaries.nandatte.voteTop}
+    />
+  );
+  const nandatteRecentRealtimeCard = (
+    <HomeNandatteRecentRealtimeCard
       initialRecentTop={summaries.nandatte.recentTop}
     />
   );
@@ -894,7 +902,18 @@ export default async function Home() {
       tiePriority: 0,
       node: imakiteWeeklyCard,
     },
-    { key: "nandatte", sortValue: toSortValue(nandatteLatest), tiePriority: 1, node: nandatteRealtimeCards },
+    {
+      key: "nandatte-vote",
+      sortValue: toSortValue(nandatteVoteLatest),
+      tiePriority: 1,
+      node: nandatteVoteRealtimeCard,
+    },
+    {
+      key: "nandatte-recent",
+      sortValue: toSortValue(nandatteRecentLatest),
+      tiePriority: 1,
+      node: nandatteRecentRealtimeCard,
+    },
     {
       key: "buzzttara",
       sortValue: toSortValue(summaries.buzz.items[0]?.createdAt ?? null),
