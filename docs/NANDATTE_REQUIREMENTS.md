@@ -162,9 +162,6 @@
   - 1回投票を「後から変更できる」仕様にするか（不正や荒れやすさとトレードオフ）
 
 ## Backlog / Future ideas
-- しおり機能（NANDATTE以外のページを保存）
-- user_bookmarks テーブル設計（user_id, page_type, page_id, title, url, created_at）
-- トレンドウォッチ（管理者がトレンドワード登録 → 関連コンテンツをDBから集約してリンク表示）
-- アップデートリクエスト（ログインユーザーがプロフィール情報の誤り/更新を管理者に通知）
-- Webで天下一ボブ道会
-  - ボブカットが素敵な人を登録して紹介する機能（企画案）
+- 全体向けの改善案・将来実装は
+  [PRODUCT_IMPROVEMENT_HUB.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/PRODUCT_IMPROVEMENT_HUB.md)
+  で管理する。

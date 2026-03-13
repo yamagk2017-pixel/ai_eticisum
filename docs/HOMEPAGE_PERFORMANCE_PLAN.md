@@ -1,5 +1,7 @@
 # トップページ表示速度 改善メモ（2026-03-13時点）
 
+> 改善案の全体集約先: [PRODUCT_IMPROVEMENT_HUB.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/PRODUCT_IMPROVEMENT_HUB.md)
+
 ## 1. 現状サマリー
 - トップページは ISR 化済み（`revalidate=300`）で、毎リクエストのフル再集計は止めた。
 - `getHomeSummaries` は `unstable_cache` でキャッシュしている。
