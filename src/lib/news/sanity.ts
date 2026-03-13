@@ -92,11 +92,13 @@ export type SanityNewsArticleDetail = {
     eventPrice: string | null;
     officialSiteUrl: string | null;
     organizer: string | null;
+    appendEtcForRelatedGroups: boolean;
     representativePerformers: Array<{
       name: string;
       groupNameJa: string | null;
       imdGroupId: string | null;
     }>;
+    appendEtcForRepresentativePerformers: boolean;
     legacyExternalPerformers: string[];
     ticketSalesUrl: string | null;
     streamingUrl: string | null;
@@ -212,6 +214,7 @@ const bySlugQuery = groq`
     eventPrice,
     officialSiteUrl,
     organizer,
+    appendEtcForRelatedGroups,
     "representativePerformers": representativePerformers[]{
       name,
       "group": group{
@@ -219,6 +222,7 @@ const bySlugQuery = groq`
         imdGroupId
       }
     },
+    appendEtcForRepresentativePerformers,
     externalPerformers,
     ticketSalesUrl,
     streamingUrl,
@@ -319,6 +323,7 @@ const bySlugPreviewQuery = groq`
     eventPrice,
     officialSiteUrl,
     organizer,
+    appendEtcForRelatedGroups,
     "representativePerformers": representativePerformers[]{
       name,
       "group": group{
@@ -326,6 +331,7 @@ const bySlugPreviewQuery = groq`
         imdGroupId
       }
     },
+    appendEtcForRepresentativePerformers,
     externalPerformers,
     ticketSalesUrl,
     streamingUrl,
@@ -736,6 +742,7 @@ export async function getSanityNewsBySlug(
     eventPrice?: string | null;
     officialSiteUrl?: string | null;
     organizer?: string | null;
+    appendEtcForRelatedGroups?: boolean | null;
     representativePerformers?:
       | Array<{
           name?: string | null;
@@ -745,6 +752,7 @@ export async function getSanityNewsBySlug(
           } | null;
         }>
       | null;
+    appendEtcForRepresentativePerformers?: boolean | null;
     externalPerformers?: string[] | null;
     ticketSalesUrl?: string | null;
     streamingUrl?: string | null;
@@ -814,6 +822,7 @@ export async function getSanityNewsBySlug(
                 : null,
             organizer:
               typeof doc.organizer === "string" && doc.organizer.trim().length > 0 ? doc.organizer.trim() : null,
+            appendEtcForRelatedGroups: doc.appendEtcForRelatedGroups === true,
             representativePerformers: (doc.representativePerformers ?? [])
               .map((item) => ({
                 name: typeof item?.name === "string" ? item.name.trim() : "",
@@ -827,6 +836,7 @@ export async function getSanityNewsBySlug(
                     : null,
               }))
               .filter((item) => item.name.length > 0),
+            appendEtcForRepresentativePerformers: doc.appendEtcForRepresentativePerformers === true,
             legacyExternalPerformers: (doc.externalPerformers ?? []).filter(
               (item): item is string => typeof item === "string" && item.trim().length > 0
             ),

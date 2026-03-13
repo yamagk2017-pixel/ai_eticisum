@@ -103,6 +103,14 @@ export const eventAnnouncementType = defineType({
       fieldset: "eventInfo",
     }),
     defineField({
+      name: "appendEtcForRelatedGroups",
+      title: "他…をつける",
+      type: "boolean",
+      fieldset: "eventInfo",
+      initialValue: false,
+      description: "出演グループを一部のみ掲載する場合、表示末尾に「他…」を付けます。",
+    }),
+    defineField({
       name: "representativePerformers",
       title: "代表者出演（複数可）",
       description: "トークイベントなど、個人名で表示したい出演者を登録します。",
@@ -155,6 +163,14 @@ export const eventAnnouncementType = defineType({
           },
         }),
       ],
+    }),
+    defineField({
+      name: "appendEtcForRepresentativePerformers",
+      title: "他…をつける",
+      type: "boolean",
+      fieldset: "eventInfo",
+      initialValue: false,
+      description: "代表者出演を一部のみ掲載する場合、表示末尾に「他…」を付けます。",
     }),
     defineField({
       name: "eventPrice",

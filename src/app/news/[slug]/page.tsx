@@ -174,10 +174,12 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   type PerformerItem =
     | {kind: "group"; groupName: string; href: string | null}
     | {kind: "representative"; name: string; groupName: string | null; groupHref: string | null}
-    | {kind: "legacy"; name: string};
+    | {kind: "legacy"; name: string}
+    | {kind: "etc"};
   const performerItems: PerformerItem[] = [];
   const representativeNameSet = new Set<string>();
   const representativeCompositeSet = new Set<string>();
+  const hasAnyGroupPerformer = article.relatedGroups.length > 0;
   for (const group of article.relatedGroups) {
     const byId = group.imdGroupId ? groupById.get(group.imdGroupId) : null;
     const byName = groupByName.get(group.groupNameJa.trim().toLowerCase());
@@ -216,6 +218,13 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
     if (legacyNameKey && representativeNameSet.has(legacyNameKey)) continue;
     performerItems.push({kind: "legacy", name: legacyName});
   }
+
+  const hasAnyRepresentativePerformer =
+    (eventInfo?.representativePerformers?.length ?? 0) > 0 || (eventInfo?.legacyExternalPerformers?.length ?? 0) > 0;
+  const shouldAppendEtc =
+    Boolean(eventInfo?.appendEtcForRelatedGroups && hasAnyGroupPerformer) ||
+    Boolean(eventInfo?.appendEtcForRepresentativePerformers && hasAnyRepresentativePerformer);
+  if (shouldAppendEtc) performerItems.push({kind: "etc"});
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 pt-10 pb-12 sm:px-12">
@@ -404,6 +413,8 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                                     </>
                                   ) : null}
                                 </>
+                              ) : item.kind === "etc" ? (
+                                "他…"
                               ) : (
                                 item.name
                               )}
@@ -445,6 +456,8 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                                   </>
                                 ) : null}
                               </>
+                            ) : item.kind === "etc" ? (
+                              "他…"
                             ) : (
                               item.name
                             )}
