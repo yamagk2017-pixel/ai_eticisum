@@ -34,21 +34,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="pop" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              const key = "${THEME_STORAGE_KEY}";
+              let theme = "pop";
               try {
-                const key = "${THEME_STORAGE_KEY}";
                 const saved = localStorage.getItem(key);
-                const theme = saved === "light"
+                theme = saved === "light"
                   ? "pop"
                   : (saved === "pop" || saved === "dark"
                     ? saved
                     : "pop");
-                document.documentElement.dataset.theme = theme;
               } catch {}
+              document.documentElement.dataset.theme = theme;
             `,
           }}
         />

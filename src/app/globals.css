@@ -232,16 +232,6 @@ html[data-theme="light"] .top-buzz-tweet-theme.rounded-xl {
   display: block;
 }
 
-@media (prefers-color-scheme: dark) {
-  .home-logo-dark {
-    display: block;
-  }
-
-  .home-logo-light {
-    display: none;
-  }
-}
-
 html[data-theme="dark"] .home-logo-dark {
   display: block;
 }

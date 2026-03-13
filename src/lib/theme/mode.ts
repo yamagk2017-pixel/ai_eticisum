@@ -18,7 +18,14 @@ export function getInitialThemeMode(): ThemeMode {
     return "pop";
   }
 
-  const saved = toThemeMode(window.localStorage.getItem(THEME_STORAGE_KEY));
+  let savedValue: string | null = null;
+  try {
+    savedValue = window.localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    savedValue = null;
+  }
+
+  const saved = toThemeMode(savedValue);
   if (saved) {
     return saved;
   }
