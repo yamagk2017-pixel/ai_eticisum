@@ -281,26 +281,7 @@ export async function generateMetadata({
     };
   }
 
-  let categoryName = slugToLabel(categorySlug);
-  const hasAnyNewsSource = hasWpApiBaseUrlConfigured() || hasSanityStudioEnv();
-
-  if (hasAnyNewsSource) {
-    try {
-      const result = await getNewsPage({
-        page: 1,
-        pageSize: 20,
-        categorySlug,
-      });
-      const matched = result.items
-        .flatMap((item) => item.categories)
-        .find((category) => category.slug === categorySlug);
-      if (matched?.name) categoryName = matched.name;
-    } catch {
-      // Use slug fallback when metadata prefetch fails.
-    }
-  }
-
   return {
-    title: `${categoryName}の一覧${NEWS_LIST_TITLE_SUFFIX}`,
+    title: `${slugToLabel(categorySlug)}の一覧${NEWS_LIST_TITLE_SUFFIX}`,
   };
 }

@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="pop" suppressHydrationWarning>
+    <html lang="ja" data-theme="pop" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
