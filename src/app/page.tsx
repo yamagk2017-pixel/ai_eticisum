@@ -141,7 +141,7 @@ function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
     id: syntheticId,
     slug: event.path.split("/").filter(Boolean).pop() ?? String(syntheticId),
     url: null,
-    publishedAt: event.eventDate ?? event.eventEndDate,
+    publishedAt: event.publishedAt,
     titleHtml: event.title,
     excerptHtml: "",
     contentHtml: "",
@@ -941,7 +941,7 @@ export default async function Home() {
     },
     {
       key: "related-event",
-      sortValue: toSortValue(relatedEventTop?.eventDate ?? null),
+      sortValue: toSortValue(relatedEventTop?.publishedAt ?? null),
       tiePriority: 2,
       node: relatedEventCard,
     },

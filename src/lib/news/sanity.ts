@@ -39,6 +39,7 @@ type SanityRelatedEventHomeDoc = {
   _id: string;
   title?: string | null;
   slug?: {current?: string | null} | null;
+  publishedAt?: string | null;
   eventDate?: string | null;
   eventEndDate?: string | null;
   eventTimeText?: string | null;
@@ -54,6 +55,7 @@ export type HomeRelatedEvent = {
   id: string;
   title: string;
   path: string;
+  publishedAt: string | null;
   eventDate: string | null;
   eventEndDate: string | null;
   eventTimeText: string | null;
@@ -406,10 +408,11 @@ const relatedEventsForHomeQuery = groq`
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id)
   ]
-  | order(eventDate asc, publishedAt desc)[0...$limit]{
+  | order(publishedAt desc)[0...$limit]{
     _id,
     title,
     slug,
+    publishedAt,
     eventDate,
     eventEndDate,
     eventTimeText,
@@ -945,6 +948,8 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
         id: doc._id,
         title: (doc.title ?? "").trim() || "(untitled)",
         path: `/news/${slug}`,
+        publishedAt:
+          typeof doc.publishedAt === "string" && doc.publishedAt.trim() ? doc.publishedAt.trim() : null,
         eventDate,
         eventEndDate,
         eventTimeText: typeof doc.eventTimeText === "string" && doc.eventTimeText.trim() ? doc.eventTimeText.trim() : null,
