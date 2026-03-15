@@ -26,6 +26,18 @@ const shipporiMincho = Shippori_Mincho({
 export const metadata: Metadata = {
   title: "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」",
   description: "アイドルと音楽の情報交差点「アイドルクロッシング」",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: [{ url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
