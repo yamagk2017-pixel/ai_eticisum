@@ -180,6 +180,14 @@ export const eventAnnouncementType = defineType({
       description: "例: 前売3,000円 / 当日3,500円（+1D）",
     }),
     defineField({
+      name: "eventPricePlusOneDrink",
+      title: "（+1D）をつける",
+      type: "boolean",
+      fieldset: "eventInfo",
+      initialValue: false,
+      description: "ONで料金表示の末尾に「（+1D）」を自動で付与します。",
+    }),
+    defineField({
       name: "ticketSalesUrl",
       title: "チケット販売URL",
       type: "string",

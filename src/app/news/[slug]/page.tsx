@@ -139,6 +139,8 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   const hasStreamingInfo = Boolean(
     eventInfo?.streamingUrl || eventInfo?.streamingDeadline || eventInfo?.streamingPrice
   );
+  const eventPriceLabel =
+    eventInfo?.eventPrice && eventInfo.eventPricePlusOneDrink ? `${eventInfo.eventPrice}（+1D）` : eventInfo?.eventPrice ?? null;
 
   const combinedRelatedGroups = [...article.relatedGroups];
   const existingKeys = new Set(combinedRelatedGroups.map(relatedGroupKey));
@@ -505,7 +507,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
                   {!isRadioAnnouncement && eventInfo.eventPrice ? (
                     <>
                       <dt className="font-semibold text-[var(--ui-text-subtle)]">料金</dt>
-                      <dd className="break-words">{eventInfo.eventPrice}</dd>
+                      <dd className="break-words">{eventPriceLabel}</dd>
                     </>
                   ) : null}
 

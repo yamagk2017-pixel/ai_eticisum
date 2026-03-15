@@ -90,6 +90,7 @@ export type SanityNewsArticleDetail = {
     eventTimeText: string | null;
     personality: string | null;
     eventPrice: string | null;
+    eventPricePlusOneDrink: boolean;
     officialSiteUrl: string | null;
     organizer: string | null;
     appendEtcForRelatedGroups: boolean;
@@ -212,6 +213,7 @@ const bySlugQuery = groq`
     eventTimeText,
     personality,
     eventPrice,
+    eventPricePlusOneDrink,
     officialSiteUrl,
     organizer,
     appendEtcForRelatedGroups,
@@ -321,6 +323,7 @@ const bySlugPreviewQuery = groq`
     eventTimeText,
     personality,
     eventPrice,
+    eventPricePlusOneDrink,
     officialSiteUrl,
     organizer,
     appendEtcForRelatedGroups,
@@ -740,6 +743,7 @@ export async function getSanityNewsBySlug(
     eventTimeText?: string | null;
     personality?: string | null;
     eventPrice?: string | null;
+    eventPricePlusOneDrink?: boolean | null;
     officialSiteUrl?: string | null;
     organizer?: string | null;
     appendEtcForRelatedGroups?: boolean | null;
@@ -816,6 +820,7 @@ export async function getSanityNewsBySlug(
                 : null,
             eventPrice:
               typeof doc.eventPrice === "string" && doc.eventPrice.trim().length > 0 ? doc.eventPrice.trim() : null,
+            eventPricePlusOneDrink: doc.eventPricePlusOneDrink === true,
             officialSiteUrl:
               typeof doc.officialSiteUrl === "string" && doc.officialSiteUrl.trim().length > 0
                 ? doc.officialSiteUrl.trim()
