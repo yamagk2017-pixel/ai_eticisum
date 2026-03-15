@@ -68,7 +68,6 @@ export function Rankings({
       setIsLoggedIn(!!authData.user);
       const response = await fetch(`/api/nandatte/rankings?limit=${maxFetchLimit}`, {
         method: "GET",
-        cache: "no-store",
       });
       const payload = (await response.json()) as {
         voteTop?: RankingRow[];

@@ -66,7 +66,6 @@ export function NandattePanel() {
     try {
       const response = await fetch("/api/nandatte/rankings?limit=5", {
         method: "GET",
-        cache: "no-store",
       });
       const payload = (await response.json()) as {
         voteTop?: RankingItem[];

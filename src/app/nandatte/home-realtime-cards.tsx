@@ -86,7 +86,6 @@ export function HomeNandatteVoteRealtimeCard({
       try {
         const res = await fetch("/api/nandatte/rankings?limit=3&focus=vote", {
           method: "GET",
-          cache: "no-store",
         });
         const payload = (await res.json()) as RankingsApiResponse;
         if (!res.ok || cancelled) return;
@@ -165,7 +164,6 @@ export function HomeNandatteRecentRealtimeCard({
       try {
         const res = await fetch("/api/nandatte/rankings?limit=3&focus=recent", {
           method: "GET",
-          cache: "no-store",
         });
         const payload = (await res.json()) as RankingsApiResponse;
         if (!res.ok || cancelled) return;

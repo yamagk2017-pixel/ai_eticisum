@@ -4,45 +4,29 @@ import { Rankings } from "./rankings";
 
 export const dynamic = "force-dynamic";
 
-type VoteSummaryRow = {
-  user_id: string | null;
-  group_id: string | null;
+type VoteSummaryRpcRow = {
+  voter_count: number | string | null;
+  group_count: number | string | null;
 };
+
+function toCount(value: number | string | null | undefined): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 0;
+}
 
 async function getNandatteVoteSummary() {
   const supabase = createServerClient();
-  const voterIds = new Set<string>();
-  const groupIds = new Set<string>();
-  const pageSize = 1000;
-  let from = 0;
-
-  while (true) {
-    const { data, error } = await supabase
-      .schema("nandatte")
-      .from("votes")
-      .select("user_id,group_id")
-      .order("id", { ascending: true })
-      .range(from, from + pageSize - 1);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    const rows = (data ?? []) as VoteSummaryRow[];
-    for (const row of rows) {
-      if (row.user_id) voterIds.add(row.user_id);
-      if (row.group_id) groupIds.add(row.group_id);
-    }
-
-    if (rows.length < pageSize) {
-      break;
-    }
-    from += pageSize;
-  }
+  const { data, error } = await supabase.schema("nandatte").rpc("get_vote_summary");
+  if (error) throw new Error(error.message);
+  const row = ((data ?? [])[0] ?? null) as VoteSummaryRpcRow | null;
 
   return {
-    voterCount: voterIds.size,
-    groupCount: groupIds.size,
+    voterCount: toCount(row?.voter_count),
+    groupCount: toCount(row?.group_count),
   };
 }
 
