@@ -817,12 +817,13 @@ export default async function Home() {
         <article className="mt-4">
           {article.featuredImageUrl ? (
             <Link href={article.path} className="mb-3 block overflow-hidden rounded-lg">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={article.featuredImageUrl}
                 alt={article.featuredImageAlt ?? ""}
+                width={1200}
+                height={675}
+                sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
                 className="h-auto w-full object-cover"
-                loading="lazy"
               />
             </Link>
           ) : null}

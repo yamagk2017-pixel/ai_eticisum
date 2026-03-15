@@ -7,6 +7,7 @@
 - 毎週1回、[PRODUCT_IMPROVEMENT_HUB.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/PRODUCT_IMPROVEMENT_HUB.md) の Backlog へ昇格判定する。
 - データ/移行計画のアイデアはこのファイルではなく、既存の移行計画ドキュメントへ直接追記する。
 
+## 【セキュリティ対策】DBに一部公開データがあるので対処法を考える
 
 ## テンプレート
 ```md
@@ -50,3 +51,18 @@
   - ねらい: ログイン継続率・投票継続率の向上
   - 対象: nandatte
   - 参考:
+
+## 2026-03-15
+- アイデア: WP画像のグローバルCDN化（CloudFront）を実施する
+  - ねらい: US/desktop のLCP改善、WP画像配信のTTFB短縮、オリジン負荷軽減
+  - 対象: news / infra / performance
+  - 参考: CloudFront + ACM + `img.musicite.net` + `WP_IMAGE_CDN_BASE_URL`
+  - 作業メモ（別作業で実施）:
+    - `img.musicite.net` を画像配信用サブドメインとして決める
+    - ACM（us-east-1）で `img.musicite.net` 証明書を発行
+    - CloudFront Distribution 作成（origin: `musicite.sub.jp`）
+    - Alternate domain に `img.musicite.net` を設定し証明書紐付け
+    - DNSで `img.musicite.net -> *.cloudfront.net` のCNAME追加
+    - `https://img.musicite.net/inm/wp-content/uploads/...` が200で返るか確認
+    - Vercel env に `WP_IMAGE_CDN_BASE_URL=https://img.musicite.net` を設定
+    - 再デプロイ後に LCP（US/desktop）と `x-cache` ヘッダを確認

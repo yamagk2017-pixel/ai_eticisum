@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { draftMode } from "next/headers";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleCitations } from "@/components/news/article-citations";
@@ -196,11 +197,14 @@ export default async function WpNewsArticlePage({
         <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
           {article.featuredImageUrl ? (
             <div className="md:order-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={article.featuredImageUrl}
                 alt={article.featuredImageAlt ?? ""}
+                width={1600}
+                height={900}
+                sizes="(max-width: 768px) 100vw, 40vw"
                 className="h-auto w-full rounded-xl object-contain"
+                priority
               />
             </div>
           ) : null}

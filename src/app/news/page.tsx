@@ -4,7 +4,7 @@ import { getNewsPage } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 import { hasSanityStudioEnv } from "@/sanity/env";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 const NEWS_LIST_TITLE_SUFFIX = " | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type SearchParams =

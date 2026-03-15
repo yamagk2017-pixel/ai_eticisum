@@ -82,6 +82,10 @@ function getWpBaseUrlOrNull() {
   return readString(process.env.WP_API_BASE_URL);
 }
 
+function getWpImageCdnBaseUrlOrNull() {
+  return readString(process.env.WP_IMAGE_CDN_BASE_URL);
+}
+
 export function hasWpApiBaseUrlConfigured() {
   return Boolean(getWpBaseUrlOrNull());
 }
@@ -103,6 +107,41 @@ function sanitizeWpHtml(html: string): string {
     .replace(/\sdata-mce-style\s*=\s*(['"])[\s\S]*?\1/gi, "")
     .replace(/\scolor\s*=\s*(['"]).*?\1/gi, "")
     .replace(/\sbgcolor\s*=\s*(['"]).*?\1/gi, "");
+}
+
+function rewriteWpImageUrl(url: string | null): string | null {
+  if (!url) return null;
+
+  try {
+    const original = new URL(url);
+    const isWpUploads =
+      original.hostname === "musicite.sub.jp" && original.pathname.startsWith("/inm/wp-content/uploads/");
+    if (!isWpUploads) return url;
+
+    const cdnBaseUrl = getWpImageCdnBaseUrlOrNull();
+    if (!cdnBaseUrl) {
+      if (original.protocol === "http:") {
+        original.protocol = "https:";
+        return original.toString();
+      }
+      return url;
+    }
+
+    const cdn = new URL(cdnBaseUrl);
+    const cdnPathPrefix = cdn.pathname.replace(/\/+$/, "");
+    cdn.pathname = `${cdnPathPrefix}${original.pathname}`;
+    cdn.search = original.search;
+    return cdn.toString();
+  } catch {
+    return url;
+  }
+}
+
+function rewriteWpImageUrlsInHtml(html: string): string {
+  return html.replace(
+    /https?:\/\/musicite\.sub\.jp\/inm\/wp-content\/uploads\/[^\s"'()<>]+/gi,
+    (rawUrl) => rewriteWpImageUrl(rawUrl) ?? rawUrl
+  );
 }
 
 function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): WpTerm[] {
@@ -140,9 +179,9 @@ function mapWpPost(post: WpPostApiItem): WpPost {
     url: readString(post.link),
     date: readString(post.date),
     titleHtml: readString(post.title?.rendered) ?? "(no title)",
-    excerptHtml: sanitizeWpHtml(readString(post.excerpt?.rendered) ?? ""),
-    contentHtml: sanitizeWpHtml(readString(post.content?.rendered) ?? ""),
-    featuredImageUrl: readString(featuredMedia?.source_url),
+    excerptHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.excerpt?.rendered) ?? "")),
+    contentHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.content?.rendered) ?? "")),
+    featuredImageUrl: rewriteWpImageUrl(readString(featuredMedia?.source_url)),
     featuredImageAlt: readString(featuredMedia?.alt_text),
     categories: extractTerms(post, "category"),
     tags: extractTerms(post, "post_tag"),
