@@ -785,19 +785,29 @@ export function GroupDetail({ slug }: Props) {
       const fileName = `nandatte-chart-${filenameSlug}-${datePart}.png`;
       const imageBlob = await (await fetch(dataUrl)).blob();
       const imageFile = new File([imageBlob], fileName, { type: "image/png" });
+      const userAgent = navigator.userAgent || "";
+      const isMobileDevice =
+        /Android|iPhone|iPad|iPod/i.test(userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const canShareFile =
+        typeof navigator.share === "function" &&
+        (!navigator.canShare || navigator.canShare({ files: [imageFile] }));
 
-      if (!navigator.share || (navigator.canShare && !navigator.canShare({ files: [imageFile] }))) {
-        setChartSaveStatus("この端末では共有して保存に対応していません。");
+      if (isMobileDevice && canShareFile) {
+        await navigator.share({
+          title: `${displayName}のナンダッテ`,
+          text: `${displayName}のナンダッテチャート`,
+          files: [imageFile],
+        });
         return;
       }
 
-      await navigator.share({
-        title: `${displayName}のナンダッテ`,
-        text: `${displayName}のナンダッテチャート`,
-        files: [imageFile],
-      });
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = fileName;
+      anchor.click();
     } catch {
-      setChartSaveStatus("共有して保存に失敗しました。");
+      setChartSaveStatus("チャートのキャプチャに失敗しました。");
     } finally {
       setIsSavingChart(false);
     }
