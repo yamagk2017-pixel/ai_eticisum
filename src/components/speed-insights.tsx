@@ -7,7 +7,12 @@ export function FilteredSpeedInsights() {
     <SpeedInsights
       beforeSend={(event) => {
         const pathname = new URL(event.url, "http://localhost").pathname;
-        if (pathname === "/relay-9147" || pathname.startsWith("/relay-9147/")) {
+        if (
+          pathname === "/relay-9147" ||
+          pathname.startsWith("/relay-9147/") ||
+          pathname === "/studio" ||
+          pathname.startsWith("/studio/")
+        ) {
           return null;
         }
         return event;
