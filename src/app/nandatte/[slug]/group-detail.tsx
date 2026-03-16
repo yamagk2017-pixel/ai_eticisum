@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { toPng } from "html-to-image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
@@ -135,6 +136,10 @@ export function GroupDetail({ slug }: Props) {
   const [authReady, setAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [expandedProfileGroupId, setExpandedProfileGroupId] = useState<string | null>(null);
+  const [chartSaveStatus, setChartSaveStatus] = useState<string>("");
+  const [isSavingChart, setIsSavingChart] = useState(false);
+  const [isLocalhostEnv, setIsLocalhostEnv] = useState(false);
+  const chartCaptureRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const run = async () => {
@@ -273,6 +278,14 @@ export function GroupDetail({ slug }: Props) {
       listener.subscription.unsubscribe();
     };
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const host = window.location.hostname;
+    setIsLocalhostEnv(host === "localhost" || host === "127.0.0.1");
+  }, []);
 
   const fetchMetricsAndCounts = async (groupId: string) => {
     setMetricsReady(false);
@@ -415,6 +428,7 @@ export function GroupDetail({ slug }: Props) {
 
   const selectedCount = selectedItems.length + (newFreeword.trim() ? 1 : 0);
   const isLoggedIn = !!userEmail;
+  const canUseChartCapture = isLoggedIn || isLocalhostEnv;
   const rankDisplay =
     rank === null ? "-" : !isLoggedIn && rank > 100 ? "非公開" : rank;
   const visibleCounts = isLoggedIn ? sortedCounts : sortedCounts.slice(0, 5);
@@ -737,6 +751,50 @@ export function GroupDetail({ slug }: Props) {
     await supabase.auth.signOut();
   };
 
+  const handleChartSave = async () => {
+    if (!canUseChartCapture || !chartCaptureRef.current || isSavingChart) {
+      return;
+    }
+
+    setChartSaveStatus("");
+    setIsSavingChart(true);
+
+    try {
+      if ("fonts" in document) {
+        await document.fonts.ready;
+      }
+
+      const backgroundColor =
+        typeof window === "undefined"
+          ? undefined
+          : window.getComputedStyle(document.body).backgroundColor;
+
+      const dataUrl = await toPng(chartCaptureRef.current, {
+        backgroundColor,
+        cacheBust: true,
+        pixelRatio: 2,
+        filter: (node) =>
+          !(
+            node instanceof HTMLElement &&
+            node.dataset.captureIgnore === "true"
+          ),
+      });
+
+      const anchor = document.createElement("a");
+      const filenameSlug = group?.slug?.trim() || safeSlug || "group";
+      const datePart = new Date().toISOString().slice(0, 10);
+      anchor.href = dataUrl;
+      anchor.download = `nandatte-chart-${filenameSlug}-${datePart}.png`;
+      anchor.click();
+
+      setChartSaveStatus("チャート画像を保存しました。");
+    } catch {
+      setChartSaveStatus("チャート画像の保存に失敗しました。");
+    } finally {
+      setIsSavingChart(false);
+    }
+  };
+
   if (status === "loading") {
     return <p className="text-sm text-zinc-400">読み込み中...</p>;
   }
@@ -848,48 +906,74 @@ export function GroupDetail({ slug }: Props) {
           <div className="min-w-0 space-y-10">
             <section>
               <div className="px-0 sm:px-5">
-                <div className="flex flex-col gap-2">
-                  <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
-                    {displayName}ってこんなグループ「ナンダッテ」
-                  </h2>
-                  <span className="text-xs text-zinc-500">
-                    上位5件をハイライト / ログインで6位以下も表示
-                  </span>
-                </div>
-                <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-6">
-                  {sortedCounts.length === 0 && (
-                    <p className="text-sm text-zinc-400 col-span-2">まだ投票がありません。</p>
-                  )}
-                  {visibleCounts.map((item, index) => {
-                    const width = maxCount
-                      ? Math.round((item.count / maxCount) * 100)
-                      : 0;
-                    const isTopFive = index < 5;
-                    return (
-                      <div key={`${item.label}-${index}`} className="px-1 py-2">
-                        <div className="flex items-center justify-between gap-4 text-sm">
-                          <span className="font-medium">
-                            {index + 1}. {item.label}
-                          </span>
-                          <span className="text-zinc-700">{item.count}</span>
-                        </div>
-                        <div className="mt-2 h-4 w-full bg-zinc-200">
-                          <div
-                            className={`h-4 ${
-                              isTopFive ? "bg-zinc-700" : "bg-zinc-600"
-                            }`}
-                            style={{ width: `${width}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {!isLoggedIn && hiddenCount > 0 && (
-                    <div className="px-1 py-2 text-sm text-zinc-600 col-span-2">
-                      その他 {hiddenCount} 件
+                <div
+                  ref={chartCaptureRef}
+                  className="space-y-6"
+                >
+                  <div>
+                    <h2 className="font-mincho-jp text-2xl font-medium leading-tight sm:text-3xl">
+                      {displayName}ってこんなグループ「ナンダッテ」
+                    </h2>
+                    <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-xs text-zinc-500">
+                        上位5件をハイライト / ログインで6位以下も表示
+                      </span>
                     </div>
-                  )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:gap-x-6">
+                    {sortedCounts.length === 0 && (
+                      <p className="text-sm text-zinc-400 col-span-2">まだ投票がありません。</p>
+                    )}
+                    {visibleCounts.map((item, index) => {
+                      const width = maxCount
+                        ? Math.round((item.count / maxCount) * 100)
+                        : 0;
+                      const isTopFive = index < 5;
+                      return (
+                        <div key={`${item.label}-${index}`} className="px-1 py-2">
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <span className="font-medium">
+                              {index + 1}. {item.label}
+                            </span>
+                            <span className="text-zinc-700">{item.count}</span>
+                          </div>
+                          <div className="mt-2 h-4 w-full bg-zinc-200">
+                            <div
+                              className={`h-4 ${
+                                isTopFive ? "bg-zinc-700" : "bg-zinc-600"
+                              }`}
+                              style={{ width: `${width}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {((!isLoggedIn && hiddenCount > 0) ||
+                      (authReady && canUseChartCapture)) && (
+                      <div className="col-span-2 flex items-center justify-between gap-3 px-1 py-2">
+                        <div className="text-sm text-zinc-600">
+                          {!isLoggedIn && hiddenCount > 0
+                            ? `その他 ${hiddenCount} 件`
+                            : ""}
+                        </div>
+                        {authReady && canUseChartCapture && (
+                          <button
+                            type="button"
+                            onClick={handleChartSave}
+                            disabled={isSavingChart}
+                            data-capture-ignore="true"
+                            className="inline-flex h-fit w-fit items-center rounded-full bg-black px-4 py-2 text-xs font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isSavingChart ? "保存中..." : "チャートをキャプチャ"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                {chartSaveStatus && (
+                  <p className="mt-2 text-xs text-zinc-600">{chartSaveStatus}</p>
+                )}
               </div>
             </section>
 
