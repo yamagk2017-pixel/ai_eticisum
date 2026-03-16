@@ -46,6 +46,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
 
   const boundedActiveIndex = groups.length === 0 ? 0 : Math.min(activeIndex, groups.length - 1);
   const active = groups[boundedActiveIndex] ?? null;
+  const activeGroupId = active?.imdGroupId ?? null;
 
   const websiteUrl = active?.websiteUrl ?? null;
   const scheduleUrl = normalizeUrl(active?.scheduleUrl ?? null);
@@ -66,7 +67,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
     let ignore = false;
 
     const run = async () => {
-      if (!active || (!youtubeUrl && !youtubeExternalId)) {
+      if (!activeGroupId || (!youtubeUrl && !youtubeExternalId)) {
         setYoutubeVideoId(null);
         setYoutubeStatus("idle");
         setYoutubeError(null);
@@ -102,7 +103,7 @@ export function RelatedGroupsSidebar({groups}: {groups: NewsRelatedGroupInfo[]})
     return () => {
       ignore = true;
     };
-  }, [active, youtubeExternalId, youtubeUrl]);
+  }, [activeGroupId, youtubeExternalId, youtubeUrl]);
 
   if (!active) return null;
 
