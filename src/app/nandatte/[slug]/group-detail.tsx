@@ -780,16 +780,26 @@ export function GroupDetail({ slug }: Props) {
           ),
       });
 
-      const anchor = document.createElement("a");
       const filenameSlug = group?.slug?.trim() || safeSlug || "group";
       const datePart = new Date().toISOString().slice(0, 10);
-      anchor.href = dataUrl;
-      anchor.download = `nandatte-chart-${filenameSlug}-${datePart}.png`;
-      anchor.click();
+      const fileName = `nandatte-chart-${filenameSlug}-${datePart}.png`;
+      const imageBlob = await (await fetch(dataUrl)).blob();
+      const imageFile = new File([imageBlob], fileName, { type: "image/png" });
 
-      setChartSaveStatus("チャート画像を保存しました。");
+      if (!navigator.share || (navigator.canShare && !navigator.canShare({ files: [imageFile] }))) {
+        setChartSaveStatus("この端末では共有して保存に対応していません。");
+        return;
+      }
+
+      await navigator.share({
+        title: `${displayName}のナンダッテ`,
+        text: `${displayName}のナンダッテチャート`,
+        files: [imageFile],
+      });
+
+      setChartSaveStatus("共有メニューを開きました。");
     } catch {
-      setChartSaveStatus("チャート画像の保存に失敗しました。");
+      setChartSaveStatus("共有して保存に失敗しました。");
     } finally {
       setIsSavingChart(false);
     }
@@ -960,11 +970,11 @@ export function GroupDetail({ slug }: Props) {
                           <button
                             type="button"
                             onClick={handleChartSave}
-                            disabled={isSavingChart}
-                            data-capture-ignore="true"
-                            className="inline-flex h-fit w-fit items-center rounded-full bg-black px-4 py-2 text-xs font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isSavingChart ? "保存中..." : "チャートをキャプチャ"}
+                          disabled={isSavingChart}
+                          data-capture-ignore="true"
+                          className="inline-flex h-fit w-fit items-center rounded-full bg-black px-4 py-2 text-xs font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {isSavingChart ? "保存中..." : "共有して保存"}
                           </button>
                         )}
                       </div>
