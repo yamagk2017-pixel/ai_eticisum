@@ -796,8 +796,6 @@ export function GroupDetail({ slug }: Props) {
         text: `${displayName}のナンダッテチャート`,
         files: [imageFile],
       });
-
-      setChartSaveStatus("共有メニューを開きました。");
     } catch {
       setChartSaveStatus("共有して保存に失敗しました。");
     } finally {
@@ -974,7 +972,7 @@ export function GroupDetail({ slug }: Props) {
                           data-capture-ignore="true"
                           className="inline-flex h-fit w-fit items-center rounded-full bg-black px-4 py-2 text-xs font-bold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {isSavingChart ? "保存中..." : "共有して保存"}
+                            {isSavingChart ? "保存中..." : "チャートをキャプチャ"}
                           </button>
                         )}
                       </div>
