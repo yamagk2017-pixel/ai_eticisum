@@ -142,6 +142,11 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
   );
   const eventPriceLabel =
     eventInfo?.eventPrice && eventInfo.eventPricePlusOneDrink ? `${eventInfo.eventPrice}（+1D）` : eventInfo?.eventPrice ?? null;
+  const radioProgramTitle =
+    typeof eventInfo?.eventTitle === "string" && eventInfo.eventTitle.trim().length > 0
+      ? eventInfo.eventTitle.trim()
+      : article.title;
+  const radioSectionTitle = isRadioAnnouncement ? `${radioProgramTitle}（エフエムたちかわ）` : "イベント情報";
 
   const combinedRelatedGroups = [...article.relatedGroups];
   const existingKeys = new Set(combinedRelatedGroups.map(relatedGroupKey));
@@ -323,7 +328,7 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
             {eventInfo ? (
               <section className="mt-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
                 <h2 className="text-sm font-semibold text-[var(--ui-text)]">
-                  {isRadioAnnouncement ? "番組概要" : "イベント情報"}
+                  {radioSectionTitle}
                 </h2>
                 <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[150px_minmax(0,1fr)]">
                   {eventInfo.eventTitle ? (
