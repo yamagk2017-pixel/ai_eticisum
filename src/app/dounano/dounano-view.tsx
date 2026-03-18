@@ -33,6 +33,20 @@ type DounanoApiResponse = {
 };
 
 type Status = "idle" | "loading" | "error";
+type SelectedChartStatus = "idle" | "loading" | "error";
+
+type NandatteChartItem = {
+  label: string;
+  count: number;
+};
+
+type NandatteChartApiResponse = {
+  items?: NandatteChartItem[];
+  totalVotes?: number | null;
+  voteRank?: number | null;
+  rank?: number | null;
+  error?: string;
+};
 
 function escapeHtml(input: string): string {
   return input
@@ -57,6 +71,9 @@ export function DounanoView() {
     totalNarrativeItems: 0,
     avgItemsPerVote: 0,
   });
+  const [selectedChartStatus, setSelectedChartStatus] = useState<SelectedChartStatus>("idle");
+  const [selectedChartMessage, setSelectedChartMessage] = useState("");
+  const [selectedChartItems, setSelectedChartItems] = useState<NandatteChartItem[]>([]);
 
   useEffect(() => {
     const run = async () => {
@@ -230,6 +247,41 @@ export function DounanoView() {
     []
   );
 
+  useEffect(() => {
+    if (!selected?.groupId) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const run = async () => {
+      setSelectedChartStatus("loading");
+      setSelectedChartMessage("");
+      const response = await fetch(`/api/news/nandatte-chart?groupId=${encodeURIComponent(selected.groupId)}`, {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const payload = (await response.json()) as NandatteChartApiResponse;
+      if (!response.ok) {
+        setSelectedChartStatus("error");
+        setSelectedChartMessage(payload.error ?? "Failed to fetch chart");
+        return;
+      }
+      setSelectedChartItems(payload.items ?? []);
+      setSelectedChartStatus("idle");
+    };
+
+    run().catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      setSelectedChartStatus("error");
+      setSelectedChartMessage(error instanceof Error ? error.message : "Failed to fetch chart");
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [selected?.groupId]);
+
   if (status === "error") {
     return (
       <section className="rounded-2xl border border-red-400/40 bg-red-500/10 p-4 text-sm text-red-100">
@@ -350,6 +402,38 @@ export function DounanoView() {
               ) : (
                 <p className="text-[var(--ui-text-muted)]">ナンダッテリンク未登録</p>
               )}
+
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-[var(--ui-text-subtle)]">ナンダッテ棒グラフ（上位5件）</p>
+                {selectedChartStatus === "loading" ? (
+                  <p className="text-xs text-[var(--ui-text-muted)]">読み込み中...</p>
+                ) : null}
+                {selectedChartStatus === "error" ? (
+                  <p className="text-xs text-red-400">取得失敗: {selectedChartMessage}</p>
+                ) : null}
+                {selectedChartStatus === "idle" && selectedChartItems.length === 0 ? (
+                  <p className="text-xs text-[var(--ui-text-muted)]">データがありません。</p>
+                ) : null}
+                <ul className="space-y-2">
+                  {selectedChartItems.map((item, index) => {
+                    const max = Math.max(...selectedChartItems.map((row) => row.count), 1);
+                    const width = Math.round((item.count / max) * 100);
+                    return (
+                      <li key={`${item.label}-${index}`} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="truncate">
+                            {index + 1}. {item.label}
+                          </span>
+                          <span>{item.count}</span>
+                        </div>
+                        <div className="h-2 w-full bg-zinc-300/70">
+                          <div className="h-2 bg-zinc-600" style={{ width: `${width}%` }} />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           ) : (
             <p className="mt-3 text-sm text-[var(--ui-text-muted)]">
