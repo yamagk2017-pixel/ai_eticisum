@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -63,7 +63,6 @@ function escapeHtml(input: string): string {
 export function DounanoView() {
   const isProduction = process.env.NODE_ENV === "production";
   const [isMobileViewport, setIsMobileViewport] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [points, setPoints] = useState<DounanoPoint[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -79,8 +78,6 @@ export function DounanoView() {
   const [showKaiwaiOnly, setShowKaiwaiOnly] = useState(false);
   const [kaiwaiStatus, setKaiwaiStatus] = useState<Status>("idle");
   const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
-  const desktopChartContainerRef = useRef<HTMLDivElement | null>(null);
-  const mobileChartContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -89,16 +86,6 @@ export function DounanoView() {
     mediaQuery.addEventListener("change", apply);
     return () => {
       mediaQuery.removeEventListener("change", apply);
-    };
-  }, []);
-
-  useEffect(() => {
-    const onFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
   }, []);
 
@@ -111,20 +98,6 @@ export function DounanoView() {
       }
       return next;
     });
-  };
-
-  const toggleFullscreen = async () => {
-    const target = isMobileViewport ? mobileChartContainerRef.current : desktopChartContainerRef.current;
-    if (!target) return;
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        return;
-      }
-      await target.requestFullscreen();
-    } catch {
-      // ignore fullscreen errors (unsupported browser / blocked by policy)
-    }
   };
 
   useEffect(() => {
@@ -443,27 +416,20 @@ export function DounanoView() {
           {selected && showKaiwaiOnly && kaiwaiStatus === "error" ? (
             <p className="mt-1 text-xs text-red-400">カイワイ取得失敗</p>
           ) : null}
-          <div className="mt-2 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={toggleFullscreen}
-              className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-1 text-xs font-semibold text-[var(--ui-text)]"
-            >
-              {isFullscreen ? "戻す" : "全画面"}
-            </button>
+          <div className="mt-2 flex justify-end">
             <p className="px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
               ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
             </p>
           </div>
         </div>
         <div className="min-w-0">
-          <div ref={mobileChartContainerRef} className="relative min-w-0 overflow-hidden pt-1">
+          <div className="relative min-w-0 overflow-hidden pt-1">
             {status === "loading" ? (
               <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
             ) : (
               <ReactECharts
                 option={chartOption}
-                style={{ height: isFullscreen ? "100vh" : 420, width: "100%", maxWidth: "100%" }}
+                style={{ height: 420, width: "100%", maxWidth: "100%" }}
                 onEvents={onEvents}
                 onChartReady={onChartReady}
               />
@@ -517,7 +483,7 @@ export function DounanoView() {
 
       <section className="hidden gap-6 md:grid">
         <div>
-          <div ref={desktopChartContainerRef} className="relative pt-2">
+          <div className="relative pt-2">
             <div className="absolute inset-x-3 top-3 z-10">
               <div className="flex items-start justify-between gap-4">
                 <div className="w-full max-w-xl">
@@ -551,14 +517,7 @@ export function DounanoView() {
                   </button>
                 </div>
               </div>
-              <div className="mt-2 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  className="rounded-full border border-[var(--ui-border)] bg-[var(--ui-panel)] px-3 py-1 text-xs font-semibold text-[var(--ui-text)]"
-                >
-                  {isFullscreen ? "戻す" : "全画面"}
-                </button>
+              <div className="mt-2 flex justify-end">
                 <p className="px-2 py-1 text-sm text-[var(--ui-text-muted)]">
                   ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
                 </p>
@@ -569,7 +528,7 @@ export function DounanoView() {
             ) : (
               <ReactECharts
                 option={chartOption}
-                style={{ height: isFullscreen ? "100vh" : 560, width: "100%" }}
+                style={{ height: 560, width: "100%" }}
                 onEvents={onEvents}
                 onChartReady={onChartReady}
               />
