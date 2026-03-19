@@ -292,7 +292,7 @@ export function DokonanoView() {
     <div className="grid gap-6">
       <section className="hidden grid-cols-[minmax(0,1fr)_320px] gap-4 md:grid">
         <div>
-          <div className="relative rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2">
+          <div className="relative py-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-xs text-[var(--ui-text-muted)]">
               X: キャリア（月） / Y: 注目度
             </div>
@@ -416,7 +416,7 @@ export function DokonanoView() {
             ))}
           </ul>
         </div>
-        <div className="relative rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2">
+        <div className="relative py-2">
           <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
             X: キャリア（月） / Y: 注目度
           </div>

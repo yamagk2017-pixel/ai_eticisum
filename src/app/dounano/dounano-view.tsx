@@ -416,9 +416,9 @@ export function DounanoView() {
 
         {showMobileChart ? (
           <div>
-            <div className="relative rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2">
+            <div className="relative py-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
-              X: 音楽接触度 / Y: ナラティブ密度
+              横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
             </div>
             <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
             </div>
@@ -434,9 +434,9 @@ export function DounanoView() {
 
       <section className="hidden grid-cols-[minmax(0,1fr)_320px] gap-4 md:grid">
         <div>
-          <div className="relative rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-2">
+          <div className="relative py-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-xs text-[var(--ui-text-muted)]">
-              X: 音楽接触度 / Y: ナラティブ密度
+              横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
             </div>
             {status === "loading" ? (
               <div className="grid h-[560px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
