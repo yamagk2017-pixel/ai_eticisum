@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
@@ -43,21 +42,6 @@ type DounanoApiResponse = {
 };
 
 type Status = "idle" | "loading" | "error";
-type SelectedChartStatus = "idle" | "loading" | "error";
-
-type NandatteChartItem = {
-  label: string;
-  count: number;
-};
-
-type NandatteChartApiResponse = {
-  items?: NandatteChartItem[];
-  totalVotes?: number | null;
-  voteRank?: number | null;
-  rank?: number | null;
-  error?: string;
-};
-
 type KaiwaiRelatedApiResponse = {
   baseGroupId?: string;
   items?: Array<{
@@ -91,12 +75,8 @@ export function DounanoView() {
     totalNarrativeItems: 0,
     avgItemsPerVote: 0,
   });
-  const [selectedChartStatus, setSelectedChartStatus] = useState<SelectedChartStatus>("idle");
-  const [selectedChartMessage, setSelectedChartMessage] = useState("");
-  const [selectedChartItems, setSelectedChartItems] = useState<NandatteChartItem[]>([]);
   const [showKaiwaiOnly, setShowKaiwaiOnly] = useState(false);
-  const [kaiwaiStatus, setKaiwaiStatus] = useState<SelectedChartStatus>("idle");
-  const [kaiwaiMessage, setKaiwaiMessage] = useState("");
+  const [kaiwaiStatus, setKaiwaiStatus] = useState<Status>("idle");
   const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -109,38 +89,16 @@ export function DounanoView() {
     };
   }, []);
 
-  useEffect(() => {
-    const onDocumentClick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const button = target.closest<HTMLButtonElement>("[data-kaiwai-toggle='1']");
-      if (!button) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const groupId = button.dataset.groupId;
-      if (!groupId) return;
-      const next = !showKaiwaiOnly;
-      button.style.borderColor = next ? "#b91c1c" : "#d4d4d8";
-      button.style.background = next ? "#dc2626" : "transparent";
-      button.style.color = next ? "#ffffff" : "#3f3f46";
-      button.dataset.kaiwaiOn = next ? "1" : "0";
-
-      setSelectedGroupId(groupId);
-      setShowKaiwaiOnly(next);
+  const toggleKaiwaiOnly = () => {
+    setShowKaiwaiOnly((prev) => {
+      const next = !prev;
       if (!next) {
         setKaiwaiStatus("idle");
-        setKaiwaiMessage("");
         setKaiwaiGroupIds([]);
       }
-    };
-
-    document.addEventListener("click", onDocumentClick);
-    return () => {
-      document.removeEventListener("click", onDocumentClick);
-    };
-  }, [showKaiwaiOnly]);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const run = async () => {
@@ -172,17 +130,21 @@ export function DounanoView() {
   }, []);
 
   const normalizedQuery = searchText.trim().toLowerCase();
-  const searched = useMemo(() => {
-    if (!normalizedQuery) return points;
-    return points.filter((point) => point.name.toLowerCase().includes(normalizedQuery));
+  const searchHitGroupIds = useMemo(() => {
+    if (!normalizedQuery) return new Set<string>();
+    return new Set(
+      points
+        .filter((point) => point.name.toLowerCase().includes(normalizedQuery))
+        .map((point) => point.groupId)
+    );
   }, [normalizedQuery, points]);
 
   const filtered = useMemo(() => {
-    if (!showKaiwaiOnly || !selectedGroupId || kaiwaiStatus !== "idle") return searched;
+    if (!showKaiwaiOnly || !selectedGroupId || kaiwaiStatus !== "idle") return points;
     const allow = new Set(kaiwaiGroupIds);
     allow.add(selectedGroupId);
-    return searched.filter((point) => allow.has(point.groupId));
-  }, [kaiwaiGroupIds, kaiwaiStatus, searched, selectedGroupId, showKaiwaiOnly]);
+    return points.filter((point) => allow.has(point.groupId));
+  }, [kaiwaiGroupIds, kaiwaiStatus, points, selectedGroupId, showKaiwaiOnly]);
 
   const selected = useMemo(() => {
     if (!selectedGroupId) return null;
@@ -212,9 +174,10 @@ export function DounanoView() {
         centeredX: point.popularity - median.popularity,
         centeredY: point.voteCount - median.voteCount,
         nandatteHref: point.nandatteHref,
+        symbolSize: searchHitGroupIds.has(point.groupId) ? 32 : 10,
         itemStyle: { color: FRESHNESS_COLOR[point.freshnessBand], opacity: 0.8 },
       })),
-    [filtered, median.popularity, median.voteCount]
+    [filtered, median.popularity, median.voteCount, searchHitGroupIds]
   );
 
   const selectedChartData = useMemo(() => {
@@ -252,7 +215,7 @@ export function DounanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: 52, left: 20, right: 8, bottom: 40, containLabel: true },
+      grid: { top: isMobileViewport ? 52 : 130, left: 20, right: 8, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "item",
         enterable: true,
@@ -260,7 +223,6 @@ export function DounanoView() {
         formatter: (params: { data?: Record<string, unknown> }) => {
           const data = params.data ?? {};
           const name = escapeHtml(String(data.name ?? "-"));
-          const groupId = escapeHtml(String(data.groupId ?? ""));
           const popularity = Number(data.popularity ?? 0);
           const voteCount = Number(data.voteCount ?? 0);
           const freshnessDays = Number(data.freshnessDays ?? 9999);
@@ -275,9 +237,6 @@ export function DounanoView() {
           const titleLine = href
             ? `<a href="${href}" target="_blank" rel="noreferrer" style="font-weight:700;margin-bottom:4px;display:inline-block;text-decoration:underline;color:#3f3f46">${name}</a>`
             : `<div style="font-weight:700;margin-bottom:4px;color:#3f3f46">${name}</div>`;
-          const kaiwaiButton = isMobileViewport
-            ? `<div style="margin-top:6px"><button type="button" data-kaiwai-toggle="1" data-group-id="${groupId}" style="border:1px solid ${showKaiwaiOnly ? "#b91c1c" : "#d4d4d8"};background:${showKaiwaiOnly ? "#dc2626" : "transparent"};color:${showKaiwaiOnly ? "#ffffff" : "#3f3f46"};border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">カイワイ</button></div>`
-            : "";
           return [
             `<div style="min-width:180px">`,
             titleLine,
@@ -286,7 +245,6 @@ export function DounanoView() {
             `<div style="color:${freshnessColor};font-weight:700">鮮度（${freshnessDays}日前）</div>`,
             `<div>イマキテ指数: ${centeredX.toFixed(1)}</div>`,
             `<div>ナンダテ指数: ${centeredY.toFixed(1)}</div>`,
-            kaiwaiButton,
             `</div>`,
           ].join("");
         },
@@ -353,13 +311,13 @@ export function DounanoView() {
         {
           type: "scatter",
           data: selectedChartData,
-          symbolSize: isMobileViewport ? 24 : 16,
+          symbolSize: isMobileViewport ? 48 : 32,
           itemStyle: { color: "#f97316" },
           z: 5,
         },
       ],
     }),
-    [axisRange.x, axisRange.y, chartData, isMobileViewport, isProduction, selectedChartData, showKaiwaiOnly]
+    [axisRange.x, axisRange.y, chartData, isMobileViewport, isProduction, selectedChartData]
   );
 
   const onEvents = useMemo(
@@ -375,47 +333,11 @@ export function DounanoView() {
   );
 
   useEffect(() => {
-    if (!selected?.groupId) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const run = async () => {
-      setSelectedChartStatus("loading");
-      setSelectedChartMessage("");
-      const response = await fetch(`/api/news/nandatte-chart?groupId=${encodeURIComponent(selected.groupId)}`, {
-        method: "GET",
-        cache: "no-store",
-        signal: controller.signal,
-      });
-      const payload = (await response.json()) as NandatteChartApiResponse;
-      if (!response.ok) {
-        setSelectedChartStatus("error");
-        setSelectedChartMessage(payload.error ?? "Failed to fetch chart");
-        return;
-      }
-      setSelectedChartItems(payload.items ?? []);
-      setSelectedChartStatus("idle");
-    };
-
-    run().catch((error: unknown) => {
-      if (controller.signal.aborted) return;
-      setSelectedChartStatus("error");
-      setSelectedChartMessage(error instanceof Error ? error.message : "Failed to fetch chart");
-    });
-
-    return () => {
-      controller.abort();
-    };
-  }, [selected?.groupId]);
-
-  useEffect(() => {
     if (!showKaiwaiOnly || !selected?.groupId) return;
 
     const controller = new AbortController();
     const run = async () => {
       setKaiwaiStatus("loading");
-      setKaiwaiMessage("");
       const response = await fetch(`/api/kaiwai/related?groupId=${encodeURIComponent(selected.groupId)}`, {
         method: "GET",
         cache: "no-store",
@@ -424,17 +346,15 @@ export function DounanoView() {
       const payload = (await response.json()) as KaiwaiRelatedApiResponse;
       if (!response.ok) {
         setKaiwaiStatus("error");
-        setKaiwaiMessage(payload.error ?? "Failed to fetch kaiwai");
         return;
       }
       setKaiwaiGroupIds((payload.items ?? []).map((item) => item.groupId));
       setKaiwaiStatus("idle");
     };
 
-    run().catch((error: unknown) => {
+    run().catch(() => {
       if (controller.signal.aborted) return;
       setKaiwaiStatus("error");
-      setKaiwaiMessage(error instanceof Error ? error.message : "Failed to fetch kaiwai");
     });
 
     return () => {
@@ -480,8 +400,8 @@ export function DounanoView() {
         </div>
         <div>
           <div className="relative pt-2">
-            <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
-              横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
+            <div className="absolute right-3 top-3 z-10 px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
+              ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
             </div>
             {status === "loading" ? (
               <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
@@ -503,8 +423,44 @@ export function DounanoView() {
       <section className="hidden gap-6 md:grid">
         <div>
           <div className="relative pt-2">
-            <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-xs text-[var(--ui-text-muted)]">
-              横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
+            <div className="absolute inset-x-3 top-3 z-10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="w-full max-w-xl">
+                  <h2 className="mb-2 font-mincho-jp text-xl font-semibold">グループ名検索</h2>
+                  <input
+                    id="dounano-search-desktop"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="例: きゅるりん、femme fatale"
+                    className="w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
+                  />
+                  {selected && showKaiwaiOnly && kaiwaiStatus === "loading" ? (
+                    <p className="mt-1 text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
+                  ) : null}
+                  {selected && showKaiwaiOnly && kaiwaiStatus === "error" ? (
+                    <p className="mt-1 text-xs text-red-400">カイワイ取得失敗</p>
+                  ) : null}
+                </div>
+                <div className="mt-9 flex items-center gap-2">
+                  <span className="text-sm text-[var(--ui-text-muted)]">カイワイレーダー：</span>
+                  <button
+                    type="button"
+                    onClick={toggleKaiwaiOnly}
+                    className={`shrink-0 rounded-full border px-3 py-1 text-sm font-semibold transition ${
+                      showKaiwaiOnly
+                        ? "border-red-700 bg-red-700 text-white hover:bg-red-600"
+                        : "border-zinc-300 bg-zinc-200 text-zinc-500 hover:bg-zinc-300"
+                    }`}
+                  >
+                    {showKaiwaiOnly ? "ON" : "OFF"}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <p className="px-2 py-1 text-sm text-[var(--ui-text-muted)]">
+                  ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
+                </p>
+              </div>
             </div>
             {status === "loading" ? (
               <div className="grid h-[560px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
@@ -532,129 +488,31 @@ export function DounanoView() {
           ) : null}
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <aside className="p-0">
-          <h2 className="mb-2 font-mincho-jp text-xl font-semibold">グループ名検索</h2>
-          <input
-            id="dounano-search-desktop"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="例: きゅるりん、femme fatale"
-            className="mb-4 w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
-          />
-          <h2 className="font-mincho-jp text-xl font-semibold">選択中グループ</h2>
-          {selected ? (
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <p className="min-w-0 truncate text-base font-semibold">{selected.name}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowKaiwaiOnly((prev) => {
-                      const next = !prev;
-                      if (!next) {
-                        setKaiwaiStatus("idle");
-                        setKaiwaiMessage("");
-                        setKaiwaiGroupIds([]);
-                      }
-                      return next;
-                    });
-                  }}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
-                    showKaiwaiOnly
-                      ? "border-red-700 bg-red-700 text-white"
-                      : "border-[var(--ui-border)]"
-                  }`}
-                >
-                  カイワイ
-                </button>
-              </div>
-              {!isProduction ? <p>artist_popularity: {selected.popularity.toFixed(1)}</p> : null}
-              {!isProduction ? <p>魅力への投票総数: {selected.voteCount}</p> : null}
-              <p style={{ color: FRESHNESS_COLOR[selected.freshnessBand], fontWeight: 700 }}>
-                鮮度（{selected.freshnessDays}日前）
-              </p>
-              <p>イマキテ指数: {(selected.popularity - median.popularity).toFixed(1)}</p>
-              <p>ナンダテ指数: {(selected.voteCount - median.voteCount).toFixed(1)}</p>
-              {selected.nandatteHref ? (
-                <Link href={selected.nandatteHref} className="block underline underline-offset-2">
-                  ナンダッテを見る
-                </Link>
-              ) : (
-                <p className="text-[var(--ui-text-muted)]">ナンダッテリンク未登録</p>
-              )}
-              {showKaiwaiOnly && kaiwaiStatus === "loading" ? (
-                <p className="text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
-              ) : null}
-              {showKaiwaiOnly && kaiwaiStatus === "error" ? (
-                <p className="text-xs text-red-400">カイワイ取得失敗: {kaiwaiMessage}</p>
-              ) : null}
-
-              <div className="mt-4 space-y-2 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-3">
-                <p className="text-xs font-semibold text-[var(--ui-text-subtle)]">ナンダッテ棒グラフ（上位5位）</p>
-                {selectedChartStatus === "loading" ? (
-                  <p className="text-xs text-[var(--ui-text-muted)]">読み込み中...</p>
-                ) : null}
-                {selectedChartStatus === "error" ? (
-                  <p className="text-xs text-red-400">取得失敗: {selectedChartMessage}</p>
-                ) : null}
-                {selectedChartStatus === "idle" && selectedChartItems.length === 0 ? (
-                  <p className="text-xs text-[var(--ui-text-muted)]">データがありません。</p>
-                ) : null}
-                <ul className="space-y-2">
-                  {selectedChartItems.map((item, index) => {
-                    const max = Math.max(...selectedChartItems.map((row) => row.count), 1);
-                    const width = Math.round((item.count / max) * 100);
-                    return (
-                      <li key={`${item.label}-${index}`} className="space-y-1">
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                          <span className="truncate">
-                            {index + 1}. {item.label}
-                          </span>
-                          <span>{item.count}</span>
-                        </div>
-                        <div className="h-2 w-full bg-zinc-300/70">
-                          <div className="h-2 bg-zinc-600" style={{ width: `${width}%` }} />
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
+        <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
+          <h3 className="font-mincho-jp text-xl font-semibold">ホットアイドル</h3>
+          {hotIdols.length === 0 ? (
+            <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
           ) : (
-            <p className="mt-3 text-sm text-[var(--ui-text-muted)]">
-              点をクリックすると詳細が表示されます。
-            </p>
+            <div className="mt-2 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
+              {hotIdols.map((item, index) => (
+                <span key={`hot-idol-desktop-${item.groupId}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGroupId(item.groupId)}
+                    className="text-left underline underline-offset-2"
+                    style={{
+                      color: FRESHNESS_COLOR[item.freshnessBand],
+                      fontWeight: selectedGroupId === item.groupId ? 700 : 500,
+                    }}
+                  >
+                    {index + 1}. {item.name}
+                  </button>
+                  {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
+                </span>
+              ))}
+            </div>
           )}
-          </aside>
-
-          <div>
-            <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
-            {hotIdols.length === 0 ? (
-              <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
-            ) : (
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {hotIdols.map((item, index) => (
-                  <span key={`hot-idol-desktop-${item.groupId}`}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedGroupId(item.groupId)}
-                      className="text-left underline underline-offset-2"
-                      style={{
-                        color: FRESHNESS_COLOR[item.freshnessBand],
-                        fontWeight: selectedGroupId === item.groupId ? 700 : 500,
-                      }}
-                    >
-                      {index + 1}. {item.name}
-                    </button>
-                    {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        </aside>
       </section>
     </div>
   );

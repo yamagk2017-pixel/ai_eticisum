@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
@@ -96,7 +95,6 @@ export function DokonanoView() {
   });
   const [showKaiwaiOnly, setShowKaiwaiOnly] = useState(false);
   const [kaiwaiStatus, setKaiwaiStatus] = useState<Status>("idle");
-  const [kaiwaiMessage, setKaiwaiMessage] = useState("");
   const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -109,38 +107,16 @@ export function DokonanoView() {
     };
   }, []);
 
-  useEffect(() => {
-    const onDocumentClick = (event: MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const button = target.closest<HTMLButtonElement>("[data-kaiwai-toggle='1']");
-      if (!button) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const groupId = button.dataset.groupId;
-      if (!groupId) return;
-      const next = !showKaiwaiOnly;
-      button.style.borderColor = next ? "#b91c1c" : "#d4d4d8";
-      button.style.background = next ? "#dc2626" : "transparent";
-      button.style.color = next ? "#ffffff" : "#3f3f46";
-      button.dataset.kaiwaiOn = next ? "1" : "0";
-
-      setSelectedGroupId(groupId);
-      setShowKaiwaiOnly(next);
+  const toggleKaiwaiOnly = () => {
+    setShowKaiwaiOnly((prev) => {
+      const next = !prev;
       if (!next) {
         setKaiwaiStatus("idle");
-        setKaiwaiMessage("");
         setKaiwaiGroupIds([]);
       }
-    };
-
-    document.addEventListener("click", onDocumentClick);
-    return () => {
-      document.removeEventListener("click", onDocumentClick);
-    };
-  }, [showKaiwaiOnly]);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const run = async () => {
@@ -170,17 +146,21 @@ export function DokonanoView() {
   }, []);
 
   const normalizedQuery = searchText.trim().toLowerCase();
-  const searched = useMemo(() => {
-    if (!normalizedQuery) return points;
-    return points.filter((point) => point.name.toLowerCase().includes(normalizedQuery));
+  const searchHitGroupIds = useMemo(() => {
+    if (!normalizedQuery) return new Set<string>();
+    return new Set(
+      points
+        .filter((point) => point.name.toLowerCase().includes(normalizedQuery))
+        .map((point) => point.groupId)
+    );
   }, [normalizedQuery, points]);
 
   const filtered = useMemo(() => {
-    if (!showKaiwaiOnly || !selectedGroupId || kaiwaiStatus !== "idle") return searched;
+    if (!showKaiwaiOnly || !selectedGroupId || kaiwaiStatus !== "idle") return points;
     const allow = new Set(kaiwaiGroupIds);
     allow.add(selectedGroupId);
-    return searched.filter((point) => allow.has(point.groupId));
-  }, [kaiwaiGroupIds, kaiwaiStatus, searched, selectedGroupId, showKaiwaiOnly]);
+    return points.filter((point) => allow.has(point.groupId));
+  }, [kaiwaiGroupIds, kaiwaiStatus, points, selectedGroupId, showKaiwaiOnly]);
 
   const selected = useMemo(() => {
     if (!selectedGroupId) return null;
@@ -218,9 +198,10 @@ export function DokonanoView() {
         freshnessBand: point.freshnessBand,
         activityStartedMonth: point.activityStartedMonth,
         nandatteHref: point.nandatteHref,
+        symbolSize: searchHitGroupIds.has(point.groupId) ? 32 : 10,
         itemStyle: { color: FRESHNESS_COLOR[point.freshnessBand], opacity: 0.78 },
       })),
-    [filtered]
+    [filtered, searchHitGroupIds]
   );
 
   const selectedChartData = useMemo(() => {
@@ -244,7 +225,7 @@ export function DokonanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: 56, left: 20, right: 8, bottom: 40, containLabel: true },
+      grid: { top: isMobileViewport ? 56 : 130, left: 20, right: 8, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "item",
         confine: true,
@@ -252,7 +233,6 @@ export function DokonanoView() {
         formatter: (params: { data?: Record<string, unknown> }) => {
           const data = params.data ?? {};
           const name = escapeHtml(String(data.name ?? "-"));
-          const groupId = escapeHtml(String(data.groupId ?? ""));
           const careerMonths = Number((data.value as number[] | undefined)?.[0] ?? 0);
           const attentionScore = Number((data.value as number[] | undefined)?.[1] ?? 0);
           const popularity = Number(data.artistPopularity ?? 0);
@@ -271,9 +251,6 @@ export function DokonanoView() {
           const titleLine = href
             ? `<a href="${href}" target="_blank" rel="noreferrer" style="font-weight:700;color:#3f3f46;margin-bottom:4px;display:inline-block;text-decoration:underline">${name}</a>`
             : `<div style="font-weight:700;color:#3f3f46;margin-bottom:4px">${name}</div>`;
-          const kaiwaiButton = isMobileViewport
-            ? `<div style="margin-top:6px"><button type="button" data-kaiwai-toggle="1" data-group-id="${groupId}" style="border:1px solid ${showKaiwaiOnly ? "#b91c1c" : "#d4d4d8"};background:${showKaiwaiOnly ? "#dc2626" : "transparent"};color:${showKaiwaiOnly ? "#ffffff" : "#3f3f46"};border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">カイワイ</button></div>`
-            : "";
           return [
             `<div style="min-width:180px">`,
             titleLine,
@@ -286,7 +263,6 @@ export function DokonanoView() {
                   `<div style="color:#6b7280">votes: ${votes}</div>`,
                 ]
               : []),
-            kaiwaiButton,
             `</div>`,
           ].join("");
         },
@@ -343,12 +319,12 @@ export function DokonanoView() {
         {
           type: "scatter",
           data: selectedChartData,
-          symbolSize: isMobileViewport ? 24 : 16,
+          symbolSize: isMobileViewport ? 48 : 32,
           z: 5,
         },
       ],
     }),
-    [chartData, isMobileViewport, isProduction, selectedChartData, showKaiwaiOnly, xMax, yMax]
+    [chartData, isMobileViewport, isProduction, selectedChartData, xMax, yMax]
   );
 
   const onEvents = useMemo(
@@ -369,7 +345,6 @@ export function DokonanoView() {
     const controller = new AbortController();
     const run = async () => {
       setKaiwaiStatus("loading");
-      setKaiwaiMessage("");
       const response = await fetch(`/api/kaiwai/related?groupId=${encodeURIComponent(selected.groupId)}`, {
         method: "GET",
         cache: "no-store",
@@ -378,17 +353,15 @@ export function DokonanoView() {
       const payload = (await response.json()) as KaiwaiRelatedApiResponse;
       if (!response.ok) {
         setKaiwaiStatus("error");
-        setKaiwaiMessage(payload.error ?? "Failed to fetch kaiwai");
         return;
       }
       setKaiwaiGroupIds((payload.items ?? []).map((item) => item.groupId));
       setKaiwaiStatus("idle");
     };
 
-    run().catch((error: unknown) => {
+    run().catch(() => {
       if (controller.signal.aborted) return;
       setKaiwaiStatus("error");
-      setKaiwaiMessage(error instanceof Error ? error.message : "Failed to fetch kaiwai");
     });
 
     return () => {
@@ -409,8 +382,44 @@ export function DokonanoView() {
       <section className="hidden gap-6 md:grid">
         <div>
           <div className="relative pt-2">
-            <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-xs text-[var(--ui-text-muted)]">
-              横軸(X)：キャリア（月）／縦軸(Y)：注目度
+            <div className="absolute inset-x-3 top-3 z-10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="w-full max-w-xl">
+                  <h2 className="mb-2 font-mincho-jp text-xl font-semibold">グループ名検索</h2>
+                  <input
+                    id="dokonano-search-desktop"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="例: ava, きゅるりん"
+                    className="w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
+                  />
+                  {selected && showKaiwaiOnly && kaiwaiStatus === "loading" ? (
+                    <p className="mt-1 text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
+                  ) : null}
+                  {selected && showKaiwaiOnly && kaiwaiStatus === "error" ? (
+                    <p className="mt-1 text-xs text-red-400">カイワイ取得失敗</p>
+                  ) : null}
+                </div>
+                <div className="mt-9 flex items-center gap-2">
+                  <span className="text-sm text-[var(--ui-text-muted)]">カイワイレーダー：</span>
+                  <button
+                    type="button"
+                    onClick={toggleKaiwaiOnly}
+                    className={`shrink-0 rounded-full border px-3 py-1 text-sm font-semibold transition ${
+                      showKaiwaiOnly
+                        ? "border-red-700 bg-red-700 text-white hover:bg-red-600"
+                        : "border-zinc-300 bg-zinc-200 text-zinc-500 hover:bg-zinc-300"
+                    }`}
+                  >
+                    {showKaiwaiOnly ? "ON" : "OFF"}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex justify-end">
+                <p className="px-2 py-1 text-sm text-[var(--ui-text-muted)]">
+                  ＜横軸(X)：活動期間（月）／縦軸(Y)：注目度＞
+                </p>
+              </div>
             </div>
             {status === "loading" ? (
               <div className="grid h-[560px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
@@ -438,100 +447,31 @@ export function DokonanoView() {
           ) : null}
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <aside className="p-0">
-          <h2 className="mb-2 font-mincho-jp text-xl font-semibold">グループ名検索</h2>
-          <input
-            id="dokonano-search-desktop"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="例: ava, きゅるりん"
-            className="mb-4 w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
-          />
-          <h2 className="font-mincho-jp text-xl font-semibold">選択中グループ</h2>
-          {selected ? (
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <p className="min-w-0 truncate text-base font-semibold">{selected.name}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowKaiwaiOnly((prev) => {
-                      const next = !prev;
-                      if (!next) {
-                        setKaiwaiStatus("idle");
-                        setKaiwaiMessage("");
-                        setKaiwaiGroupIds([]);
-                      }
-                      return next;
-                    });
-                  }}
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
-                    showKaiwaiOnly
-                      ? "border-red-700 bg-red-700 text-white"
-                      : "border-[var(--ui-border)]"
-                  }`}
-                >
-                  カイワイ
-                </button>
-              </div>
-              <p style={{ color: FRESHNESS_COLOR[selected.freshnessBand], fontWeight: 700 }}>
-                鮮度（{selected.freshnessDays}日前）
-              </p>
-              <p>
-                キャリア: {selected.careerMonths}ヶ月
-                {selected.activityStartedMonth
-                  ? `（${new Date(selected.activityStartedMonth).getFullYear()}年${String(
-                      new Date(selected.activityStartedMonth).getMonth() + 1
-                    ).padStart(2, "0")}月から）`
-                  : "（開始月未設定）"}
-              </p>
-              <p>注目度: {selected.attentionScore.toFixed(2)}</p>
-              {!isProduction ? <p>artist_popularity: {selected.artistPopularity.toFixed(1)}</p> : null}
-              {!isProduction ? <p>votes: {selected.voteCount}</p> : null}
-              {selected.nandatteHref ? (
-                <Link href={selected.nandatteHref} className="block underline underline-offset-2">
-                  ナンダッテページへ
-                </Link>
-              ) : null}
-              {showKaiwaiOnly && kaiwaiStatus === "loading" ? (
-                <p className="text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
-              ) : null}
-              {showKaiwaiOnly && kaiwaiStatus === "error" ? (
-                <p className="text-xs text-red-400">カイワイ取得失敗: {kaiwaiMessage}</p>
-              ) : null}
-            </div>
+        <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
+          <h3 className="font-mincho-jp text-xl font-semibold">ホットアイドル</h3>
+          {hotIdols.length === 0 ? (
+            <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
           ) : (
-            <p className="mt-3 text-sm text-[var(--ui-text-muted)]">点をクリックすると詳細が表示されます。</p>
+            <div className="mt-2 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
+              {hotIdols.map((item, index) => (
+                <span key={`hot-idol-desktop-${item.groupId}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGroupId(item.groupId)}
+                    className="text-left underline underline-offset-2"
+                    style={{
+                      color: FRESHNESS_COLOR[item.freshnessBand],
+                      fontWeight: selectedGroupId === item.groupId ? 700 : 500,
+                    }}
+                  >
+                    {index + 1}. {item.name}
+                  </button>
+                  {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
+                </span>
+              ))}
+            </div>
           )}
-          </aside>
-
-          <div>
-            <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
-            {hotIdols.length === 0 ? (
-              <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
-            ) : (
-              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {hotIdols.map((item, index) => (
-                  <span key={`hot-idol-desktop-${item.groupId}`}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedGroupId(item.groupId)}
-                      className="text-left underline underline-offset-2"
-                      style={{
-                        color: FRESHNESS_COLOR[item.freshnessBand],
-                        fontWeight: selectedGroupId === item.groupId ? 700 : 500,
-                      }}
-                    >
-                      {index + 1}. {item.name}
-                    </button>
-                    {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        </aside>
       </section>
 
       <section className="grid gap-4 md:hidden">
@@ -561,8 +501,8 @@ export function DokonanoView() {
           )}
         </div>
         <div className="relative pt-2">
-          <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
-            横軸(X)：キャリア（月）／縦軸(Y)：注目度
+          <div className="absolute right-3 top-3 z-10 px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
+            ＜横軸(X)：活動期間（月）／縦軸(Y)：注目度＞
           </div>
           {status === "loading" ? (
             <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
