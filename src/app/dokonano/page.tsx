@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DokonanoView } from "./dokonano-view";
 
 export const metadata: Metadata = {
   title: "ドコナノ | IDOL CROSSING",
@@ -15,9 +16,7 @@ export default function DokonanoPage() {
           <p className="text-sm text-[var(--ui-text-muted)]">ハイプ・サイクルモデル（キャリア × 注目度）</p>
         </header>
 
-        <section className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6 text-sm text-[var(--ui-text-muted)]">
-          可視化コンポーネントはこれから実装します。
-        </section>
+        <DokonanoView />
       </main>
     </div>
   );
