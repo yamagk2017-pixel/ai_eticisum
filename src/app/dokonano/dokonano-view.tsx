@@ -121,23 +121,26 @@ export function DokonanoView() {
 
       const groupId = button.dataset.groupId;
       if (!groupId) return;
+      const next = !showKaiwaiOnly;
+      button.style.borderColor = next ? "#b91c1c" : "#d4d4d8";
+      button.style.background = next ? "#dc2626" : "transparent";
+      button.style.color = next ? "#ffffff" : "#3f3f46";
+      button.dataset.kaiwaiOn = next ? "1" : "0";
+
       setSelectedGroupId(groupId);
-      setShowKaiwaiOnly((prev) => {
-        const next = !prev;
-        if (!next) {
-          setKaiwaiStatus("idle");
-          setKaiwaiMessage("");
-          setKaiwaiGroupIds([]);
-        }
-        return next;
-      });
+      setShowKaiwaiOnly(next);
+      if (!next) {
+        setKaiwaiStatus("idle");
+        setKaiwaiMessage("");
+        setKaiwaiGroupIds([]);
+      }
     };
 
     document.addEventListener("click", onDocumentClick);
     return () => {
       document.removeEventListener("click", onDocumentClick);
     };
-  }, []);
+  }, [showKaiwaiOnly]);
 
   useEffect(() => {
     const run = async () => {
@@ -241,7 +244,7 @@ export function DokonanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: 56, left: 60, right: 20, bottom: 64 },
+      grid: { top: 56, left: 20, right: 8, bottom: 64, containLabel: true },
       tooltip: {
         trigger: "item",
         confine: true,
@@ -297,6 +300,10 @@ export function DokonanoView() {
         type: "value",
         min: 0,
         max: Math.ceil(yMax * 1.1),
+        axisLabel: {
+          inside: false,
+          margin: 8,
+        },
       },
       dataZoom: [
         {
@@ -524,38 +531,6 @@ export function DokonanoView() {
       </section>
 
       <section className="grid gap-4 md:hidden">
-        <div className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-          <label htmlFor="dokonano-search-mobile" className="mb-2 block text-xs font-semibold text-[var(--ui-text-subtle)]">
-            グループ名検索
-          </label>
-          <input
-            id="dokonano-search-mobile"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="例: ava, きゅるりん"
-            className="mb-3 w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
-          />
-          <ul className="grid gap-2">
-            {filtered.slice(0, 30).map((point) => (
-              <li key={point.groupId}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroupId(point.groupId)}
-                  className={`w-full rounded-xl border px-3 py-2 text-left ${
-                    selectedGroupId === point.groupId
-                      ? "border-zinc-500 bg-zinc-500/10"
-                      : "border-[var(--ui-border)]"
-                  }`}
-                >
-                  <p className="text-sm font-semibold">{point.name}</p>
-                  <p className="text-xs text-[var(--ui-text-muted)]">
-                    career {point.careerMonths}m / score {point.attentionScore.toFixed(1)}
-                  </p>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
         <div className="relative py-2">
           <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
             横軸(X)：キャリア（月）／縦軸(Y)：注目度

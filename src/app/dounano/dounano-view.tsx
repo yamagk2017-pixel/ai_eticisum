@@ -84,7 +84,6 @@ export function DounanoView() {
   const [message, setMessage] = useState("");
   const [searchText, setSearchText] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const [showMobileChart, setShowMobileChart] = useState(false);
   const [median, setMedian] = useState({ popularity: 0, voteCount: 0 });
   const [meta, setMeta] = useState({
     totalGroups: 0,
@@ -122,23 +121,26 @@ export function DounanoView() {
 
       const groupId = button.dataset.groupId;
       if (!groupId) return;
+      const next = !showKaiwaiOnly;
+      button.style.borderColor = next ? "#b91c1c" : "#d4d4d8";
+      button.style.background = next ? "#dc2626" : "transparent";
+      button.style.color = next ? "#ffffff" : "#3f3f46";
+      button.dataset.kaiwaiOn = next ? "1" : "0";
+
       setSelectedGroupId(groupId);
-      setShowKaiwaiOnly((prev) => {
-        const next = !prev;
-        if (!next) {
-          setKaiwaiStatus("idle");
-          setKaiwaiMessage("");
-          setKaiwaiGroupIds([]);
-        }
-        return next;
-      });
+      setShowKaiwaiOnly(next);
+      if (!next) {
+        setKaiwaiStatus("idle");
+        setKaiwaiMessage("");
+        setKaiwaiGroupIds([]);
+      }
     };
 
     document.addEventListener("click", onDocumentClick);
     return () => {
       document.removeEventListener("click", onDocumentClick);
     };
-  }, []);
+  }, [showKaiwaiOnly]);
 
   useEffect(() => {
     const run = async () => {
@@ -250,7 +252,7 @@ export function DounanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: 52, left: 56, right: 30, bottom: 64 },
+      grid: { top: 52, left: 20, right: 8, bottom: 64, containLabel: true },
       tooltip: {
         trigger: "item",
         enterable: true,
@@ -298,6 +300,10 @@ export function DounanoView() {
         type: "value",
         min: -axisRange.y,
         max: axisRange.y,
+        axisLabel: {
+          inside: false,
+          margin: 8,
+        },
       },
       dataZoom: [
         {
@@ -444,71 +450,26 @@ export function DounanoView() {
   return (
     <div className="grid gap-6">
       <section className="grid gap-4 md:hidden">
-        <div className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="font-mincho-jp text-xl font-semibold">検索結果</h2>
-            <button
-              type="button"
-              onClick={() => setShowMobileChart((value) => !value)}
-              className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs"
-            >
-              {showMobileChart ? "マップを隠す" : "マップを表示"}
-            </button>
-          </div>
-          {status === "loading" ? <p className="text-sm text-[var(--ui-text-muted)]">読み込み中...</p> : null}
-          <label htmlFor="dounano-search-mobile" className="mb-2 block text-xs font-semibold text-[var(--ui-text-subtle)]">
-            グループ名検索
-          </label>
-          <input
-            id="dounano-search-mobile"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="例: きゅるりん、femme fatale"
-            className="mb-3 w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
-          />
-          {status === "idle" && filtered.length === 0 ? (
-            <p className="text-sm text-[var(--ui-text-muted)]">該当するグループがありません。</p>
-          ) : null}
-          <ul className="grid gap-2">
-            {filtered.slice(0, 30).map((point) => (
-              <li key={point.groupId}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedGroupId(point.groupId)}
-                  className={`w-full rounded-xl border px-3 py-2 text-left ${
-                    selectedGroupId === point.groupId
-                      ? "border-zinc-500 bg-zinc-500/10"
-                      : "border-[var(--ui-border)]"
-                  }`}
-                >
-                  <p className="text-sm font-semibold">{point.name}</p>
-                  <p className="text-xs text-[var(--ui-text-muted)]">
-                    popularity {point.popularity.toFixed(1)} / 票 {point.voteCount}
-                  </p>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {showMobileChart ? (
-          <div>
-            <div className="relative py-2">
+        <div>
+          <div className="relative py-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
               横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
             </div>
-            <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
-            </div>
-            {!isProduction ? (
-              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
-                <span>全体件数: {points.length}</span>
-                <span>投票数: {meta.totalVotes}</span>
-                <span>魅力総投票数: {meta.totalNarrativeItems}</span>
-                <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
-              </div>
-            ) : null}
+            {status === "loading" ? (
+              <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
+            ) : (
+              <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
+            )}
           </div>
-        ) : null}
+          {!isProduction ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
+              <span>全体件数: {points.length}</span>
+              <span>投票数: {meta.totalVotes}</span>
+              <span>魅力総投票数: {meta.totalNarrativeItems}</span>
+              <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
+            </div>
+          ) : null}
+        </div>
       </section>
 
       <section className="hidden grid-cols-[minmax(0,1fr)_320px] gap-4 md:grid">
