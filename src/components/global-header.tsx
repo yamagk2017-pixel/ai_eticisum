@@ -49,6 +49,7 @@ export function GlobalHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
   const [theme, setTheme] = useState<ThemeMode>("pop");
   const showDevThemeSwitch = process.env.NODE_ENV !== "production";
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -125,7 +126,49 @@ export function GlobalHeader() {
     setMobileNavOpen(false);
     setMenuOpen(false);
     setSearchOpen(false);
+    setMobileHeaderVisible(true);
   }, [currentPathname]);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastY;
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+
+      if (isDesktop) {
+        if (!mobileHeaderVisible) setMobileHeaderVisible(true);
+        lastY = currentY;
+        return;
+      }
+
+      if (mobileNavOpen || menuOpen || searchOpen) {
+        if (!mobileHeaderVisible) setMobileHeaderVisible(true);
+        lastY = currentY;
+        return;
+      }
+
+      if (currentY <= 0) {
+        if (!mobileHeaderVisible) setMobileHeaderVisible(true);
+        lastY = currentY;
+        return;
+      }
+
+      if (delta > 6 && currentY > 56) {
+        if (mobileHeaderVisible) setMobileHeaderVisible(false);
+      } else if (delta < -6) {
+        if (!mobileHeaderVisible) setMobileHeaderVisible(true);
+      }
+
+      lastY = currentY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [menuOpen, mobileHeaderVisible, mobileNavOpen, searchOpen]);
 
   if (isStudioRoute) return null;
 
@@ -170,7 +213,11 @@ export function GlobalHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--ui-border)] bg-[color-mix(in_oklab,var(--ui-panel)_88%,transparent)] backdrop-blur">
+    <header
+      className={`sticky top-0 z-40 border-b border-[var(--ui-border)] bg-[color-mix(in_oklab,var(--ui-panel)_88%,transparent)] backdrop-blur transition-transform duration-300 ease-out md:translate-y-0 ${
+        mobileHeaderVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
         <Link href="/" className="shrink-0 text-sm font-semibold tracking-[0.12em]">
           IDOL CROSSING
