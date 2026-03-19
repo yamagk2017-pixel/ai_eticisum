@@ -215,7 +215,7 @@ export function DounanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: isMobileViewport ? 52 : 130, left: 20, right: 8, bottom: 40, containLabel: true },
+      grid: { top: isMobileViewport ? 20 : 130, left: 20, right: 8, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "item",
         enterable: true,
