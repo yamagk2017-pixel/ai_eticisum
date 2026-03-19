@@ -514,31 +514,6 @@ export function DokonanoView() {
             </p>
           </div>
         </div>
-        <div>
-          <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
-          {hotIdols.length === 0 ? (
-            <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
-          ) : (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-              {hotIdols.map((item, index) => (
-                <span key={`hot-idol-mobile-${item.groupId}`}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedGroupId(item.groupId)}
-                    className="text-left underline underline-offset-2"
-                    style={{
-                      color: FRESHNESS_COLOR[item.freshnessBand],
-                      fontWeight: selectedGroupId === item.groupId ? 700 : 500,
-                    }}
-                  >
-                    {index + 1}. {item.name}
-                  </button>
-                  {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
         <div className="relative pt-1">
           {status === "loading" ? (
             <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
@@ -564,6 +539,31 @@ export function DokonanoView() {
             </div>
           ) : null}
         </div>
+        <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
+          <h3 className="font-mincho-jp text-xl font-semibold">ホットアイドル</h3>
+          {hotIdols.length === 0 ? (
+            <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
+          ) : (
+            <div className="mt-2 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
+              {hotIdols.map((item, index) => (
+                <span key={`hot-idol-mobile-${item.groupId}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGroupId(item.groupId)}
+                    className="text-left underline underline-offset-2"
+                    style={{
+                      color: FRESHNESS_COLOR[item.freshnessBand],
+                      fontWeight: selectedGroupId === item.groupId ? 700 : 500,
+                    }}
+                  >
+                    {index + 1}. {item.name}
+                  </button>
+                  {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
+                </span>
+              ))}
+            </div>
+          )}
+        </aside>
       </section>
     </div>
   );

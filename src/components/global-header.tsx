@@ -312,6 +312,20 @@ export function GlobalHeader() {
                       >
                         マイ投票
                       </Link>
+                      <Link
+                        href="/dounano"
+                        onClick={() => setMenuOpen(false)}
+                        className="rounded-lg px-3 py-2 text-xs text-[var(--ui-text)] hover:bg-[var(--ui-panel-soft)]"
+                      >
+                        ドウナノ
+                      </Link>
+                      <Link
+                        href="/dokonano"
+                        onClick={() => setMenuOpen(false)}
+                        className="rounded-lg px-3 py-2 text-xs text-[var(--ui-text)] hover:bg-[var(--ui-panel-soft)]"
+                      >
+                        ドコナノ
+                      </Link>
                       <div className="mt-1 rounded-lg px-3 py-2">
                         <p className="text-[10px] text-[var(--ui-text-subtle)]">デザイン切り替え</p>
                         <div className="mt-2 grid grid-cols-2 gap-2">
