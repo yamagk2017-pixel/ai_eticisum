@@ -252,7 +252,7 @@ export function DounanoView() {
   const chartOption = useMemo(
     () => ({
       animation: false,
-      grid: { top: 52, left: 20, right: 8, bottom: 64, containLabel: true },
+      grid: { top: 52, left: 20, right: 8, bottom: 40, containLabel: true },
       tooltip: {
         trigger: "item",
         enterable: true,
@@ -295,6 +295,9 @@ export function DounanoView() {
         type: "value",
         min: -axisRange.x,
         max: axisRange.x,
+        axisLabel: {
+          margin: 6,
+        },
       },
       yAxis: {
         type: "value",
@@ -476,7 +479,7 @@ export function DounanoView() {
           )}
         </div>
         <div>
-          <div className="relative py-2">
+          <div className="relative pt-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
               横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
             </div>
@@ -497,9 +500,9 @@ export function DounanoView() {
         </div>
       </section>
 
-      <section className="hidden grid-cols-[minmax(0,1fr)_320px] gap-4 md:grid">
+      <section className="hidden gap-6 md:grid">
         <div>
-          <div className="relative py-2">
+          <div className="relative pt-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-xs text-[var(--ui-text-muted)]">
               横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
             </div>
@@ -508,15 +511,15 @@ export function DounanoView() {
             ) : (
               <ReactECharts option={chartOption} style={{ height: 560, width: "100%" }} onEvents={onEvents} />
             )}
-          </div>
-          <div className="mt-1 px-1 text-xs text-[var(--ui-text-muted)]">
-            <p className="mb-1 font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span><span className="mr-1 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</span>
-            <span><span className="mr-1 inline-block h-2 w-2 bg-[#f97316]" />2日</span>
-            <span><span className="mr-1 inline-block h-2 w-2 bg-[#eab308]" />3-4日</span>
-            <span><span className="mr-1 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</span>
-            <span><span className="mr-1 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</span>
+            <div className="mt-0 px-1 text-xs text-[var(--ui-text-muted)] text-center">
+              <p className="mb-1 font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#f97316]" />2日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#eab308]" />3-4日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</span>
+              </div>
             </div>
           </div>
           {!isProduction ? (
@@ -529,10 +532,9 @@ export function DounanoView() {
           ) : null}
         </div>
 
-        <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
-          <label htmlFor="dounano-search-desktop" className="mb-2 block text-xs font-semibold text-[var(--ui-text-subtle)]">
-            グループ名検索
-          </label>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <aside className="p-0">
+          <h2 className="mb-2 font-mincho-jp text-xl font-semibold">グループ名検索</h2>
           <input
             id="dounano-search-desktop"
             value={searchText}
@@ -588,8 +590,8 @@ export function DounanoView() {
                 <p className="text-xs text-red-400">カイワイ取得失敗: {kaiwaiMessage}</p>
               ) : null}
 
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-semibold text-[var(--ui-text-subtle)]">ナンダッテ棒グラフ（上位5件）</p>
+              <div className="mt-4 space-y-2 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-3">
+                <p className="text-xs font-semibold text-[var(--ui-text-subtle)]">ナンダッテ棒グラフ（上位5位）</p>
                 {selectedChartStatus === "loading" ? (
                   <p className="text-xs text-[var(--ui-text-muted)]">読み込み中...</p>
                 ) : null}
@@ -625,19 +627,20 @@ export function DounanoView() {
               点をクリックすると詳細が表示されます。
             </p>
           )}
+          </aside>
 
-          <div className="mt-8 space-y-2">
+          <div>
             <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
             {hotIdols.length === 0 ? (
-              <p className="text-xs text-[var(--ui-text-muted)]">データがありません。</p>
+              <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
             ) : (
-              <ul className="space-y-1">
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 {hotIdols.map((item, index) => (
-                  <li key={`hot-idol-${item.groupId}`}>
+                  <span key={`hot-idol-desktop-${item.groupId}`}>
                     <button
                       type="button"
                       onClick={() => setSelectedGroupId(item.groupId)}
-                      className="text-left text-sm underline underline-offset-2"
+                      className="text-left underline underline-offset-2"
                       style={{
                         color: FRESHNESS_COLOR[item.freshnessBand],
                         fontWeight: selectedGroupId === item.groupId ? 700 : 500,
@@ -645,12 +648,13 @@ export function DounanoView() {
                     >
                       {index + 1}. {item.name}
                     </button>
-                  </li>
+                    {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
+                  </span>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
-        </aside>
+        </div>
       </section>
     </div>
   );
