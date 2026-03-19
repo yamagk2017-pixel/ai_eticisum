@@ -451,6 +451,31 @@ export function DounanoView() {
     <div className="grid gap-6">
       <section className="grid gap-4 md:hidden">
         <div>
+          <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
+          {hotIdols.length === 0 ? (
+            <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
+          ) : (
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              {hotIdols.map((item, index) => (
+                <span key={`hot-idol-mobile-${item.groupId}`}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGroupId(item.groupId)}
+                    className="text-left underline underline-offset-2"
+                    style={{
+                      color: FRESHNESS_COLOR[item.freshnessBand],
+                      fontWeight: selectedGroupId === item.groupId ? 700 : 500,
+                    }}
+                  >
+                    {index + 1}. {item.name}
+                  </button>
+                  {index < hotIdols.length - 1 ? <span className="ml-2 text-[var(--ui-text-muted)]">/</span> : null}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
           <div className="relative py-2">
             <div className="absolute right-3 top-3 z-10 rounded-md border border-[var(--ui-border)] bg-[var(--ui-panel)] px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
               横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数
