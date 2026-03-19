@@ -78,6 +78,7 @@ function escapeHtml(input: string): string {
 
 export function DounanoView() {
   const isProduction = process.env.NODE_ENV === "production";
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [points, setPoints] = useState<DounanoPoint[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -98,6 +99,46 @@ export function DounanoView() {
   const [kaiwaiStatus, setKaiwaiStatus] = useState<SelectedChartStatus>("idle");
   const [kaiwaiMessage, setKaiwaiMessage] = useState("");
   const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobileViewport(mediaQuery.matches);
+    apply();
+    mediaQuery.addEventListener("change", apply);
+    return () => {
+      mediaQuery.removeEventListener("change", apply);
+    };
+  }, []);
+
+  useEffect(() => {
+    const onDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLButtonElement>("[data-kaiwai-toggle='1']");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const groupId = button.dataset.groupId;
+      if (!groupId) return;
+      setSelectedGroupId(groupId);
+      setShowKaiwaiOnly((prev) => {
+        const next = !prev;
+        if (!next) {
+          setKaiwaiStatus("idle");
+          setKaiwaiMessage("");
+          setKaiwaiGroupIds([]);
+        }
+        return next;
+      });
+    };
+
+    document.addEventListener("click", onDocumentClick);
+    return () => {
+      document.removeEventListener("click", onDocumentClick);
+    };
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -217,6 +258,7 @@ export function DounanoView() {
         formatter: (params: { data?: Record<string, unknown> }) => {
           const data = params.data ?? {};
           const name = escapeHtml(String(data.name ?? "-"));
+          const groupId = escapeHtml(String(data.groupId ?? ""));
           const popularity = Number(data.popularity ?? 0);
           const voteCount = Number(data.voteCount ?? 0);
           const freshnessDays = Number(data.freshnessDays ?? 9999);
@@ -224,14 +266,25 @@ export function DounanoView() {
           const centeredX = Number(data.centeredX ?? 0);
           const centeredY = Number(data.centeredY ?? 0);
           const freshnessColor = FRESHNESS_COLOR[freshnessBand] ?? FRESHNESS_COLOR.stale;
+          const href =
+            typeof data.nandatteHref === "string" && data.nandatteHref.length > 0
+              ? escapeHtml(data.nandatteHref)
+              : null;
+          const titleLine = href
+            ? `<a href="${href}" target="_blank" rel="noreferrer" style="font-weight:700;margin-bottom:4px;display:inline-block;text-decoration:underline;color:#3f3f46">${name}</a>`
+            : `<div style="font-weight:700;margin-bottom:4px;color:#3f3f46">${name}</div>`;
+          const kaiwaiButton = isMobileViewport
+            ? `<div style="margin-top:6px"><button type="button" data-kaiwai-toggle="1" data-group-id="${groupId}" style="border:1px solid ${showKaiwaiOnly ? "#b91c1c" : "#d4d4d8"};background:${showKaiwaiOnly ? "#dc2626" : "transparent"};color:${showKaiwaiOnly ? "#ffffff" : "#3f3f46"};border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">カイワイ</button></div>`
+            : "";
           return [
             `<div style="min-width:180px">`,
-            `<div style="font-weight:700;margin-bottom:4px">${name}</div>`,
+            titleLine,
             isProduction ? "" : `<div>artist_popularity: ${popularity.toFixed(1)}</div>`,
             isProduction ? "" : `<div>魅力への投票総数: ${voteCount}</div>`,
             `<div style="color:${freshnessColor};font-weight:700">鮮度（${freshnessDays}日前）</div>`,
             `<div>イマキテ指数: ${centeredX.toFixed(1)}</div>`,
             `<div>ナンダテ指数: ${centeredY.toFixed(1)}</div>`,
+            kaiwaiButton,
             `</div>`,
           ].join("");
         },
@@ -297,7 +350,7 @@ export function DounanoView() {
         },
       ],
     }),
-    [axisRange.x, axisRange.y, chartData, isProduction, selectedChartData]
+    [axisRange.x, axisRange.y, chartData, isMobileViewport, isProduction, selectedChartData, showKaiwaiOnly]
   );
 
   const onEvents = useMemo(

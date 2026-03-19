@@ -80,6 +80,7 @@ function toFreshnessLabel(days: unknown): string {
 
 export function DokonanoView() {
   const isProduction = process.env.NODE_ENV === "production";
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [points, setPoints] = useState<DokonanoPoint[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -97,6 +98,46 @@ export function DokonanoView() {
   const [kaiwaiStatus, setKaiwaiStatus] = useState<Status>("idle");
   const [kaiwaiMessage, setKaiwaiMessage] = useState("");
   const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobileViewport(mediaQuery.matches);
+    apply();
+    mediaQuery.addEventListener("change", apply);
+    return () => {
+      mediaQuery.removeEventListener("change", apply);
+    };
+  }, []);
+
+  useEffect(() => {
+    const onDocumentClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLButtonElement>("[data-kaiwai-toggle='1']");
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const groupId = button.dataset.groupId;
+      if (!groupId) return;
+      setSelectedGroupId(groupId);
+      setShowKaiwaiOnly((prev) => {
+        const next = !prev;
+        if (!next) {
+          setKaiwaiStatus("idle");
+          setKaiwaiMessage("");
+          setKaiwaiGroupIds([]);
+        }
+        return next;
+      });
+    };
+
+    document.addEventListener("click", onDocumentClick);
+    return () => {
+      document.removeEventListener("click", onDocumentClick);
+    };
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -208,6 +249,7 @@ export function DokonanoView() {
         formatter: (params: { data?: Record<string, unknown> }) => {
           const data = params.data ?? {};
           const name = escapeHtml(String(data.name ?? "-"));
+          const groupId = escapeHtml(String(data.groupId ?? ""));
           const careerMonths = Number((data.value as number[] | undefined)?.[0] ?? 0);
           const attentionScore = Number((data.value as number[] | undefined)?.[1] ?? 0);
           const popularity = Number(data.artistPopularity ?? 0);
@@ -219,11 +261,21 @@ export function DokonanoView() {
           const activityStartedMonth =
             typeof data.activityStartedMonth === "string" ? data.activityStartedMonth : null;
           const startedLabel = formatActivityStartedMonthLabel(activityStartedMonth);
+          const href =
+            typeof data.nandatteHref === "string" && data.nandatteHref.length > 0
+              ? escapeHtml(data.nandatteHref)
+              : null;
+          const titleLine = href
+            ? `<a href="${href}" target="_blank" rel="noreferrer" style="font-weight:700;color:#3f3f46;margin-bottom:4px;display:inline-block;text-decoration:underline">${name}</a>`
+            : `<div style="font-weight:700;color:#3f3f46;margin-bottom:4px">${name}</div>`;
+          const kaiwaiButton = isMobileViewport
+            ? `<div style="margin-top:6px"><button type="button" data-kaiwai-toggle="1" data-group-id="${groupId}" style="border:1px solid ${showKaiwaiOnly ? "#b91c1c" : "#d4d4d8"};background:${showKaiwaiOnly ? "#dc2626" : "transparent"};color:${showKaiwaiOnly ? "#ffffff" : "#3f3f46"};border-radius:9999px;padding:2px 10px;font-size:12px;font-weight:700;cursor:pointer">カイワイ</button></div>`
+            : "";
           return [
             `<div style="min-width:180px">`,
-            `<div style="font-weight:700;color:#3f3f46;margin-bottom:4px">${name}</div>`,
+            titleLine,
             `<div style="font-weight:700;color:${freshnessColor};margin-bottom:2px">鮮度（${freshnessLabel}）</div>`,
-            `<div style="color:#6b7280">キャリア: ${careerMonths}ヶ月${startedLabel ? `（${startedLabel}）` : "（開始月未設定）"}</div>`,
+            `<div style="color:#6b7280">キャリア: ${careerMonths}ヶ月${startedLabel ? `（${startedLabel}〜）` : "（開始月未設定）"}</div>`,
             `<div style="color:#7c3aed">注目度: ${attentionScore.toFixed(2)}</div>`,
             ...(!isProduction
               ? [
@@ -231,6 +283,7 @@ export function DokonanoView() {
                   `<div style="color:#6b7280">votes: ${votes}</div>`,
                 ]
               : []),
+            kaiwaiButton,
             `</div>`,
           ].join("");
         },
@@ -285,7 +338,7 @@ export function DokonanoView() {
         },
       ],
     }),
-    [chartData, isProduction, selectedChartData, xMax, yMax]
+    [chartData, isMobileViewport, isProduction, selectedChartData, showKaiwaiOnly, xMax, yMax]
   );
 
   const onEvents = useMemo(
