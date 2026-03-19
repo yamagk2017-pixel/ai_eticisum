@@ -19,6 +19,7 @@ type RelatedItem = {
   name: string;
   slug: string | null;
   overlapUsers: number;
+  overlapScore: number;
 };
 
 type RelatedApiResponse = {
@@ -76,14 +77,33 @@ export async function GET(request: Request) {
     }
 
     const allVotes = (allVotesRes.data ?? []) as VoteRow[];
-    const overlapMap = new Map<string, number>();
+    const groupsByUser = new Map<string, Set<string>>();
 
     for (const row of allVotes) {
-      if (!row.user_id || !row.group_id || row.group_id === baseGroupId) continue;
-      overlapMap.set(row.group_id, (overlapMap.get(row.group_id) ?? 0) + 1);
+      if (!row.user_id || !row.group_id) continue;
+      const current = groupsByUser.get(row.user_id) ?? new Set<string>();
+      current.add(row.group_id);
+      groupsByUser.set(row.user_id, current);
     }
 
-    const relatedGroupIds = Array.from(overlapMap.keys());
+    const overlapUserMap = new Map<string, number>();
+    const overlapScoreMap = new Map<string, number>();
+
+    for (const [, groupIds] of groupsByUser) {
+      if (!groupIds.has(baseGroupId)) continue;
+      const votedGroupCount = groupIds.size;
+      if (votedGroupCount <= 1) continue;
+
+      const weight = 1 / (votedGroupCount - 1);
+
+      for (const groupId of groupIds) {
+        if (groupId === baseGroupId) continue;
+        overlapUserMap.set(groupId, (overlapUserMap.get(groupId) ?? 0) + 1);
+        overlapScoreMap.set(groupId, (overlapScoreMap.get(groupId) ?? 0) + weight);
+      }
+    }
+
+    const relatedGroupIds = Array.from(overlapScoreMap.keys());
     const groupMap = new Map<string, GroupRow>();
 
     if (relatedGroupIds.length > 0) {
@@ -108,10 +128,12 @@ export async function GET(request: Request) {
           groupId,
           name: group?.name_ja ?? groupId,
           slug: group?.slug ?? null,
-          overlapUsers: overlapMap.get(groupId) ?? 0,
+          overlapUsers: overlapUserMap.get(groupId) ?? 0,
+          overlapScore: overlapScoreMap.get(groupId) ?? 0,
         };
       })
       .sort((a, b) => {
+        if (b.overlapScore !== a.overlapScore) return b.overlapScore - a.overlapScore;
         if (b.overlapUsers !== a.overlapUsers) return b.overlapUsers - a.overlapUsers;
         return a.name.localeCompare(b.name, "ja");
       });
