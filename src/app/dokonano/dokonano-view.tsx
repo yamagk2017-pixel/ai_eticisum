@@ -474,10 +474,10 @@ export function DokonanoView() {
         </aside>
       </section>
 
-      <section className="grid gap-4 md:hidden">
-        <div>
-          <div className="flex items-end justify-between gap-3">
-            <div className="w-full">
+      <section className="grid min-w-0 gap-4 md:hidden">
+        <div className="min-w-0">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0 w-full">
               <h2 className="mb-2 font-mincho-jp text-lg font-semibold">グループ名検索</h2>
               <input
                 id="dokonano-search-mobile"
@@ -487,7 +487,7 @@ export function DokonanoView() {
                 className="w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
               />
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
               <span className="text-xs text-[var(--ui-text-muted)]">カイワイレーダー：</span>
               <button
                 type="button"
@@ -518,7 +518,7 @@ export function DokonanoView() {
           {status === "loading" ? (
             <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
           ) : (
-            <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
+            <ReactECharts option={chartOption} style={{ height: 420, width: "100%", maxWidth: "100%" }} onEvents={onEvents} />
           )}
           <div className="mt-0 px-1 text-xs text-[var(--ui-text-muted)] text-center">
             <p className="mb-1 font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
@@ -539,12 +539,12 @@ export function DokonanoView() {
             </div>
           ) : null}
         </div>
-        <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
+        <aside className="min-w-0 rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
           <h3 className="font-mincho-jp text-xl font-semibold">ホットアイドル</h3>
           {hotIdols.length === 0 ? (
             <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
           ) : (
-            <div className="mt-2 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
+            <div className="mt-2 min-w-0 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
               {hotIdols.map((item, index) => (
                 <span key={`hot-idol-mobile-${item.groupId}`}>
                   <button
