@@ -632,7 +632,7 @@ export function DounanoView() {
               <p className="text-xs text-[var(--ui-text-muted)]">データがありません。</p>
             ) : (
               <ul className="space-y-1">
-                {hotIdols.map((item) => (
+                {hotIdols.map((item, index) => (
                   <li key={`hot-idol-${item.groupId}`}>
                     <button
                       type="button"
@@ -643,7 +643,7 @@ export function DounanoView() {
                         fontWeight: selectedGroupId === item.groupId ? 700 : 500,
                       }}
                     >
-                      {item.name}
+                      {index + 1}. {item.name}
                     </button>
                   </li>
                 ))}
