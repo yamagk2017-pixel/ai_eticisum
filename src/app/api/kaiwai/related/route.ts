@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+const MIN_OVERLAP_USERS = 2;
 
 type VoteRow = {
   user_id: string | null;
@@ -132,6 +133,7 @@ export async function GET(request: Request) {
           overlapScore: overlapScoreMap.get(groupId) ?? 0,
         };
       })
+      .filter((item) => item.overlapUsers >= MIN_OVERLAP_USERS)
       .sort((a, b) => {
         if (b.overlapScore !== a.overlapScore) return b.overlapScore - a.overlapScore;
         if (b.overlapUsers !== a.overlapUsers) return b.overlapUsers - a.overlapUsers;
