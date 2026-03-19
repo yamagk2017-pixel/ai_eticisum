@@ -48,6 +48,15 @@ type NandatteChartApiResponse = {
   error?: string;
 };
 
+type KaiwaiRelatedApiResponse = {
+  baseGroupId?: string;
+  items?: Array<{
+    groupId: string;
+    overlapUsers: number;
+  }>;
+  error?: string;
+};
+
 function escapeHtml(input: string): string {
   return input
     .replaceAll("&", "&amp;")
@@ -74,6 +83,10 @@ export function DounanoView() {
   const [selectedChartStatus, setSelectedChartStatus] = useState<SelectedChartStatus>("idle");
   const [selectedChartMessage, setSelectedChartMessage] = useState("");
   const [selectedChartItems, setSelectedChartItems] = useState<NandatteChartItem[]>([]);
+  const [showKaiwaiOnly, setShowKaiwaiOnly] = useState(false);
+  const [kaiwaiStatus, setKaiwaiStatus] = useState<SelectedChartStatus>("idle");
+  const [kaiwaiMessage, setKaiwaiMessage] = useState("");
+  const [kaiwaiGroupIds, setKaiwaiGroupIds] = useState<string[]>([]);
 
   useEffect(() => {
     const run = async () => {
@@ -105,10 +118,17 @@ export function DounanoView() {
   }, []);
 
   const normalizedQuery = searchText.trim().toLowerCase();
-  const filtered = useMemo(() => {
+  const searched = useMemo(() => {
     if (!normalizedQuery) return points;
     return points.filter((point) => point.name.toLowerCase().includes(normalizedQuery));
   }, [normalizedQuery, points]);
+
+  const filtered = useMemo(() => {
+    if (!showKaiwaiOnly || !selectedGroupId || kaiwaiStatus !== "idle") return searched;
+    const allow = new Set(kaiwaiGroupIds);
+    allow.add(selectedGroupId);
+    return searched.filter((point) => allow.has(point.groupId));
+  }, [kaiwaiGroupIds, kaiwaiStatus, searched, selectedGroupId, showKaiwaiOnly]);
 
   const selected = useMemo(() => {
     if (!selectedGroupId) return null;
@@ -282,6 +302,39 @@ export function DounanoView() {
     };
   }, [selected?.groupId]);
 
+  useEffect(() => {
+    if (!showKaiwaiOnly || !selected?.groupId) return;
+
+    const controller = new AbortController();
+    const run = async () => {
+      setKaiwaiStatus("loading");
+      setKaiwaiMessage("");
+      const response = await fetch(`/api/kaiwai/related?groupId=${encodeURIComponent(selected.groupId)}`, {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const payload = (await response.json()) as KaiwaiRelatedApiResponse;
+      if (!response.ok) {
+        setKaiwaiStatus("error");
+        setKaiwaiMessage(payload.error ?? "Failed to fetch kaiwai");
+        return;
+      }
+      setKaiwaiGroupIds((payload.items ?? []).map((item) => item.groupId));
+      setKaiwaiStatus("idle");
+    };
+
+    run().catch((error: unknown) => {
+      if (controller.signal.aborted) return;
+      setKaiwaiStatus("error");
+      setKaiwaiMessage(error instanceof Error ? error.message : "Failed to fetch kaiwai");
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [selected?.groupId, showKaiwaiOnly]);
+
   if (status === "error") {
     return (
       <section className="rounded-2xl border border-red-400/40 bg-red-500/10 p-4 text-sm text-red-100">
@@ -396,12 +449,39 @@ export function DounanoView() {
               <p>artist_popularity: {selected.popularity.toFixed(1)}</p>
               <p>魅力への投票総数: {selected.voteCount}</p>
               {selected.nandatteHref ? (
-                <Link href={selected.nandatteHref} className="inline-block underline underline-offset-2">
+                <Link href={selected.nandatteHref} className="block underline underline-offset-2">
                   ナンダッテページへ
                 </Link>
               ) : (
                 <p className="text-[var(--ui-text-muted)]">ナンダッテリンク未登録</p>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowKaiwaiOnly((prev) => {
+                    const next = !prev;
+                    if (!next) {
+                      setKaiwaiStatus("idle");
+                      setKaiwaiMessage("");
+                      setKaiwaiGroupIds([]);
+                    }
+                    return next;
+                  });
+                }}
+                className={`mt-1 block rounded-full border px-3 py-1 text-xs ${
+                  showKaiwaiOnly
+                    ? "border-red-700 bg-red-700 text-white"
+                    : "border-[var(--ui-border)]"
+                }`}
+              >
+                カイワイ {showKaiwaiOnly ? "ON" : "OFF"}
+              </button>
+              {showKaiwaiOnly && kaiwaiStatus === "loading" ? (
+                <p className="text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
+              ) : null}
+              {showKaiwaiOnly && kaiwaiStatus === "error" ? (
+                <p className="text-xs text-red-400">カイワイ取得失敗: {kaiwaiMessage}</p>
+              ) : null}
 
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-semibold text-[var(--ui-text-subtle)]">ナンダッテ棒グラフ（上位5件）</p>
