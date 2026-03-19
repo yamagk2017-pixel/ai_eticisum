@@ -514,7 +514,7 @@ export function DokonanoView() {
             </p>
           </div>
         </div>
-        <div className="relative pt-1">
+        <div className="relative min-w-0 overflow-hidden pt-1">
           {status === "loading" ? (
             <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
           ) : (
