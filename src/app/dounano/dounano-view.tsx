@@ -396,7 +396,7 @@ export function DounanoView() {
                     : "border-zinc-300 bg-zinc-200 text-zinc-500 hover:bg-zinc-300"
                 }`}
               >
-                {showKaiwaiOnly ? "ON" : "OFF"}
+                {"ON"}
               </button>
             </div>
           </div>
@@ -498,7 +498,7 @@ export function DounanoView() {
                         : "border-zinc-300 bg-zinc-200 text-zinc-500 hover:bg-zinc-300"
                     }`}
                   >
-                    {showKaiwaiOnly ? "ON" : "OFF"}
+                    {"ON"}
                   </button>
                 </div>
               </div>
