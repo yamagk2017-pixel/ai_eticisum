@@ -374,6 +374,45 @@ export function DounanoView() {
     <div className="grid gap-6">
       <section className="grid gap-4 md:hidden">
         <div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="w-full">
+              <h2 className="mb-2 font-mincho-jp text-lg font-semibold">グループ名検索</h2>
+              <input
+                id="dounano-search-mobile"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                placeholder="例: きゅるりん、femme fatale"
+                className="w-full rounded-xl border border-[var(--ui-border)] bg-transparent px-3 py-2 text-sm outline-none focus:border-zinc-500"
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-xs text-[var(--ui-text-muted)]">カイワイレーダー：</span>
+              <button
+                type="button"
+                onClick={toggleKaiwaiOnly}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                  showKaiwaiOnly
+                    ? "border-red-700 bg-red-700 text-white hover:bg-red-600"
+                    : "border-zinc-300 bg-zinc-200 text-zinc-500 hover:bg-zinc-300"
+                }`}
+              >
+                {showKaiwaiOnly ? "ON" : "OFF"}
+              </button>
+            </div>
+          </div>
+          {selected && showKaiwaiOnly && kaiwaiStatus === "loading" ? (
+            <p className="mt-1 text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
+          ) : null}
+          {selected && showKaiwaiOnly && kaiwaiStatus === "error" ? (
+            <p className="mt-1 text-xs text-red-400">カイワイ取得失敗</p>
+          ) : null}
+          <div className="mt-2 flex justify-end">
+            <p className="px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
+              ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
+            </p>
+          </div>
+        </div>
+        <div>
           <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
           {hotIdols.length === 0 ? (
             <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
@@ -399,15 +438,22 @@ export function DounanoView() {
           )}
         </div>
         <div>
-          <div className="relative pt-2">
-            <div className="absolute right-3 top-3 z-10 px-2 py-1 text-[11px] text-[var(--ui-text-muted)]">
-              ＜横軸(X)：イマキテ指数／縦軸(Y)：ナンダテ指数＞
-            </div>
+          <div className="relative pt-1">
             {status === "loading" ? (
               <div className="grid h-[420px] place-items-center text-sm text-[var(--ui-text-muted)]">読み込み中...</div>
             ) : (
               <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
             )}
+          </div>
+          <div className="mt-0 px-1 text-xs text-[var(--ui-text-muted)] text-center">
+            <p className="mb-1 font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#f97316]" />2日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#eab308]" />3-4日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</span>
+              <span><span className="mr-1 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</span>
+            </div>
           </div>
           {!isProduction ? (
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
