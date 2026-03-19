@@ -215,6 +215,13 @@ export function DokonanoView() {
           type: "scatter",
           data: chartData,
           symbolSize: 10,
+          label: {
+            show: true,
+            position: "top",
+            color: "#3f3f46",
+            fontSize: 11,
+            formatter: (params: { data?: Record<string, unknown> }) => String(params.data?.name ?? ""),
+          },
           emphasis: { itemStyle: { opacity: 1 } },
         },
         {
@@ -318,38 +325,42 @@ export function DokonanoView() {
           <h2 className="font-mincho-jp text-xl font-semibold">選択中グループ</h2>
           {selected ? (
             <div className="mt-3 space-y-2 text-sm">
-              <p className="text-base font-semibold">{selected.name}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 truncate text-base font-semibold">{selected.name}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowKaiwaiOnly((prev) => {
+                      const next = !prev;
+                      if (!next) {
+                        setKaiwaiStatus("idle");
+                        setKaiwaiMessage("");
+                        setKaiwaiGroupIds([]);
+                      }
+                      return next;
+                    });
+                  }}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
+                    showKaiwaiOnly
+                      ? "border-red-700 bg-red-700 text-white"
+                      : "border-[var(--ui-border)]"
+                  }`}
+                >
+                  カイワイ
+                </button>
+              </div>
               <p>キャリア: {selected.careerMonths}ヶ月</p>
               <p>注目度: {selected.attentionScore.toFixed(2)}</p>
               <p>artist_popularity: {selected.artistPopularity.toFixed(1)}</p>
               <p>votes: {selected.voteCount}</p>
-              <p>鮮度: {selected.freshnessDays}日前</p>
+              <p style={{ color: FRESHNESS_COLOR[selected.freshnessBand], fontWeight: 700 }}>
+                鮮度（{selected.freshnessDays}日前）
+              </p>
               {selected.nandatteHref ? (
                 <Link href={selected.nandatteHref} className="block underline underline-offset-2">
                   ナンダッテページへ
                 </Link>
               ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKaiwaiOnly((prev) => {
-                    const next = !prev;
-                    if (!next) {
-                      setKaiwaiStatus("idle");
-                      setKaiwaiMessage("");
-                      setKaiwaiGroupIds([]);
-                    }
-                    return next;
-                  });
-                }}
-                className={`mt-1 block rounded-full border px-3 py-1 text-xs ${
-                  showKaiwaiOnly
-                    ? "border-red-700 bg-red-700 text-white"
-                    : "border-[var(--ui-border)]"
-                }`}
-              >
-                カイワイ {showKaiwaiOnly ? "ON" : "OFF"}
-              </button>
               {showKaiwaiOnly && kaiwaiStatus === "loading" ? (
                 <p className="text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
               ) : null}

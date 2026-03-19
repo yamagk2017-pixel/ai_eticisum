@@ -13,6 +13,16 @@ type DounanoPoint = {
   nandatteHref: string | null;
   popularity: number;
   voteCount: number;
+  freshnessDays: number;
+  freshnessBand: "hot" | "warm" | "active" | "cool" | "stale";
+};
+
+const FRESHNESS_COLOR: Record<DounanoPoint["freshnessBand"], string> = {
+  hot: "#ef4444",
+  warm: "#f97316",
+  active: "#eab308",
+  cool: "#22c55e",
+  stale: "#3b82f6",
 };
 
 type DounanoApiResponse = {
@@ -67,6 +77,7 @@ function escapeHtml(input: string): string {
 }
 
 export function DounanoView() {
+  const isProduction = process.env.NODE_ENV === "production";
   const [points, setPoints] = useState<DounanoPoint[]>([]);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -143,9 +154,12 @@ export function DounanoView() {
         name: point.name,
         popularity: point.popularity,
         voteCount: point.voteCount,
+        freshnessDays: point.freshnessDays,
+        freshnessBand: point.freshnessBand,
         centeredX: point.popularity - median.popularity,
         centeredY: point.voteCount - median.voteCount,
         nandatteHref: point.nandatteHref,
+        itemStyle: { color: FRESHNESS_COLOR[point.freshnessBand], opacity: 0.8 },
       })),
     [filtered, median.popularity, median.voteCount]
   );
@@ -159,6 +173,8 @@ export function DounanoView() {
         name: selected.name,
         popularity: selected.popularity,
         voteCount: selected.voteCount,
+        freshnessDays: selected.freshnessDays,
+        freshnessBand: selected.freshnessBand,
         centeredX: selected.popularity - median.popularity,
         centeredY: selected.voteCount - median.voteCount,
         nandatteHref: selected.nandatteHref,
@@ -193,20 +209,19 @@ export function DounanoView() {
           const name = escapeHtml(String(data.name ?? "-"));
           const popularity = Number(data.popularity ?? 0);
           const voteCount = Number(data.voteCount ?? 0);
+          const freshnessDays = Number(data.freshnessDays ?? 9999);
+          const freshnessBand = (data.freshnessBand as DounanoPoint["freshnessBand"] | undefined) ?? "stale";
           const centeredX = Number(data.centeredX ?? 0);
           const centeredY = Number(data.centeredY ?? 0);
-          const href = typeof data.nandatteHref === "string" ? data.nandatteHref : null;
-          const link = href
-            ? `<a href="${href}" target="_blank" rel="noreferrer" style="text-decoration:underline">ナンダッテを見る</a>`
-            : "ナンダッテリンクなし";
+          const freshnessColor = FRESHNESS_COLOR[freshnessBand] ?? FRESHNESS_COLOR.stale;
           return [
             `<div style="min-width:180px">`,
             `<div style="font-weight:700;margin-bottom:4px">${name}</div>`,
-            `<div>artist_popularity: ${popularity.toFixed(1)}</div>`,
-            `<div>魅力への投票総数: ${voteCount}</div>`,
-            `<div>中心化X: ${centeredX.toFixed(1)}</div>`,
-            `<div>中心化Y: ${centeredY.toFixed(1)}</div>`,
-            `<div style="margin-top:6px">${link}</div>`,
+            isProduction ? "" : `<div>artist_popularity: ${popularity.toFixed(1)}</div>`,
+            isProduction ? "" : `<div>魅力への投票総数: ${voteCount}</div>`,
+            `<div style="color:${freshnessColor};font-weight:700">鮮度（${freshnessDays}日前）</div>`,
+            `<div>イマキテ指数: ${centeredX.toFixed(1)}</div>`,
+            `<div>ナンダテ指数: ${centeredY.toFixed(1)}</div>`,
             `</div>`,
           ].join("");
         },
@@ -230,8 +245,14 @@ export function DounanoView() {
           type: "scatter",
           data: chartData,
           symbolSize: 10,
-          itemStyle: { color: "#0284c7", opacity: 0.72 },
-          emphasis: { itemStyle: { color: "#0369a1", opacity: 1 } },
+          label: {
+            show: true,
+            position: "top",
+            color: "#3f3f46",
+            fontSize: 11,
+            formatter: (params: { data?: Record<string, unknown> }) => String(params.data?.name ?? ""),
+          },
+          emphasis: { itemStyle: { opacity: 1 } },
           markLine: {
             silent: true,
             symbol: "none",
@@ -252,7 +273,7 @@ export function DounanoView() {
         },
       ],
     }),
-    [axisRange.x, axisRange.y, chartData, selectedChartData]
+    [axisRange.x, axisRange.y, chartData, isProduction, selectedChartData]
   );
 
   const onEvents = useMemo(
@@ -445,37 +466,44 @@ export function DounanoView() {
           <h2 className="font-mincho-jp text-xl font-semibold">選択中グループ</h2>
           {selected ? (
             <div className="mt-3 space-y-2 text-sm">
-              <p className="text-base font-semibold">{selected.name}</p>
-              <p>artist_popularity: {selected.popularity.toFixed(1)}</p>
-              <p>魅力への投票総数: {selected.voteCount}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="min-w-0 truncate text-base font-semibold">{selected.name}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowKaiwaiOnly((prev) => {
+                      const next = !prev;
+                      if (!next) {
+                        setKaiwaiStatus("idle");
+                        setKaiwaiMessage("");
+                        setKaiwaiGroupIds([]);
+                      }
+                      return next;
+                    });
+                  }}
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs ${
+                    showKaiwaiOnly
+                      ? "border-red-700 bg-red-700 text-white"
+                      : "border-[var(--ui-border)]"
+                  }`}
+                >
+                  カイワイ
+                </button>
+              </div>
+              {!isProduction ? <p>artist_popularity: {selected.popularity.toFixed(1)}</p> : null}
+              {!isProduction ? <p>魅力への投票総数: {selected.voteCount}</p> : null}
+              <p style={{ color: FRESHNESS_COLOR[selected.freshnessBand], fontWeight: 700 }}>
+                鮮度（{selected.freshnessDays}日前）
+              </p>
+              <p>イマキテ指数: {(selected.popularity - median.popularity).toFixed(1)}</p>
+              <p>ナンダテ指数: {(selected.voteCount - median.voteCount).toFixed(1)}</p>
               {selected.nandatteHref ? (
                 <Link href={selected.nandatteHref} className="block underline underline-offset-2">
-                  ナンダッテページへ
+                  ナンダッテを見る
                 </Link>
               ) : (
                 <p className="text-[var(--ui-text-muted)]">ナンダッテリンク未登録</p>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  setShowKaiwaiOnly((prev) => {
-                    const next = !prev;
-                    if (!next) {
-                      setKaiwaiStatus("idle");
-                      setKaiwaiMessage("");
-                      setKaiwaiGroupIds([]);
-                    }
-                    return next;
-                  });
-                }}
-                className={`mt-1 block rounded-full border px-3 py-1 text-xs ${
-                  showKaiwaiOnly
-                    ? "border-red-700 bg-red-700 text-white"
-                    : "border-[var(--ui-border)]"
-                }`}
-              >
-                カイワイ {showKaiwaiOnly ? "ON" : "OFF"}
-              </button>
               {showKaiwaiOnly && kaiwaiStatus === "loading" ? (
                 <p className="text-xs text-[var(--ui-text-muted)]">カイワイを取得中...</p>
               ) : null}
@@ -520,6 +548,14 @@ export function DounanoView() {
               点をクリックすると詳細が表示されます。
             </p>
           )}
+          <div className="mt-6 space-y-1 text-xs text-[var(--ui-text-muted)]">
+            <p className="font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
+            <p><span className="mr-2 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</p>
+            <p><span className="mr-2 inline-block h-2 w-2 bg-[#f97316]" />2日</p>
+            <p><span className="mr-2 inline-block h-2 w-2 bg-[#eab308]" />3-4日</p>
+            <p><span className="mr-2 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</p>
+            <p><span className="mr-2 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</p>
+          </div>
         </aside>
       </section>
     </div>

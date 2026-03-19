@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 type VoteItemWithGroupRow = {
   group_id: string | null;
+  updated_at?: string | null;
 };
 
 type MetricCountRpcRow = {
@@ -30,6 +31,8 @@ type DounanoPoint = {
   nandatteHref: string | null;
   popularity: number;
   voteCount: number;
+  freshnessDays: number;
+  freshnessBand: "hot" | "warm" | "active" | "cool" | "stale";
 };
 
 type DounanoScatterApiResponse = {
@@ -52,6 +55,12 @@ type DounanoScatterApiResponse = {
 const PAGE_SIZE = 1000;
 const GROUP_CHUNK_SIZE = 300;
 const IHC_TABLE_CANDIDATES = ["daily_ranking", "daily_rankings"] as const;
+const FRESHNESS_THRESHOLDS = {
+  hot: 1,
+  warm: 2,
+  active: 4,
+  cool: 7,
+} as const;
 
 function isMissingRelationError(message: string): boolean {
   return message.includes("does not exist") || message.includes("relation") || message.includes("schema cache");
@@ -75,6 +84,23 @@ function computeMedian(values: number[]): number {
   return (left + right) / 2;
 }
 
+function calculateFreshnessDays(lastVoteAt: string | null): number {
+  if (!lastVoteAt) return 9999;
+  const ts = Date.parse(lastVoteAt);
+  if (Number.isNaN(ts)) return 9999;
+  const diffMs = Date.now() - ts;
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(0, days);
+}
+
+function getFreshnessBand(days: number): DounanoPoint["freshnessBand"] {
+  if (days <= FRESHNESS_THRESHOLDS.hot) return "hot";
+  if (days <= FRESHNESS_THRESHOLDS.warm) return "warm";
+  if (days <= FRESHNESS_THRESHOLDS.active) return "active";
+  if (days <= FRESHNESS_THRESHOLDS.cool) return "cool";
+  return "stale";
+}
+
 function toCount(value: number | string | null | undefined): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -87,12 +113,13 @@ function toCount(value: number | string | null | undefined): number {
 async function loadGroupIdsWithVotes() {
   const supabase = createServerClient();
   const groupIdSet = new Set<string>();
+  const lastVoteAtByGroup = new Map<string, string>();
   let from = 0;
   while (true) {
     const res = await supabase
       .schema("nandatte")
       .from("votes")
-      .select("group_id")
+      .select("group_id,updated_at")
       .not("group_id", "is", null)
       .range(from, from + PAGE_SIZE - 1);
 
@@ -105,13 +132,19 @@ async function loadGroupIdsWithVotes() {
       const groupId = row.group_id ?? null;
       if (!groupId) continue;
       groupIdSet.add(groupId);
+      if (row.updated_at) {
+        const current = lastVoteAtByGroup.get(groupId);
+        if (!current || Date.parse(row.updated_at) > Date.parse(current)) {
+          lastVoteAtByGroup.set(groupId, row.updated_at);
+        }
+      }
     }
 
     if (rows.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
 
-  return Array.from(groupIdSet);
+  return { groupIds: Array.from(groupIdSet), lastVoteAtByGroup };
 }
 
 async function loadNarrativeVoteTotalsByGroup(groupIds: string[]) {
@@ -241,7 +274,7 @@ async function loadPopularityMap(groupIds: string[]) {
 
 export async function GET() {
   try {
-    const groupIds = await loadGroupIdsWithVotes();
+    const { groupIds, lastVoteAtByGroup } = await loadGroupIdsWithVotes();
 
     if (groupIds.length === 0) {
       return NextResponse.json<DounanoScatterApiResponse>(
@@ -283,6 +316,8 @@ export async function GET() {
           nandatteHref: slug ? `/nandatte/${slug}` : null,
           popularity: popularityResult.popularityMap.get(groupId) ?? 0,
           voteCount: narrativeTotals.get(groupId) ?? 0,
+          freshnessDays: calculateFreshnessDays(lastVoteAtByGroup.get(groupId) ?? null),
+          freshnessBand: getFreshnessBand(calculateFreshnessDays(lastVoteAtByGroup.get(groupId) ?? null)),
         };
       })
       .filter((row) => row.voteCount >= 1)
