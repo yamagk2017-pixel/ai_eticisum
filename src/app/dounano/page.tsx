@@ -65,10 +65,10 @@ async function DounanoPageContent({
         <section className="p-0">
           <h2 className="font-mincho-jp text-xl font-semibold">グラフの見方</h2>
           <p className="mt-3 text-sm text-[var(--ui-text-muted)]">
-            横軸(X)：イマキテ指数。イマキテランキング内での評価を指数化した値。右に行くほど高評価。
+            横軸(X)：イマキテ指数。イマキテランキング内での楽曲浸透度を指数化した値。右に行くほど高評価。
           </p>
           <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
-            縦軸(Y)：ナンダテ指数。ナンダッテ内の評価を指数化した値。上に行くほど高評価。
+            縦軸(Y)：ナンダテ指数。ナンダッテ内の投票濃度を指数化した値。上に行くほど高評価。
           </p>
         </section>
       </main>

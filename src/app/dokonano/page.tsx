@@ -65,7 +65,7 @@ async function DokonanoPageContent({
         <section className="p-0">
           <h2 className="font-mincho-jp text-xl font-semibold">グラフの見方</h2>
           <p className="mt-3 text-sm text-[var(--ui-text-muted)]">
-            横軸(X)：活動期間（月）。活動開始月からの経過月数。右にいくほど長期活動。
+            横軸(X)：活動期間（月）。活動開始からの経過月数。右にいくほど長期活動。
           </p>
           <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
             縦軸(Y)：注目度。イマキテランキングとナンダッテの統合指標。上にいくほど高評価
