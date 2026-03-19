@@ -444,7 +444,7 @@ export function DounanoView() {
           {hotIdols.length === 0 ? (
             <p className="mt-2 text-xs text-[var(--ui-text-muted)]">データがありません。</p>
           ) : (
-            <div className="mt-2 min-w-0 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap text-base">
+            <div className="mt-2 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
               {hotIdols.map((item, index) => (
                 <span key={`hot-idol-mobile-${item.groupId}`}>
                   <button
