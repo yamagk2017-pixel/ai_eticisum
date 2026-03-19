@@ -146,6 +146,16 @@ export function DounanoView() {
     return filtered.find((point) => point.groupId === selectedGroupId) ?? null;
   }, [filtered, selectedGroupId]);
 
+  const hotIdols = useMemo(() => {
+    return [...points]
+      .sort((a, b) => {
+        if (a.freshnessDays !== b.freshnessDays) return a.freshnessDays - b.freshnessDays;
+        if (b.voteCount !== a.voteCount) return b.voteCount - a.voteCount;
+        return a.name.localeCompare(b.name, "ja");
+      })
+      .slice(0, 5);
+  }, [points]);
+
   const chartData = useMemo(
     () =>
       filtered.map((point) => ({
@@ -237,8 +247,22 @@ export function DounanoView() {
         max: axisRange.y,
       },
       dataZoom: [
-        { type: "inside", xAxisIndex: 0, yAxisIndex: 0 },
-        { type: "slider", xAxisIndex: 0, bottom: 24 },
+        {
+          type: "inside",
+          xAxisIndex: 0,
+          filterMode: "none",
+          zoomOnMouseWheel: true,
+          moveOnMouseMove: true,
+          moveOnMouseWheel: false,
+        },
+        {
+          type: "inside",
+          yAxisIndex: 0,
+          filterMode: "none",
+          zoomOnMouseWheel: true,
+          moveOnMouseMove: true,
+          moveOnMouseWheel: false,
+        },
       ],
       series: [
         {
@@ -422,12 +446,14 @@ export function DounanoView() {
             </div>
             <ReactECharts option={chartOption} style={{ height: 420, width: "100%" }} onEvents={onEvents} />
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
-              <span>全体件数: {points.length}</span>
-              <span>投票数: {meta.totalVotes}</span>
-              <span>魅力総投票数: {meta.totalNarrativeItems}</span>
-              <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
-            </div>
+            {!isProduction ? (
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
+                <span>全体件数: {points.length}</span>
+                <span>投票数: {meta.totalVotes}</span>
+                <span>魅力総投票数: {meta.totalNarrativeItems}</span>
+                <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -444,12 +470,24 @@ export function DounanoView() {
               <ReactECharts option={chartOption} style={{ height: 560, width: "100%" }} onEvents={onEvents} />
             )}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
-            <span>全体件数: {points.length}</span>
-            <span>投票数: {meta.totalVotes}</span>
-            <span>魅力総投票数: {meta.totalNarrativeItems}</span>
-            <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
+          <div className="mt-1 px-1 text-xs text-[var(--ui-text-muted)]">
+            <p className="mb-1 font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span><span className="mr-1 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</span>
+            <span><span className="mr-1 inline-block h-2 w-2 bg-[#f97316]" />2日</span>
+            <span><span className="mr-1 inline-block h-2 w-2 bg-[#eab308]" />3-4日</span>
+            <span><span className="mr-1 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</span>
+            <span><span className="mr-1 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</span>
+            </div>
           </div>
+          {!isProduction ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-xs text-[var(--ui-text-muted)]">
+              <span>全体件数: {points.length}</span>
+              <span>投票数: {meta.totalVotes}</span>
+              <span>魅力総投票数: {meta.totalNarrativeItems}</span>
+              <span>1投票あたり平均件数: {meta.avgItemsPerVote.toFixed(2)}</span>
+            </div>
+          ) : null}
         </div>
 
         <aside className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4">
@@ -548,13 +586,30 @@ export function DounanoView() {
               点をクリックすると詳細が表示されます。
             </p>
           )}
-          <div className="mt-6 space-y-1 text-xs text-[var(--ui-text-muted)]">
-            <p className="font-semibold text-[var(--ui-text-subtle)]">鮮度カラー</p>
-            <p><span className="mr-2 inline-block h-2 w-2 bg-[#ef4444]" />0-1日</p>
-            <p><span className="mr-2 inline-block h-2 w-2 bg-[#f97316]" />2日</p>
-            <p><span className="mr-2 inline-block h-2 w-2 bg-[#eab308]" />3-4日</p>
-            <p><span className="mr-2 inline-block h-2 w-2 bg-[#22c55e]" />5-7日</p>
-            <p><span className="mr-2 inline-block h-2 w-2 bg-[#3b82f6]" />8日以上</p>
+
+          <div className="mt-8 space-y-2">
+            <h3 className="font-mincho-jp text-lg font-semibold">ホットアイドル</h3>
+            {hotIdols.length === 0 ? (
+              <p className="text-xs text-[var(--ui-text-muted)]">データがありません。</p>
+            ) : (
+              <ul className="space-y-1">
+                {hotIdols.map((item) => (
+                  <li key={`hot-idol-${item.groupId}`}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedGroupId(item.groupId)}
+                      className="text-left text-sm underline underline-offset-2"
+                      style={{
+                        color: FRESHNESS_COLOR[item.freshnessBand],
+                        fontWeight: selectedGroupId === item.groupId ? 700 : 500,
+                      }}
+                    >
+                      {item.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </aside>
       </section>
