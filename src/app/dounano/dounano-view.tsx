@@ -350,7 +350,7 @@ export function DounanoView() {
         {
           type: "scatter",
           data: selectedChartData,
-          symbolSize: 16,
+          symbolSize: isMobileViewport ? 24 : 16,
           itemStyle: { color: "#f97316" },
           z: 5,
         },

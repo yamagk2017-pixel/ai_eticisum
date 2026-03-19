@@ -340,7 +340,7 @@ export function DokonanoView() {
         {
           type: "scatter",
           data: selectedChartData,
-          symbolSize: 16,
+          symbolSize: isMobileViewport ? 24 : 16,
           z: 5,
         },
       ],
