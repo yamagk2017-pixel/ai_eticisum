@@ -18,6 +18,17 @@ export const dynamic = "force-dynamic";
 const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type Params = {slug: string} | Promise<{slug: string}>;
+type SearchParams =
+  | {
+      p?: string | string[] | undefined;
+    }
+  | Promise<{
+      p?: string | string[] | undefined;
+    }>;
+
+type PortableTextLikeBlock = {
+  _type?: string;
+};
 
 function formatDate(value: string | null) {
   if (!value) return "-";
@@ -73,6 +84,37 @@ function relatedGroupKey(item: SanityRelatedGroup) {
   return `name:${item.groupNameJa.trim().toLowerCase()}`;
 }
 
+function toPositivePageNumber(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number.parseInt(raw ?? "", 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return 1;
+  return parsed;
+}
+
+function splitBodyByPageBreak(body: unknown): unknown[][] {
+  const blocks = Array.isArray(body) ? body : [];
+  const pages: unknown[][] = [];
+  let current: unknown[] = [];
+
+  for (const block of blocks) {
+    const typed = block as PortableTextLikeBlock;
+    if (typed?._type === "pageBreak") {
+      if (current.length > 0) pages.push(current);
+      current = [];
+      continue;
+    }
+    current.push(block);
+  }
+
+  if (current.length > 0 || pages.length === 0) pages.push(current);
+  return pages;
+}
+
+function buildBodyPageHref(path: string, page: number) {
+  if (page <= 1) return path;
+  return `${path}?p=${page}`;
+}
+
 function toSeoArticleShape(article: Awaited<ReturnType<typeof getSanityNewsBySlug>>): NewsArticle | null {
   if (!article) return null;
   return {
@@ -108,8 +150,15 @@ export async function generateMetadata({params}: {params: Params}): Promise<Meta
   }
 }
 
-export default async function SanityNewsArticlePage({params}: {params: Params}) {
+export default async function SanityNewsArticlePage({
+  params,
+  searchParams,
+}: {
+  params: Params;
+  searchParams?: SearchParams;
+}) {
   const resolved = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const {isEnabled} = await draftMode();
 
   if (!hasSanityStudioEnv()) {
@@ -126,6 +175,11 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
 
   const article = await getSanityNewsBySlug(resolved.slug, {preview: isEnabled});
   if (!article) notFound();
+  const bodyPages = splitBodyByPageBreak(article.body);
+  const totalBodyPages = bodyPages.length;
+  const requestedPage = toPositivePageNumber(resolvedSearchParams?.p);
+  const bodyPage = Math.min(requestedPage, totalBodyPages);
+  const currentBody = bodyPages[bodyPage - 1] ?? [];
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
   const eventInfo = article.eventInfo;
@@ -582,7 +636,58 @@ export default async function SanityNewsArticlePage({params}: {params: Params}) 
 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
-            <SanityArticleBody value={article.body} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
+            <SanityArticleBody value={currentBody} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
+            {totalBodyPages > 1 ? (
+              <nav
+                aria-label="本文ページネーション"
+                className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm"
+              >
+                {bodyPage > 1 ? (
+                  <Link
+                    href={buildBodyPageHref(article.path, bodyPage - 1)}
+                    className="rounded-full border border-[var(--ui-border)] px-3 py-1.5 text-[var(--ui-text)] transition hover:bg-[var(--ui-panel-soft)]"
+                  >
+                    前へ
+                  </Link>
+                ) : (
+                  <span className="rounded-full border border-[var(--ui-border)] px-3 py-1.5 text-[var(--ui-text-subtle)]">
+                    前へ
+                  </span>
+                )}
+
+                {Array.from({length: totalBodyPages}, (_, index) => {
+                  const page = index + 1;
+                  const isCurrent = page === bodyPage;
+                  return (
+                    <Link
+                      key={`body-page-${page}`}
+                      href={buildBodyPageHref(article.path, page)}
+                      aria-current={isCurrent ? "page" : undefined}
+                      className={`rounded-full border px-3 py-1.5 transition ${
+                        isCurrent
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-black"
+                          : "border-[var(--ui-border)] text-[var(--ui-text)] hover:bg-[var(--ui-panel-soft)]"
+                      }`}
+                    >
+                      {page}
+                    </Link>
+                  );
+                })}
+
+                {bodyPage < totalBodyPages ? (
+                  <Link
+                    href={buildBodyPageHref(article.path, bodyPage + 1)}
+                    className="rounded-full border border-[var(--ui-border)] px-3 py-1.5 text-[var(--ui-text)] transition hover:bg-[var(--ui-panel-soft)]"
+                  >
+                    次へ
+                  </Link>
+                ) : (
+                  <span className="rounded-full border border-[var(--ui-border)] px-3 py-1.5 text-[var(--ui-text-subtle)]">
+                    次へ
+                  </span>
+                )}
+              </nav>
+            ) : null}
             {article.galleryImages.length > 0 ? <SanityGallery images={article.galleryImages} /> : null}
             <ArticleCitations
               citationSourceArticle={article.citationSourceArticle}

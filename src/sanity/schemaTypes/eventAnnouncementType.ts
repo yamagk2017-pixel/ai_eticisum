@@ -276,6 +276,21 @@ export const eventAnnouncementType = defineType({
         }),
         defineArrayMember({
           type: "object",
+          name: "pageBreak",
+          title: "改ページ",
+          fields: [
+            defineField({
+              name: "kind",
+              title: "Kind",
+              type: "string",
+              initialValue: "page_break",
+              readOnly: true,
+              hidden: true,
+            }),
+          ],
+        }),
+        defineArrayMember({
+          type: "object",
           name: "calloutBox",
           title: "囲み罫線ボックス",
           fields: [
