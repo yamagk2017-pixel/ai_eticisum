@@ -47,6 +47,14 @@
   - 参照: [HOMEPAGE_PERFORMANCE_PLAN.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/HOMEPAGE_PERFORMANCE_PLAN.md)
   - メモ: 重いカードの後段表示を標準化する
 
+- [ ] 公開データの範囲を再設計しDB露出リスクを抑制
+  - 種別: ops
+  - 対象: cross
+  - 期待効果: セキュリティ事故リスク低減と運用信頼性向上
+  - 概算工数: M
+  - 参照: [FLASH_IDEAS_INBOX.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/FLASH_IDEAS_INBOX.md)
+  - メモ: 公開可否の列棚卸し -> RLS/公開ビュー設計 -> サービスロール利用箇所監査の順で進める
+
 - [ ] ナンダッテの改善リクエスト導線を仕様化
   - 種別: feature
   - 対象: nandatte
@@ -151,13 +159,21 @@
   - 参照: [NANDATTE_REQUIREMENTS.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/NANDATTE_REQUIREMENTS.md)
   - メモ: 小規模PoCで需要検証してから本実装判断
 
-- [ ] ニュース受付フォームからAI記事化までの運用フローを実装
+- [ ] アイドル運営向けニュースリリース受付フォームからAI記事化までの運用フローを実装
   - 種別: ops
   - 対象: cross
   - 期待効果: 記事投入リードタイム短縮と運用負荷の軽減
   - 概算工数: L
   - 参照: [FLASH_IDEAS_INBOX.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/FLASH_IDEAS_INBOX.md)
-  - メモ: フォーム投稿 -> AI整形 -> Sanity下書き -> プレビュー確認 -> 公開。整形不能時の再投稿依頼ルールを定義する
+  - メモ: アイドル運営がニュースリリースを投稿 -> AI整形 -> Sanity下書き -> プレビュー確認 -> 公開。整形不能時の再投稿依頼ルールを定義する
+
+- [ ] サイト利用者向け「ニュース化リクエスト/情報収集代行」受付フローを設計
+  - 種別: ops
+  - 対象: cross
+  - 期待効果: 利用者起点のネタ収集強化と記事化機会の拡大
+  - 概算工数: M
+  - 参照: [FLASH_IDEAS_INBOX.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/FLASH_IDEAS_INBOX.md)
+  - メモ: 事実確認ステップと「採用/保留/不採用」通知方針を先に定義する
 
 ## 4. 参照ドキュメント（改善案・将来実装）
 - [HOMEPAGE_PERFORMANCE_PLAN.md](/Users/yamada2/バイブコーディング/musicite_ai/docs/HOMEPAGE_PERFORMANCE_PLAN.md)
