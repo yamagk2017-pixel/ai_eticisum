@@ -181,6 +181,7 @@ export default async function SanityNewsArticlePage({
   const bodyPage = Math.min(requestedPage, totalBodyPages);
   const currentBody = bodyPages[bodyPage - 1] ?? [];
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
+  const isInterviewArticle = article.tags.some((tag) => tag.name.trim() === "インタビュー");
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
   const eventInfo = article.eventInfo;
   const isRadioAnnouncement = article.type === "radioAnnouncement";
@@ -636,7 +637,11 @@ export default async function SanityNewsArticlePage({
 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
-            <SanityArticleBody value={currentBody} className={highlightLeadBlock ? "news-intro-cream" : undefined} />
+            <SanityArticleBody
+              value={currentBody}
+              className={highlightLeadBlock ? "news-intro-cream" : undefined}
+              boldSpeakerParagraph={isInterviewArticle}
+            />
             {totalBodyPages > 1 ? (
               <nav
                 aria-label="本文ページネーション"

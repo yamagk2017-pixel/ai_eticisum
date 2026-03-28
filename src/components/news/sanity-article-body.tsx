@@ -129,9 +129,12 @@ function linkifyNode(node: ReactNode): ReactNode {
   return cloneElement(node, undefined, nextChildren);
 }
 
-const components: PortableTextComponents = {
-  block: {
-    normal: ({children, value}) => {
+function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}): PortableTextComponents {
+  const boldSpeakerParagraph = options?.boldSpeakerParagraph === true;
+
+  return {
+    block: {
+      normal: ({children, value}) => {
       const text = extractPlainTextFromBlock(value);
       const trimmed = text.trim();
       const maybeUrl = trimmed ? parseHttpUrl(trimmed) : null;
@@ -169,42 +172,47 @@ const components: PortableTextComponents = {
         }
       }
 
+      const shouldBoldSpeaker = boldSpeakerParagraph && /^――/.test(trimmed);
       return (
-        <p className="my-4 px-2 text-[17px] leading-[2.1] whitespace-pre-wrap text-[var(--ui-text)] sm:px-3">
+        <p
+          className={`my-4 px-2 text-[17px] leading-[2.1] whitespace-pre-wrap text-[var(--ui-text)] sm:px-3 ${
+            shouldBoldSpeaker ? "font-bold" : ""
+          }`}
+        >
           {Children.map(children, (child) => linkifyNode(child))}
         </p>
       );
-    },
-    h2: ({children}) => (
+      },
+      h2: ({children}) => (
       <h2
         className="font-mincho-jp mt-12 mb-4 border-b border-zinc-400 pb-3 text-[1.125rem] font-semibold leading-tight text-[var(--ui-text)] dark:border-zinc-500 sm:text-[1.375rem]"
       >
         {children}
       </h2>
-    ),
-    h3: ({children}) => (
+      ),
+      h3: ({children}) => (
       <h3 className="mt-8 mb-1 inline-block border-b border-zinc-400 pb-0 text-[1rem] font-bold leading-snug text-zinc-900 dark:border-zinc-500 dark:text-zinc-300 sm:text-[1.15rem]">
         {children}
       </h3>
-    ),
-    blockquote: ({children}) => (
+      ),
+      blockquote: ({children}) => (
       <blockquote className="my-5 border-l-2 border-[var(--ui-border)] pl-4 text-[var(--ui-text)]">
         {children}
       </blockquote>
-    ),
-    well3: ({children}) => (
+      ),
+      well3: ({children}) => (
       <div className="well3 my-6 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] px-4 py-3 text-[17px] leading-[2.1] text-[var(--ui-text)]">
         {children}
       </div>
-    ),
-  },
-  list: {
-    bullet: ({children}) => <ul className="my-4 list-disc space-y-2 pl-8 text-[var(--ui-text)]">{children}</ul>,
-    number: ({children}) => <ol className="my-4 list-decimal space-y-2 pl-8 text-[var(--ui-text)]">{children}</ol>,
-  },
-  listItem: ({children}) => <li className="text-[17px] leading-8 text-[var(--ui-text)]">{children}</li>,
-  marks: {
-    link: ({children, value}) => {
+      ),
+    },
+    list: {
+      bullet: ({children}) => <ul className="my-4 list-disc space-y-2 pl-8 text-[var(--ui-text)]">{children}</ul>,
+      number: ({children}) => <ol className="my-4 list-decimal space-y-2 pl-8 text-[var(--ui-text)]">{children}</ol>,
+    },
+    listItem: ({children}) => <li className="text-[17px] leading-8 text-[var(--ui-text)]">{children}</li>,
+    marks: {
+      link: ({children, value}) => {
       const href = typeof value?.href === "string" ? value.href : undefined;
       return (
         <a
@@ -216,11 +224,12 @@ const components: PortableTextComponents = {
           {children}
         </a>
       );
+      },
     },
-  },
-  types: {
-    horizontalRule: () => <hr className="my-8 border-0 border-t border-[var(--ui-border)]" />,
-    calloutBox: ({value}) => {
+    types: {
+      horizontalRule: () => <hr className="my-8 border-0 border-t border-[var(--ui-border)]" />,
+      pageBreak: () => null,
+      calloutBox: ({value}) => {
       const item = (value ?? {}) as CalloutBoxValue;
       const text = typeof item.text === "string" ? item.text.trim() : "";
       if (!text) return null;
@@ -229,8 +238,8 @@ const components: PortableTextComponents = {
           <p className="m-0 whitespace-pre-wrap">{text}</p>
         </div>
       );
-    },
-    image: ({value}) => {
+      },
+      image: ({value}) => {
       const imageValue = (value ?? {}) as BodyImageValue;
       const url = resolveImageUrl(imageValue);
       if (!url) return null;
@@ -297,12 +306,22 @@ const components: PortableTextComponents = {
           ) : null}
         </figure>
       );
+      },
     },
-  },
-};
+  };
+}
 
-export function SanityArticleBody({value, className}: {value: unknown; className?: string}) {
+export function SanityArticleBody({
+  value,
+  className,
+  boldSpeakerParagraph,
+}: {
+  value: unknown;
+  className?: string;
+  boldSpeakerParagraph?: boolean;
+}) {
   if (!Array.isArray(value)) return null;
+  const components = createPortableTextComponents({boldSpeakerParagraph});
 
   return (
     <div
