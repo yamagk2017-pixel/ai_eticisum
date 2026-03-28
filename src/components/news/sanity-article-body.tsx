@@ -87,7 +87,7 @@ function extractPlainTextFromBlock(value: unknown): string {
 
 function extractSpeakerPrefix(text: string): {prefix: string; rest: string} | null {
   const source = text.trimStart();
-  const match = source.match(/^([^：:\n]{1,80})([：:])(.*)$/s);
+  const match = source.match(/^([^：:\n]{1,80})([：:])([\s\S]*)$/);
   if (!match) return null;
   const speaker = match[1].trim();
   if (!speaker) return null;
