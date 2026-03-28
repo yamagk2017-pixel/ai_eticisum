@@ -85,6 +85,18 @@ function extractPlainTextFromBlock(value: unknown): string {
     .join("");
 }
 
+function extractSpeakerPrefix(text: string): {prefix: string; rest: string} | null {
+  const source = text.trimStart();
+  const match = source.match(/^([^：:\n]{1,80})([：:])(.*)$/s);
+  if (!match) return null;
+  const speaker = match[1].trim();
+  if (!speaker) return null;
+  return {
+    prefix: `${speaker}${match[2]}`,
+    rest: match[3] ?? "",
+  };
+}
+
 function renderTextWithAutoLinks(text: string) {
   const urlPattern = /https?:\/\/[^\s<>"']+/g;
   const nodes: ReactNode[] = [];
@@ -173,13 +185,21 @@ function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}
       }
 
       const shouldBoldSpeaker = boldSpeakerParagraph && /^――/.test(trimmed);
+      const speakerPrefix = boldSpeakerParagraph && !shouldBoldSpeaker ? extractSpeakerPrefix(text) : null;
       return (
         <p
           className={`my-4 px-2 text-[17px] leading-[2.1] whitespace-pre-wrap text-[var(--ui-text)] sm:px-3 ${
             shouldBoldSpeaker ? "font-bold" : ""
           }`}
         >
-          {Children.map(children, (child) => linkifyNode(child))}
+          {speakerPrefix ? (
+            <>
+              <strong>{speakerPrefix.prefix}</strong>
+              {renderTextWithAutoLinks(speakerPrefix.rest)}
+            </>
+          ) : (
+            Children.map(children, (child) => linkifyNode(child))
+          )}
         </p>
       );
       },
