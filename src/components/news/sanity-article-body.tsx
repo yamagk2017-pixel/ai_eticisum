@@ -205,7 +205,7 @@ function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}
       },
       h2: ({children}) => (
       <h2
-        className="font-mincho-jp mt-12 mb-4 border-b border-zinc-400 pb-3 text-[1.125rem] font-semibold leading-tight text-[var(--ui-text)] dark:border-zinc-500 sm:text-[1.375rem]"
+        className="font-mincho-jp mt-12 mb-4 border-b border-zinc-400 pb-3 text-[1.2rem] font-semibold leading-tight text-[var(--ui-text)] dark:border-zinc-500 sm:text-[1.375rem]"
       >
         {children}
       </h2>
