@@ -145,16 +145,16 @@ export async function GET(request: Request) {
         .maybeSingle(),
     ]);
 
-    if (externalIdsRes.error) throw new Error(externalIdsRes.error.message);
-    if (profileRes.error) throw new Error(profileRes.error.message);
-    if (attributesRes.error) throw new Error(attributesRes.error.message);
-    if (eventRes.error) throw new Error(eventRes.error.message);
-    if (metricsRes.error) throw new Error(metricsRes.error.message);
-    if (freeMetricRes.error) throw new Error(freeMetricRes.error.message);
-    if (metricCountsRes.error) throw new Error(metricCountsRes.error.message);
-    if (totalVotesRes.error) throw new Error(totalVotesRes.error.message);
-    if (voteRankRes.error) throw new Error(voteRankRes.error.message);
-    if (rankRes.error) throw new Error(rankRes.error.message);
+    if (externalIdsRes.error) console.error("[api/nandatte/group-detail] external_ids", externalIdsRes.error.message);
+    if (profileRes.error) console.error("[api/nandatte/group-detail] group_profiles", profileRes.error.message);
+    if (attributesRes.error) console.error("[api/nandatte/group-detail] group_attributes", attributesRes.error.message);
+    if (eventRes.error) console.error("[api/nandatte/group-detail] events", eventRes.error.message);
+    if (metricsRes.error) console.error("[api/nandatte/group-detail] metrics", metricsRes.error.message);
+    if (freeMetricRes.error) console.error("[api/nandatte/group-detail] free metric", freeMetricRes.error.message);
+    if (metricCountsRes.error) console.error("[api/nandatte/group-detail] get_group_metric_counts", metricCountsRes.error.message);
+    if (totalVotesRes.error) console.error("[api/nandatte/group-detail] get_group_vote_total", totalVotesRes.error.message);
+    if (voteRankRes.error) console.error("[api/nandatte/group-detail] get_group_vote_rank", voteRankRes.error.message);
+    if (rankRes.error) console.error("[api/nandatte/group-detail] daily_rankings", rankRes.error.message);
 
     const groupAttributes = (() => {
       const rows = (attributesRes.data ?? []) as GroupAttributeKVRow[];
@@ -186,12 +186,12 @@ export async function GET(request: Request) {
         fixedMetrics: (metricsRes.data ?? []) as MetricRow[],
         freeMetricId: freeMetricRes.data?.id ?? null,
         metricCounts,
-        totalVotes: Number(totalVotesRes.data ?? 0),
+        totalVotes: totalVotesRes.error ? 0 : Number(totalVotesRes.data ?? 0),
         voteRank:
-          voteRankRes.data == null || Number.isNaN(Number(voteRankRes.data))
+          voteRankRes.error || voteRankRes.data == null || Number.isNaN(Number(voteRankRes.data))
             ? null
             : Number(voteRankRes.data),
-        rank: rankRes.data?.rank ?? null,
+        rank: rankRes.error ? null : (rankRes.data?.rank ?? null),
       },
       { headers: { "Cache-Control": "no-store" } }
     );
