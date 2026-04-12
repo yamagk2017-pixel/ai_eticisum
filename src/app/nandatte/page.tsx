@@ -1,8 +1,9 @@
 import { createServerClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 import { GroupsList } from "./groups-list";
 import { Rankings } from "./rankings";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type VoteSummaryRpcRow = {
   voter_count: number | string | null;
@@ -30,8 +31,12 @@ async function getNandatteVoteSummary() {
   };
 }
 
+const getCachedNandatteVoteSummary = unstable_cache(getNandatteVoteSummary, ["nandatte-vote-summary-v1"], {
+  revalidate,
+});
+
 export default async function NandattePage() {
-  const summary = await getNandatteVoteSummary().catch(() => ({
+  const summary = await getCachedNandatteVoteSummary().catch(() => ({
     voterCount: 0,
     groupCount: 0,
   }));
