@@ -29,14 +29,6 @@ type MetricCountRow = {
   freeword_id: string | null;
 };
 
-type MetricCountRpcRow = {
-  label: string | null;
-  count: number | null;
-  kind: string | null;
-  metric_id: string | null;
-  freeword_id: string | null;
-};
-
 type VoteItemRow = {
   metric_id: string | null;
   freeword_id: string | null;
@@ -58,26 +50,32 @@ type ExternalIdRow = {
   created_at: string | null;
 };
 
-type GroupProfileRow = {
-  id: string;
-  group_id: string;
-  locale: string;
-  body: string | null;
-};
-
-type GroupAttributeKVRow = {
-  id: string;
-  group_id: string;
-  key: string;
-  locale: string;
-  value: string | null;
-};
-
 type EventRow = {
   event_name: string | null;
   event_date: string | null;
   venue_name: string | null;
   event_url: string | null;
+};
+
+type GroupAttributes = {
+  members: string | null;
+  location: string | null;
+  agency: string | null;
+};
+
+type GroupDetailApiResponse = {
+  group: GroupRow | null;
+  externalIds: ExternalIdRow[];
+  profileBody: string | null;
+  groupAttributes: GroupAttributes | null;
+  latestEvent: EventRow | null;
+  fixedMetrics: MetricRow[];
+  freeMetricId: string | null;
+  metricCounts: MetricCountRow[];
+  totalVotes: number | null;
+  voteRank: number | null;
+  rank: number | null;
+  error?: string;
 };
 
 type Props = {
@@ -118,11 +116,7 @@ export function GroupDetail({ slug }: Props) {
   const [voteRank, setVoteRank] = useState<number | null>(null);
   const [externalIds, setExternalIds] = useState<ExternalIdRow[]>([]);
   const [profileBody, setProfileBody] = useState<string | null>(null);
-  const [groupAttributes, setGroupAttributes] = useState<{
-    members: string | null;
-    location: string | null;
-    agency: string | null;
-  } | null>(null);
+  const [groupAttributes, setGroupAttributes] = useState<GroupAttributes | null>(null);
   const [latestEvent, setLatestEvent] = useState<EventRow | null>(null);
   const [metricsReady, setMetricsReady] = useState(false);
 
@@ -141,10 +135,28 @@ export function GroupDetail({ slug }: Props) {
   const [isLocalhostEnv, setIsLocalhostEnv] = useState(false);
   const chartCaptureRef = useRef<HTMLDivElement | null>(null);
 
+  const applyDetailPayload = (payload: GroupDetailApiResponse) => {
+    setGroup(payload.group ?? null);
+    setExternalIds(payload.externalIds ?? []);
+    setProfileBody(payload.profileBody ?? null);
+    setGroupAttributes(payload.groupAttributes ?? null);
+    setLatestEvent(payload.latestEvent ?? null);
+    setFixedMetrics(payload.fixedMetrics ?? []);
+    setFreeMetricId(payload.freeMetricId ?? null);
+    setMetricCounts(payload.metricCounts ?? []);
+    setTotalVotes(payload.totalVotes ?? 0);
+    setVoteRank(payload.voteRank ?? null);
+    setRank(payload.rank ?? null);
+    setMetricsReady(true);
+  };
+
   useEffect(() => {
+    let ignore = false;
+
     const run = async () => {
       setStatus("loading");
-      const supabase = createClient();
+      setMessage("");
+      setMetricsReady(false);
 
       if (!safeSlug) {
         setStatus("error");
@@ -152,96 +164,32 @@ export function GroupDetail({ slug }: Props) {
         return;
       }
 
-      const { data, error } = await supabase
-        .schema("imd")
-        .from("groups")
-        .select("id,name_ja,slug,artist_image_url")
-        .ilike("slug", safeSlug)
-        .maybeSingle();
+      const response = await fetch(`/api/nandatte/group-detail?slug=${encodeURIComponent(safeSlug)}`, {
+        cache: "no-store",
+      });
+      const payload = (await response.json()) as GroupDetailApiResponse;
 
-      if (error) {
+      if (ignore) return;
+      if (!response.ok || !payload.group) {
         setStatus("error");
-        setMessage(error.message);
+        setMessage(payload.error ?? "グループ情報の取得に失敗しました。");
         return;
       }
 
-      setGroup(data);
+      applyDetailPayload(payload);
       setStatus("idle");
     };
 
     run().catch((err: unknown) => {
+      if (ignore) return;
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Unknown error");
     });
-  }, [safeSlug]);
 
-  useEffect(() => {
-    if (!group?.id) {
-      return;
-    }
-
-    const run = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .schema("imd")
-        .from("external_ids")
-        .select("id,group_id,service,external_id,url,meta,created_at")
-        .eq("group_id", group.id);
-
-      if (!error) {
-        setExternalIds(data ?? []);
-      }
-
-      const { data: profileRow } = await supabase
-        .schema("imd")
-        .from("group_profiles")
-        .select("id,group_id,locale,body")
-        .eq("group_id", group.id)
-        .eq("locale", "ja")
-        .maybeSingle();
-
-      setProfileBody((profileRow as GroupProfileRow | null)?.body ?? null);
-
-      const { data: attributesRows } = await supabase
-        .schema("imd")
-        .from("group_attributes")
-        .select("id,group_id,key,locale,value")
-        .eq("group_id", group.id)
-        .eq("locale", "ja")
-        .in("key", ["members", "location", "agency"]);
-
-      if (attributesRows && attributesRows.length > 0) {
-        const map = new Map<string, string | null>();
-        for (const row of attributesRows as GroupAttributeKVRow[]) {
-          map.set(row.key, row.value ?? null);
-        }
-        setGroupAttributes({
-          members: map.get("members") ?? null,
-          location: map.get("location") ?? null,
-          agency: map.get("agency") ?? null,
-        });
-      } else {
-        setGroupAttributes(null);
-      }
-
-      const { data: eventRow } = await supabase
-        .from("events")
-        .select("event_name,event_date,venue_name,event_url")
-        .eq("group_id", group.id)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      setLatestEvent((eventRow as EventRow | null) ?? null);
+    return () => {
+      ignore = true;
     };
-
-    run().catch(() => {
-      setExternalIds([]);
-      setProfileBody(null);
-      setGroupAttributes(null);
-      setLatestEvent(null);
-    });
-  }, [group?.id]);
+  }, [safeSlug]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -286,96 +234,6 @@ export function GroupDetail({ slug }: Props) {
     const host = window.location.hostname;
     setIsLocalhostEnv(host === "localhost" || host === "127.0.0.1");
   }, []);
-
-  const fetchMetricsAndCounts = async (groupId: string) => {
-    setMetricsReady(false);
-    const supabase = createClient();
-    const [metricsResponse, freeMetricResponse, metricCountsResponse, totalVotesResponse] =
-      await Promise.all([
-        supabase
-          .schema("nandatte")
-          .from("metrics")
-          .select("id,label,type")
-          .eq("type", "fixed")
-          .order("label", { ascending: true }),
-        supabase
-          .schema("nandatte")
-          .from("metrics")
-          .select("id")
-          .eq("type", "free")
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .schema("nandatte")
-          .rpc("get_group_metric_counts", { p_group_id: groupId }),
-        supabase
-          .schema("nandatte")
-          .rpc("get_group_vote_total", { p_group_id: groupId }),
-      ]);
-
-    if (metricsResponse.error) {
-      setVoteStatus("error");
-      setVoteMessage(metricsResponse.error.message);
-      return;
-    }
-
-    setFixedMetrics(metricsResponse.data ?? []);
-    setFreeMetricId(freeMetricResponse.data?.id ?? null);
-
-    if (metricCountsResponse.error) {
-      setVoteStatus("error");
-      setVoteMessage(metricCountsResponse.error.message);
-      return;
-    }
-
-    const counts = ((metricCountsResponse.data ?? []) as MetricCountRpcRow[]).map((row) => ({
-      label: row.label ?? "",
-      count: Number(row.count ?? 0),
-      kind: row.kind ?? "fixed",
-      metric_id: row.metric_id,
-      freeword_id: row.freeword_id,
-    }));
-
-    setMetricCounts(counts);
-    setTotalVotes(
-      totalVotesResponse.error ? 0 : Number(totalVotesResponse.data ?? 0)
-    );
-    setMetricsReady(true);
-
-    const { data: voteRankRow, error: voteRankError } = await supabase
-      .schema("nandatte")
-      .rpc("get_group_vote_rank", { p_group_id: groupId });
-
-    if (!voteRankError) {
-      setVoteRank(Number(voteRankRow ?? null));
-    }
-
-    const { data: rankRow, error: rankError } = await supabase
-      .schema("ihc")
-      .from("daily_rankings")
-      .select("rank")
-      .eq("group_id", groupId)
-      .order("snapshot_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!rankError) {
-      setRank(rankRow?.rank ?? null);
-    }
-  };
-
-  useEffect(() => {
-    if (!group?.id) {
-      return;
-    }
-
-    queueMicrotask(() => {
-      fetchMetricsAndCounts(group.id).catch((err: unknown) => {
-        setVoteStatus("error");
-        setVoteMessage(err instanceof Error ? err.message : "Unknown error");
-      });
-    });
-  }, [group?.id]);
 
   const sortedCounts = useMemo(() => {
     return [...metricCounts].sort((a, b) => {
@@ -727,7 +585,16 @@ export function GroupDetail({ slug }: Props) {
     setVoteMessage("投票を保存しました。");
     setSelectedItems(pendingItems);
     setNewFreeword("");
-    fetchMetricsAndCounts(group.id).catch(() => null);
+    fetch(`/api/nandatte/group-detail?slug=${encodeURIComponent(safeSlug)}`, {
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) return;
+        const payload = (await response.json()) as GroupDetailApiResponse;
+        if (!payload.group || payload.group.id !== group.id) return;
+        applyDetailPayload(payload);
+      })
+      .catch(() => null);
   };
 
   const handleSignIn = async () => {

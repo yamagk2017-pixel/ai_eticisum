@@ -1,5 +1,6 @@
 import type {Metadata} from "next";
 import {draftMode} from "next/headers";
+import {unstable_cache} from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import {notFound} from "next/navigation";
@@ -14,7 +15,7 @@ import {getSanityNewsBySlug, type SanityRelatedGroup} from "@/lib/news/sanity";
 import type {NewsArticle} from "@/lib/news/types";
 import {hasSanityStudioEnv} from "@/sanity/env";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
 type Params = {slug: string} | Promise<{slug: string}>;
@@ -29,6 +30,18 @@ type SearchParams =
 type PortableTextLikeBlock = {
   _type?: string;
 };
+
+const getCachedSanityNewsBySlug = unstable_cache(
+  async (slug: string) => getSanityNewsBySlug(slug, {preview: false}),
+  ["sanity-news-by-slug-v1"],
+  {revalidate}
+);
+
+const getCachedNewsRelatedGroupsInfo = unstable_cache(
+  async (relatedGroups: SanityRelatedGroup[]) => getNewsRelatedGroupsInfo(relatedGroups),
+  ["news-related-groups-info-v1"],
+  {revalidate}
+);
 
 function formatDate(value: string | null) {
   if (!value) return "-";
@@ -139,7 +152,9 @@ export async function generateMetadata({params}: {params: Params}): Promise<Meta
   const resolved = await params;
   try {
     const {isEnabled} = await draftMode();
-    const article = await getSanityNewsBySlug(resolved.slug, {preview: isEnabled});
+    const article = isEnabled
+      ? await getSanityNewsBySlug(resolved.slug, {preview: true})
+      : await getCachedSanityNewsBySlug(resolved.slug);
     return buildArticleMetadata(toSeoArticleShape(article), {
       fallbackTitle: "News",
       canonicalStrategy: "self",
@@ -173,7 +188,9 @@ export default async function SanityNewsArticlePage({
     );
   }
 
-  const article = await getSanityNewsBySlug(resolved.slug, {preview: isEnabled});
+  const article = isEnabled
+    ? await getSanityNewsBySlug(resolved.slug, {preview: true})
+    : await getCachedSanityNewsBySlug(resolved.slug);
   if (!article) notFound();
   const bodyPages = splitBodyByPageBreak(article.body);
   const totalBodyPages = bodyPages.length;
@@ -219,7 +236,9 @@ export default async function SanityNewsArticlePage({
     combinedRelatedGroups.push(candidate);
   }
 
-  const allGroupPanels = await getNewsRelatedGroupsInfo(combinedRelatedGroups);
+  const allGroupPanels = isEnabled
+    ? await getNewsRelatedGroupsInfo(combinedRelatedGroups)
+    : await getCachedNewsRelatedGroupsInfo(combinedRelatedGroups);
   const sidebarSourceGroups = article.relatedGroups.length > 0 ? article.relatedGroups : combinedRelatedGroups;
   const sidebarGroupKeys = new Set(sidebarSourceGroups.map(relatedGroupKey));
   const relatedGroupPanels = allGroupPanels.filter((group) =>
