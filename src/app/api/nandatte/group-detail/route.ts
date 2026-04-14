@@ -176,6 +176,30 @@ export async function GET(request: Request) {
       freeword_id: row.freeword_id,
     }));
 
+    const fallbackFixedMetrics = Array.from(
+      new Map(
+        metricCounts
+          .filter((row) => row.kind === "fixed" && typeof row.metric_id === "string" && row.metric_id.length > 0)
+          .map((row) => [
+            row.metric_id as string,
+            {
+              id: row.metric_id as string,
+              label: row.label,
+              type: "fixed" as const,
+            },
+          ])
+      ).values()
+    ).sort((a, b) => a.label.localeCompare(b.label, "ja"));
+
+    const effectiveFixedMetrics =
+      metricsRes.error || (metricsRes.data ?? []).length === 0
+        ? fallbackFixedMetrics
+        : ((metricsRes.data ?? []) as MetricRow[]);
+    const fallbackFreeMetricId =
+      metricCounts.find((row) => row.kind === "freeword" && typeof row.metric_id === "string" && row.metric_id.length > 0)
+        ?.metric_id ?? null;
+    const effectiveFreeMetricId = freeMetricRes.data?.id ?? fallbackFreeMetricId;
+
     return NextResponse.json(
       {
         group,
@@ -183,8 +207,8 @@ export async function GET(request: Request) {
         profileBody: ((profileRes.data as GroupProfileRow | null)?.body ?? null) as string | null,
         groupAttributes,
         latestEvent: (eventRes.data as EventRow | null) ?? null,
-        fixedMetrics: (metricsRes.data ?? []) as MetricRow[],
-        freeMetricId: freeMetricRes.data?.id ?? null,
+        fixedMetrics: effectiveFixedMetrics,
+        freeMetricId: effectiveFreeMetricId,
         metricCounts,
         totalVotes: totalVotesRes.error ? 0 : Number(totalVotesRes.data ?? 0),
         voteRank:
