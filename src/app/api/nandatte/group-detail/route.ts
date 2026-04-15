@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const supabase = createServerClient();
+    const supabase = createServerClient({ requireServiceRole: true });
 
     const { data: groupData, error: groupError } = await supabase
       .schema("imd")
