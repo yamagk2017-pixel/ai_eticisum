@@ -28,6 +28,7 @@ export type CollectRawUpdatesYoutubeResult = {
   success: number;
   failed: number;
   skipped: number;
+  errors: Array<{ groupId: string; message: string }>;
 };
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
@@ -187,7 +188,7 @@ async function getYoutubeExternalIds(groupIds: string[]) {
   return (res.data ?? []) as ExternalIdRow[];
 }
 
-async function upsertRawUpdate(row: {
+async function saveRawUpdate(row: {
   groupId: string;
   sourceUrl: string;
   videoId: string;
@@ -196,33 +197,56 @@ async function upsertRawUpdate(row: {
   publishedAt: string | null;
 }) {
   const supabase = createServerClient({ requireServiceRole: true });
-  const res = await supabase
+  const existingRes = await supabase
     .schema("imd")
     .from("raw_updates")
-    .upsert(
-      {
-        group_id: row.groupId,
-        source_type: "youtube",
-        source_url: row.sourceUrl,
-        external_item_id: row.videoId,
-        title: row.title,
-        body_text: row.description,
-        raw_json: {
-          source: "youtube",
-          video_id: row.videoId,
-        },
-        published_at: row.publishedAt,
-        fetched_at: new Date().toISOString(),
-        status: "success",
-        title_hash: toTitleHash(row.title),
-      },
-      { onConflict: "group_id,source_type,source_url,external_item_id" }
-    )
     .select("id")
-    .single();
+    .eq("group_id", row.groupId)
+    .eq("source_type", "youtube")
+    .eq("external_item_id", row.videoId)
+    .maybeSingle();
 
-  if (res.error) {
-    throw new Error(`Failed to upsert raw_updates: ${res.error.message}`);
+  if (existingRes.error) {
+    throw new Error(`Failed to check raw_updates existing row: ${existingRes.error.message}`);
+  }
+
+  const payload = {
+    group_id: row.groupId,
+    source_type: "youtube",
+    source_url: row.sourceUrl,
+    external_item_id: row.videoId,
+    title: row.title,
+    body_text: row.description,
+    raw_json: {
+      source: "youtube",
+      video_id: row.videoId,
+    },
+    published_at: row.publishedAt,
+    fetched_at: new Date().toISOString(),
+    status: "success",
+    title_hash: toTitleHash(row.title),
+    error_type: null,
+    error_message: null,
+  };
+
+  if (existingRes.data?.id) {
+    const updateRes = await supabase
+      .schema("imd")
+      .from("raw_updates")
+      .update(payload)
+      .eq("id", existingRes.data.id)
+      .select("id")
+      .single();
+
+    if (updateRes.error) {
+      throw new Error(`Failed to update raw_updates: ${updateRes.error.message}`);
+    }
+    return;
+  }
+
+  const insertRes = await supabase.schema("imd").from("raw_updates").insert(payload).select("id").single();
+  if (insertRes.error) {
+    throw new Error(`Failed to insert raw_updates: ${insertRes.error.message}`);
   }
 }
 
@@ -234,7 +258,7 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
 
   const weekKey = await getLatestWeekKey();
   if (!weekKey) {
-    return { weekKey: null, targetGroups: 0, youtubeSources: 0, processed: 0, success: 0, failed: 0, skipped: 0 };
+    return { weekKey: null, targetGroups: 0, youtubeSources: 0, processed: 0, success: 0, failed: 0, skipped: 0, errors: [] };
   }
 
   const groupIds = await getWeeklyTargetGroupIds(weekKey);
@@ -255,6 +279,7 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
     success: 0,
     failed: 0,
     skipped: 0,
+    errors: [],
   };
 
   for (const row of youtubeRows) {
@@ -272,7 +297,7 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
         continue;
       }
 
-      await upsertRawUpdate({
+      await saveRawUpdate({
         groupId: row.group_id,
         sourceUrl: video.sourceUrl,
         videoId: video.videoId,
@@ -281,8 +306,12 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
         publishedAt: video.publishedAt,
       });
       result.success += 1;
-    } catch {
+    } catch (error) {
       result.failed += 1;
+      result.errors.push({
+        groupId: row.group_id,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   }
 
