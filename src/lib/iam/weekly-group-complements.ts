@@ -189,14 +189,14 @@ async function getLatestWeekKey() {
   const supabase = createServerClient({ requireServiceRole: true });
   const res = await supabase
     .schema("imd")
-    .from("weekly_targets")
+    .from("weekly_digest_candidates")
     .select("week_key")
     .order("week_key", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (res.error) {
-    throw new Error(`Failed to load latest week_key: ${res.error.message}`);
+    throw new Error(`Failed to load latest week_key from weekly_digest_candidates: ${res.error.message}`);
   }
   return res.data?.week_key ?? null;
 }
