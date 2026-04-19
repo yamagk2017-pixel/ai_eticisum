@@ -45,7 +45,7 @@ type CandidatesData = {
   eventMap: Map<string, EventRow>;
   groupMap: Map<string, GroupRow>;
   complementMap: Map<string, ComplementRow>;
-  eventSourceUrlMap: Map<string, string>;
+  eventSourceMap: Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>;
   error: string | null;
 };
 
@@ -114,8 +114,8 @@ async function getComplementMap(weekKey: string, groupIds: string[]) {
   return new Map(((data ?? []) as ComplementRow[]).map((row) => [row.group_id, row]));
 }
 
-async function getEventSourceUrlMap(eventIds: string[]) {
-  if (eventIds.length === 0) return new Map<string, string>();
+async function getEventSourceMap(eventIds: string[]) {
+  if (eventIds.length === 0) return new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>();
   const supabase = createServerClient({ requireServiceRole: true });
   const { data, error } = await supabase
     .schema("imd")
@@ -125,7 +125,7 @@ async function getEventSourceUrlMap(eventIds: string[]) {
 
   if (error) throw new Error(error.message);
 
-  const map = new Map<string, string>();
+  const map = new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>();
   const rows = (data ?? []) as Array<{
     event_id: string;
     raw_updates: { source_url?: string | null; source_type?: string | null } | Array<{ source_url?: string | null; source_type?: string | null }>;
@@ -135,9 +135,12 @@ async function getEventSourceUrlMap(eventIds: string[]) {
     const raws = Array.isArray(row.raw_updates) ? row.raw_updates : [row.raw_updates];
     const preferred = raws.find((raw) => raw?.source_type === "youtube" || raw?.source_type === "spotify_release");
     const fallback = raws.find((raw) => typeof raw?.source_url === "string" && raw.source_url.length > 0);
-    const selected = preferred?.source_url ?? fallback?.source_url ?? null;
-    if (selected && !map.has(row.event_id)) {
-      map.set(row.event_id, selected);
+    const selectedUrl = preferred?.source_url ?? fallback?.source_url ?? null;
+    const selectedType = preferred?.source_type ?? fallback?.source_type ?? "other";
+    const label: "YouTube" | "Spotify" | "Other" =
+      selectedType === "youtube" ? "YouTube" : selectedType === "spotify_release" ? "Spotify" : "Other";
+    if (selectedUrl && !map.has(row.event_id)) {
+      map.set(row.event_id, { url: selectedUrl, label });
     }
   }
 
@@ -154,7 +157,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
         eventMap: new Map<string, EventRow>(),
         groupMap: new Map<string, GroupRow>(),
         complementMap: new Map<string, ComplementRow>(),
-        eventSourceUrlMap: new Map<string, string>(),
+        eventSourceMap: new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>(),
         error: null,
       };
     }
@@ -162,13 +165,13 @@ async function loadCandidatesData(): Promise<CandidatesData> {
     const candidates = await getCandidates(weekKey);
     const eventMap = await getEventMap(candidates.map((row) => row.event_id));
     const groupIds = [...new Set([...eventMap.values()].map((row) => row.group_id))];
-    const [groupMap, complementMap, eventSourceUrlMap] = await Promise.all([
+    const [groupMap, complementMap, eventSourceMap] = await Promise.all([
       getGroupMap(groupIds),
       getComplementMap(weekKey, groupIds),
-      getEventSourceUrlMap(candidates.map((row) => row.event_id)),
+      getEventSourceMap(candidates.map((row) => row.event_id)),
     ]);
 
-    return { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceUrlMap, error: null };
+    return { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceMap, error: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return {
@@ -177,14 +180,14 @@ async function loadCandidatesData(): Promise<CandidatesData> {
       eventMap: new Map<string, EventRow>(),
       groupMap: new Map<string, GroupRow>(),
       complementMap: new Map<string, ComplementRow>(),
-      eventSourceUrlMap: new Map<string, string>(),
+      eventSourceMap: new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>(),
       error: message,
     };
   }
 }
 
 export default async function IamConsolePage() {
-  const { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceUrlMap, error } = await loadCandidatesData();
+  const { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceMap, error } = await loadCandidatesData();
 
   if (error) {
     return (
@@ -255,7 +258,7 @@ export default async function IamConsolePage() {
                 const complementBullets = complement?.status === "completed" ? (complement.bullets ?? []) : [];
                 const majorTopics = complement?.status === "completed" ? (complement.major_ongoing_topics ?? []) : [];
                 const complementSources = complement?.status === "completed" ? (complement.sources ?? []) : [];
-                const eventSourceUrl = event ? eventSourceUrlMap.get(event.id) : null;
+                const eventSource = event ? eventSourceMap.get(event.id) : null;
                 const groupDetailHref = group?.slug ? `/nandatte/${group.slug}` : null;
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
@@ -268,12 +271,11 @@ export default async function IamConsolePage() {
                       ) : (
                         <p>{group?.name_ja ?? event?.group_id ?? "-"}</p>
                       )}
-                      <p className="text-xs text-[var(--ui-text-subtle)]">{group?.slug ?? "-"}</p>
                     </td>
                     <td className="px-4 py-3">
-                      {eventSourceUrl ? (
+                      {eventSource ? (
                         <a
-                          href={eventSourceUrl}
+                          href={eventSource.url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium text-[var(--ui-accent)] hover:underline"
@@ -283,6 +285,9 @@ export default async function IamConsolePage() {
                       ) : (
                         <p className="font-medium">{event?.headline ?? "(event not found)"}</p>
                       )}
+                      {eventSource ? (
+                        <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">Source: {eventSource.label}</p>
+                      ) : null}
                       <p className="mt-1 text-xs text-[var(--ui-text-muted)]">{event?.summary ?? row.editorial_note ?? "-"}</p>
                       {complementSummary ? (
                         <p className="mt-2 text-xs text-[var(--ui-accent)]">AI補足: {complementSummary}</p>
@@ -298,7 +303,6 @@ export default async function IamConsolePage() {
                       {complementSources.length > 0 ? (
                         <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
                       ) : null}
-                      <p className="mt-1 font-mono text-xs text-[var(--ui-text-subtle)]">{event?.event_type ?? "-"}</p>
                     </td>
                     <td className="px-4 py-3 font-mono">{row.candidate_score}</td>
                     <td className="px-4 py-3">{row.status}</td>
