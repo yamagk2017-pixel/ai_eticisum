@@ -18,6 +18,21 @@ type GroupRow = {
   slug: string | null;
 };
 
+function formatTokyoDateTime(value: string) {
+  const ts = Date.parse(value);
+  if (Number.isNaN(ts)) return value;
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date(ts));
+}
+
 type TargetsData = {
   weekKey: string | null;
   rows: TargetRow[];
@@ -157,7 +172,7 @@ export default async function IamTargetsPage() {
                         <span className="text-[var(--ui-text-subtle)]">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">{row.created_at}</td>
+                    <td className="px-4 py-3 text-xs">{formatTokyoDateTime(row.created_at)}</td>
                   </tr>
                 );
               })}
