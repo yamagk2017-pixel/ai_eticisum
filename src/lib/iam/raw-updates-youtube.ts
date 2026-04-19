@@ -49,12 +49,81 @@ function extractChannelIdFromUrl(url: string | null) {
   return null;
 }
 
+function extractHandleFromUrl(url: string | null) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const handleMatch = parsed.pathname.match(/\/@([A-Za-z0-9._-]+)/);
+    return handleMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function extractUserFromUrl(url: string | null) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const userMatch = parsed.pathname.match(/\/user\/([A-Za-z0-9._-]+)/);
+    return userMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function extractCustomFromUrl(url: string | null) {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const customMatch = parsed.pathname.match(/\/c\/([A-Za-z0-9._-]+)/);
+    return customMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchJson<T>(url: string) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`YouTube API error: ${res.status}`);
   }
   return (await res.json()) as T;
+}
+
+async function resolveChannelId(apiKey: string, externalId: string | null, url: string | null) {
+  if (externalId && externalId.startsWith("UC")) return externalId;
+
+  const channelIdFromUrl = extractChannelIdFromUrl(url);
+  if (channelIdFromUrl) return channelIdFromUrl;
+
+  const handle = extractHandleFromUrl(url);
+  if (handle) {
+    const data = await fetchJson<{ items?: Array<{ id?: string }> }>(
+      `${YOUTUBE_API_BASE}/channels?part=id&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`
+    );
+    const id = data.items?.[0]?.id ?? null;
+    if (id && id.startsWith("UC")) return id;
+  }
+
+  const user = extractUserFromUrl(url);
+  if (user) {
+    const data = await fetchJson<{ items?: Array<{ id?: string }> }>(
+      `${YOUTUBE_API_BASE}/channels?part=id&forUsername=${encodeURIComponent(user)}&key=${apiKey}`
+    );
+    const id = data.items?.[0]?.id ?? null;
+    if (id && id.startsWith("UC")) return id;
+  }
+
+  const custom = extractCustomFromUrl(url);
+  if (custom) {
+    const data = await fetchJson<{ items?: Array<{ id?: { channelId?: string } }> }>(
+      `${YOUTUBE_API_BASE}/search?part=id&type=channel&maxResults=1&q=${encodeURIComponent(custom)}&key=${apiKey}`
+    );
+    const id = data.items?.[0]?.id?.channelId ?? null;
+    if (id && id.startsWith("UC")) return id;
+  }
+
+  return null;
 }
 
 async function fetchLatestYoutubeVideo(apiKey: string, channelId: string) {
@@ -190,8 +259,7 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
 
   for (const row of youtubeRows) {
     result.processed += 1;
-    const channelId =
-      (row.external_id && row.external_id.startsWith("UC") ? row.external_id : null) ?? extractChannelIdFromUrl(row.url);
+    const channelId = await resolveChannelId(apiKey, row.external_id, row.url);
     if (!channelId) {
       result.skipped += 1;
       continue;
@@ -220,4 +288,3 @@ export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesY
 
   return result;
 }
-
