@@ -235,7 +235,7 @@ export default async function IamConsolePage() {
         </header>
 
         <div className="overflow-hidden rounded-2xl border border-[var(--ui-border)]">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-base">
             <thead className="bg-black/20 text-xs uppercase tracking-wider text-[var(--ui-text-subtle)]">
               <tr>
                 <th className="px-4 py-3">Rank</th>
@@ -262,7 +262,7 @@ export default async function IamConsolePage() {
                 const groupDetailHref = group?.slug ? `/nandatte/${group.slug}` : null;
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
-                    <td className="px-4 py-3 font-mono">{row.rank_hint ?? index + 1}</td>
+                    <td className="px-4 py-3 text-lg font-mono">{row.rank_hint ?? index + 1}</td>
                     <td className="px-4 py-3">
                       {groupDetailHref ? (
                         <Link href={groupDetailHref} className="text-[var(--ui-accent)] hover:underline">
@@ -286,27 +286,27 @@ export default async function IamConsolePage() {
                         <p className="font-medium">{event?.headline ?? "(event not found)"}</p>
                       )}
                       {eventSource ? (
-                        <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">Source: {eventSource.label}</p>
+                        <p className="mt-1 text-sm text-[var(--ui-text-subtle)]">Source: {eventSource.label}</p>
                       ) : null}
-                      <p className="mt-1 text-xs text-[var(--ui-text-muted)]">{event?.summary ?? row.editorial_note ?? "-"}</p>
+                      <p className="mt-1 text-sm text-[var(--ui-text-muted)]">{event?.summary ?? row.editorial_note ?? "-"}</p>
                       {complementSummary ? (
-                        <p className="mt-2 text-xs text-[var(--ui-accent)]">AI補足: {complementSummary}</p>
+                        <p className="mt-2 text-sm text-[var(--ui-accent)]">AI補足: {complementSummary}</p>
                       ) : null}
                       {complementBullets.length > 0 ? (
-                        <p className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                        <p className="mt-1 text-sm text-[var(--ui-text-muted)]">
                           補足ポイント: {complementBullets.join(" / ")}
                         </p>
                       ) : null}
                       {majorTopics.length > 0 ? (
-                        <p className="mt-1 text-xs text-[var(--ui-text)]">継続重要: {majorTopics.join(" / ")}</p>
+                        <p className="mt-1 text-sm text-[var(--ui-text)]">継続重要: {majorTopics.join(" / ")}</p>
                       ) : null}
                       {complementSources.length > 0 ? (
-                        <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
+                        <p className="mt-1 text-sm text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 font-mono">{row.candidate_score}</td>
+                    <td className="px-4 py-3 text-lg font-mono">{row.candidate_score}</td>
                     <td className="px-4 py-3">{row.status}</td>
-                    <td className="px-4 py-3 font-mono">{event?.confidence ?? "-"}</td>
+                    <td className="px-4 py-3 text-lg font-mono">{event?.confidence ?? "-"}</td>
                   </tr>
                 );
               })}
