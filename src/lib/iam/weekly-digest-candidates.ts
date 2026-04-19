@@ -192,7 +192,10 @@ export async function buildWeeklyDigestCandidates(): Promise<BuildWeeklyDigestCa
     };
   });
 
-  rows.sort((a, b) => b.candidate_score - a.candidate_score);
+  rows.sort((a, b) => {
+    if (b.candidate_score !== a.candidate_score) return b.candidate_score - a.candidate_score;
+    return a.event_id.localeCompare(b.event_id);
+  });
   rows.forEach((row, index) => {
     row.rank_hint = index + 1;
   });

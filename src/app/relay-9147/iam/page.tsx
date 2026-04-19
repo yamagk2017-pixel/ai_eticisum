@@ -70,6 +70,7 @@ async function getCandidates(weekKey: string) {
     .from("weekly_digest_candidates")
     .select("id,week_key,event_id,candidate_score,rank_hint,editorial_note,status,created_at")
     .eq("week_key", weekKey)
+    .order("rank_hint", { ascending: true, nullsFirst: false })
     .order("candidate_score", { ascending: false })
     .order("created_at", { ascending: true });
 
