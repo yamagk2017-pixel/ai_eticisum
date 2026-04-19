@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type TargetRow = {
   week_key: string;
   group_id: string;

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type CandidateRow = {
   id: string;
   week_key: string;
