@@ -220,9 +220,14 @@ export default async function IamConsolePage() {
           <p className="text-sm text-[var(--ui-text-muted)]">
             week_key: <span className="font-mono">{weekKey}</span> / {candidates.length}件
           </p>
-          <Link href="/relay-9147" className="inline-block text-sm text-[var(--ui-accent)]">
-            /relay-9147 へ戻る
-          </Link>
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/relay-9147/iam/targets" className="text-[var(--ui-accent)] hover:underline">
+              weekly targets を確認
+            </Link>
+            <Link href="/relay-9147" className="text-[var(--ui-accent)] hover:underline">
+              /relay-9147 へ戻る
+            </Link>
+          </div>
         </header>
 
         <div className="overflow-hidden rounded-2xl border border-[var(--ui-border)]">
