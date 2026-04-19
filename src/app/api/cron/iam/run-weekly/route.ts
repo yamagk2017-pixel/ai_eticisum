@@ -3,6 +3,7 @@ import { buildWeeklyTargets } from "@/lib/iam/weekly-targets";
 import { collectRawUpdatesFromYoutube } from "@/lib/iam/raw-updates-youtube";
 import { collectRawUpdatesFromSpotify } from "@/lib/iam/raw-updates-spotify";
 import { normalizeEventsFromRawUpdates } from "@/lib/iam/normalize-events";
+import { buildWeeklyDigestCandidates } from "@/lib/iam/weekly-digest-candidates";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ export async function GET(request: NextRequest) {
     const rawUpdatesYoutube = await collectRawUpdatesFromYoutube();
     const rawUpdatesSpotify = await collectRawUpdatesFromSpotify();
     const normalizedEvents = await normalizeEventsFromRawUpdates();
+    const weeklyDigestCandidates = await buildWeeklyDigestCandidates();
     const completedAt = Date.now();
 
     return NextResponse.json({
@@ -28,6 +30,7 @@ export async function GET(request: NextRequest) {
       rawUpdatesYoutube,
       rawUpdatesSpotify,
       normalizedEvents,
+      weeklyDigestCandidates,
     });
   } catch (error) {
     return NextResponse.json(
