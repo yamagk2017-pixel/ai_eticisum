@@ -30,11 +30,21 @@ type GroupRow = {
   slug: string | null;
 };
 
+type ComplementRow = {
+  group_id: string;
+  status: "completed" | "budget_limited" | "error" | "skipped";
+  summary: string | null;
+  bullets: string[] | null;
+  major_ongoing_topics: string[] | null;
+  sources: string[] | null;
+};
+
 type CandidatesData = {
   weekKey: string | null;
   candidates: CandidateRow[];
   eventMap: Map<string, EventRow>;
   groupMap: Map<string, GroupRow>;
+  complementMap: Map<string, ComplementRow>;
   error: string | null;
 };
 
@@ -88,6 +98,20 @@ async function getGroupMap(groupIds: string[]) {
   return new Map(((data ?? []) as GroupRow[]).map((row) => [row.id, row]));
 }
 
+async function getComplementMap(weekKey: string, groupIds: string[]) {
+  if (groupIds.length === 0) return new Map<string, ComplementRow>();
+  const supabase = createServerClient({ requireServiceRole: true });
+  const { data, error } = await supabase
+    .schema("imd")
+    .from("weekly_group_complements")
+    .select("group_id,status,summary,bullets,major_ongoing_topics,sources")
+    .eq("week_key", weekKey)
+    .in("group_id", groupIds);
+
+  if (error) throw new Error(error.message);
+  return new Map(((data ?? []) as ComplementRow[]).map((row) => [row.group_id, row]));
+}
+
 async function loadCandidatesData(): Promise<CandidatesData> {
   try {
     const weekKey = await getLatestWeekKey();
@@ -97,6 +121,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
         candidates: [],
         eventMap: new Map<string, EventRow>(),
         groupMap: new Map<string, GroupRow>(),
+        complementMap: new Map<string, ComplementRow>(),
         error: null,
       };
     }
@@ -104,9 +129,9 @@ async function loadCandidatesData(): Promise<CandidatesData> {
     const candidates = await getCandidates(weekKey);
     const eventMap = await getEventMap(candidates.map((row) => row.event_id));
     const groupIds = [...new Set([...eventMap.values()].map((row) => row.group_id))];
-    const groupMap = await getGroupMap(groupIds);
+    const [groupMap, complementMap] = await Promise.all([getGroupMap(groupIds), getComplementMap(weekKey, groupIds)]);
 
-    return { weekKey, candidates, eventMap, groupMap, error: null };
+    return { weekKey, candidates, eventMap, groupMap, complementMap, error: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return {
@@ -114,13 +139,14 @@ async function loadCandidatesData(): Promise<CandidatesData> {
       candidates: [],
       eventMap: new Map<string, EventRow>(),
       groupMap: new Map<string, GroupRow>(),
+      complementMap: new Map<string, ComplementRow>(),
       error: message,
     };
   }
 }
 
 export default async function IamCandidatesPage() {
-  const { weekKey, candidates, eventMap, groupMap, error } = await loadCandidatesData();
+  const { weekKey, candidates, eventMap, groupMap, complementMap, error } = await loadCandidatesData();
 
   if (error) {
     return (
@@ -178,6 +204,14 @@ export default async function IamCandidatesPage() {
               {candidates.map((row, index) => {
                 const event = eventMap.get(row.event_id);
                 const group = event ? groupMap.get(event.group_id) : undefined;
+                const complement = event ? complementMap.get(event.group_id) : undefined;
+                const complementSummary =
+                  complement?.status === "budget_limited"
+                    ? "利用限度（料金）の上限に達しました"
+                    : complement?.summary ?? null;
+                const complementBullets = complement?.status === "completed" ? (complement.bullets ?? []) : [];
+                const majorTopics = complement?.status === "completed" ? (complement.major_ongoing_topics ?? []) : [];
+                const complementSources = complement?.status === "completed" ? (complement.sources ?? []) : [];
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
                     <td className="px-4 py-3 font-mono">{row.rank_hint ?? index + 1}</td>
@@ -188,6 +222,20 @@ export default async function IamCandidatesPage() {
                     <td className="px-4 py-3">
                       <p className="font-medium">{event?.headline ?? "(event not found)"}</p>
                       <p className="mt-1 text-xs text-[var(--ui-text-muted)]">{event?.summary ?? row.editorial_note ?? "-"}</p>
+                      {complementSummary ? (
+                        <p className="mt-2 text-xs text-[var(--ui-accent)]">AI補足: {complementSummary}</p>
+                      ) : null}
+                      {complementBullets.length > 0 ? (
+                        <p className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                          補足ポイント: {complementBullets.join(" / ")}
+                        </p>
+                      ) : null}
+                      {majorTopics.length > 0 ? (
+                        <p className="mt-1 text-xs text-[var(--ui-text)]">継続重要: {majorTopics.join(" / ")}</p>
+                      ) : null}
+                      {complementSources.length > 0 ? (
+                        <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
+                      ) : null}
                       <p className="mt-1 font-mono text-xs text-[var(--ui-text-subtle)]">{event?.event_type ?? "-"}</p>
                     </td>
                     <td className="px-4 py-3 font-mono">{row.candidate_score}</td>
