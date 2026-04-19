@@ -1,0 +1,47 @@
+name: IAM Weekly Targets
+
+on:
+  schedule:
+    # Monday 03:00 JST = Sunday 18:00 UTC
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-iam-weekly-targets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Trigger IAM weekly targets cron API
+        env:
+          BASE_URL: ${{ secrets.PRODUCTION_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "PRODUCTION_BASE_URL secret is not set"
+            exit 1
+          fi
+
+          if [ -z "${CRON_SECRET:-}" ]; then
+            echo "CRON_SECRET secret is not set"
+            exit 1
+          fi
+
+          URL="${BASE_URL%/}/api/cron/iam/weekly-targets"
+          echo "Calling: $URL"
+
+          HTTP_CODE=$(curl -sS -o /tmp/iam-weekly-targets-response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "$URL")
+
+          cat /tmp/iam-weekly-targets-response.json
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Request failed with status: $HTTP_CODE"
+            exit 1
+          fi

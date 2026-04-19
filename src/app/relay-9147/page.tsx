@@ -18,12 +18,20 @@ export default function Relay9147Page() {
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--ui-text-subtle)]">Control Surface</p>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-3xl font-semibold sm:text-4xl">運用コンソール</h1>
-            <Link
-              href="/"
-              className="rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs text-[var(--ui-text)] hover:border-zinc-500"
-            >
-              ポータルへ戻る
-            </Link>
+            <div className="flex gap-2">
+              <Link
+                href="/relay-9147/iam"
+                className="rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs text-[var(--ui-text)] hover:border-zinc-500"
+              >
+                IAM Console
+              </Link>
+              <Link
+                href="/"
+                className="rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs text-[var(--ui-text)] hover:border-zinc-500"
+              >
+                ポータルへ戻る
+              </Link>
+            </div>
           </div>
           <p className="text-sm text-[var(--ui-text-muted)]">IMAKITE、NANDATTE、BUZZTTARA を単一画面で管理します。</p>
         </header>
