@@ -47,6 +47,12 @@ type YoutubeVideoDetailsItem = {
   };
 };
 
+type YoutubeSnippetBase = {
+  title?: string;
+  description?: string;
+  publishedAt?: string;
+};
+
 type YoutubeActivity = {
   videoId: string;
   title: string | null;
@@ -212,7 +218,7 @@ async function fetchVideoDetailsMap(apiKey: string, videoIds: string[]) {
 }
 
 async function fetchChannelActivities(apiKey: string, channelId: string, weekStartTs: number) {
-  const candidates = new Map<string, YoutubeVideoItem["snippet"]>();
+  const candidates = new Map<string, YoutubeSnippetBase | undefined>();
 
   const uploadsPlaylistId = await fetchChannelUploadsPlaylistId(apiKey, channelId);
   if (uploadsPlaylistId) {
@@ -258,9 +264,9 @@ async function fetchChannelActivities(apiKey: string, channelId: string, weekSta
   const activities: YoutubeActivity[] = [];
   for (const videoId of videoIds) {
     const detail = detailsMap.get(videoId);
-    const snippet = detail?.snippet ?? candidates.get(videoId);
+    const snippet = (detail?.snippet as YoutubeSnippetBase | undefined) ?? candidates.get(videoId);
     const publishedAt = snippet?.publishedAt ?? null;
-    const liveBroadcastContent = snippet?.liveBroadcastContent ?? "none";
+    const liveBroadcastContent = detail?.snippet?.liveBroadcastContent ?? "none";
     const scheduledStartTime = detail?.liveStreamingDetails?.scheduledStartTime ?? null;
     const durationSeconds = parseIsoDurationSeconds(detail?.contentDetails?.duration);
     const isShort = durationSeconds !== null && durationSeconds <= 70 && liveBroadcastContent === "none";
