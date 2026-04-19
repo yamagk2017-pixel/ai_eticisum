@@ -62,8 +62,7 @@ async function getTopCandidates(weekKey: string) {
     .select("id,event_id,candidate_score,rank_hint")
     .eq("week_key", weekKey)
     .order("candidate_score", { ascending: false })
-    .order("created_at", { ascending: true })
-    .limit(10);
+    .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as CandidateRow[];
 }
@@ -136,14 +135,14 @@ export default async function IamConsoleIndexPage() {
 
         <section className="rounded-2xl border border-[var(--ui-border)] bg-black/10 p-5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">週間ニュース候補（上位10）</h2>
+            <h2 className="text-lg font-semibold">週間ニュース候補（全件）</h2>
             <Link href="/relay-9147/iam/candidates" className="text-xs text-[var(--ui-accent)] hover:underline">
               candidatesページへ
             </Link>
           </div>
           {weekKey ? (
             <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">
-              week_key: <span className="font-mono">{weekKey}</span>
+              week_key: <span className="font-mono">{weekKey}</span> / {candidates.length}件
             </p>
           ) : null}
 
