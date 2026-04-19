@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Trigger IAM weekly targets cron API
+      - name: Trigger IAM weekly pipeline API
         env:
           BASE_URL: ${{ secrets.PRODUCTION_BASE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -32,14 +32,14 @@ jobs:
             exit 1
           fi
 
-          URL="${BASE_URL%/}/api/cron/iam/weekly-targets"
+          URL="${BASE_URL%/}/api/cron/iam/run-weekly"
           echo "Calling: $URL"
 
-          HTTP_CODE=$(curl -sS -o /tmp/iam-weekly-targets-response.json -w "%{http_code}" \
+          HTTP_CODE=$(curl -sS -o /tmp/iam-weekly-pipeline-response.json -w "%{http_code}" \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             "$URL")
 
-          cat /tmp/iam-weekly-targets-response.json
+          cat /tmp/iam-weekly-pipeline-response.json
 
           if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
             echo "Request failed with status: $HTTP_CODE"
