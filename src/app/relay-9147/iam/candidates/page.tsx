@@ -45,6 +45,7 @@ type CandidatesData = {
   eventMap: Map<string, EventRow>;
   groupMap: Map<string, GroupRow>;
   complementMap: Map<string, ComplementRow>;
+  eventSourceUrlMap: Map<string, string>;
   error: string | null;
 };
 
@@ -112,6 +113,36 @@ async function getComplementMap(weekKey: string, groupIds: string[]) {
   return new Map(((data ?? []) as ComplementRow[]).map((row) => [row.group_id, row]));
 }
 
+async function getEventSourceUrlMap(eventIds: string[]) {
+  if (eventIds.length === 0) return new Map<string, string>();
+  const supabase = createServerClient({ requireServiceRole: true });
+  const { data, error } = await supabase
+    .schema("imd")
+    .from("event_sources")
+    .select("event_id,raw_updates!inner(source_url,source_type)")
+    .in("event_id", eventIds);
+
+  if (error) throw new Error(error.message);
+
+  const map = new Map<string, string>();
+  const rows = (data ?? []) as Array<{
+    event_id: string;
+    raw_updates: { source_url?: string | null; source_type?: string | null } | Array<{ source_url?: string | null; source_type?: string | null }>;
+  }>;
+
+  for (const row of rows) {
+    const raws = Array.isArray(row.raw_updates) ? row.raw_updates : [row.raw_updates];
+    const preferred = raws.find((raw) => raw?.source_type === "youtube" || raw?.source_type === "spotify_release");
+    const fallback = raws.find((raw) => typeof raw?.source_url === "string" && raw.source_url.length > 0);
+    const selected = preferred?.source_url ?? fallback?.source_url ?? null;
+    if (selected && !map.has(row.event_id)) {
+      map.set(row.event_id, selected);
+    }
+  }
+
+  return map;
+}
+
 async function loadCandidatesData(): Promise<CandidatesData> {
   try {
     const weekKey = await getLatestWeekKey();
@@ -122,6 +153,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
         eventMap: new Map<string, EventRow>(),
         groupMap: new Map<string, GroupRow>(),
         complementMap: new Map<string, ComplementRow>(),
+        eventSourceUrlMap: new Map<string, string>(),
         error: null,
       };
     }
@@ -129,9 +161,13 @@ async function loadCandidatesData(): Promise<CandidatesData> {
     const candidates = await getCandidates(weekKey);
     const eventMap = await getEventMap(candidates.map((row) => row.event_id));
     const groupIds = [...new Set([...eventMap.values()].map((row) => row.group_id))];
-    const [groupMap, complementMap] = await Promise.all([getGroupMap(groupIds), getComplementMap(weekKey, groupIds)]);
+    const [groupMap, complementMap, eventSourceUrlMap] = await Promise.all([
+      getGroupMap(groupIds),
+      getComplementMap(weekKey, groupIds),
+      getEventSourceUrlMap(candidates.map((row) => row.event_id)),
+    ]);
 
-    return { weekKey, candidates, eventMap, groupMap, complementMap, error: null };
+    return { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceUrlMap, error: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return {
@@ -140,13 +176,14 @@ async function loadCandidatesData(): Promise<CandidatesData> {
       eventMap: new Map<string, EventRow>(),
       groupMap: new Map<string, GroupRow>(),
       complementMap: new Map<string, ComplementRow>(),
+      eventSourceUrlMap: new Map<string, string>(),
       error: message,
     };
   }
 }
 
 export default async function IamCandidatesPage() {
-  const { weekKey, candidates, eventMap, groupMap, complementMap, error } = await loadCandidatesData();
+  const { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceUrlMap, error } = await loadCandidatesData();
 
   if (error) {
     return (
@@ -212,15 +249,34 @@ export default async function IamCandidatesPage() {
                 const complementBullets = complement?.status === "completed" ? (complement.bullets ?? []) : [];
                 const majorTopics = complement?.status === "completed" ? (complement.major_ongoing_topics ?? []) : [];
                 const complementSources = complement?.status === "completed" ? (complement.sources ?? []) : [];
+                const eventSourceUrl = event ? eventSourceUrlMap.get(event.id) : null;
+                const groupDetailHref = group?.slug ? `/nandatte/${group.slug}` : null;
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
                     <td className="px-4 py-3 font-mono">{row.rank_hint ?? index + 1}</td>
                     <td className="px-4 py-3">
-                      <p>{group?.name_ja ?? event?.group_id ?? "-"}</p>
+                      {groupDetailHref ? (
+                        <Link href={groupDetailHref} className="text-[var(--ui-accent)] hover:underline">
+                          {group?.name_ja ?? event?.group_id ?? "-"}
+                        </Link>
+                      ) : (
+                        <p>{group?.name_ja ?? event?.group_id ?? "-"}</p>
+                      )}
                       <p className="text-xs text-[var(--ui-text-subtle)]">{group?.slug ?? "-"}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium">{event?.headline ?? "(event not found)"}</p>
+                      {eventSourceUrl ? (
+                        <a
+                          href={eventSourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-[var(--ui-accent)] hover:underline"
+                        >
+                          {event?.headline ?? "(event not found)"}
+                        </a>
+                      ) : (
+                        <p className="font-medium">{event?.headline ?? "(event not found)"}</p>
+                      )}
                       <p className="mt-1 text-xs text-[var(--ui-text-muted)]">{event?.summary ?? row.editorial_note ?? "-"}</p>
                       {complementSummary ? (
                         <p className="mt-2 text-xs text-[var(--ui-accent)]">AI補足: {complementSummary}</p>
