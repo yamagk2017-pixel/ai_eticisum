@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildWeeklyTargets } from "@/lib/iam/weekly-targets";
 import { collectRawUpdatesFromYoutube } from "@/lib/iam/raw-updates-youtube";
+import { collectRawUpdatesFromSpotify } from "@/lib/iam/raw-updates-spotify";
 import { normalizeEventsFromRawUpdates } from "@/lib/iam/normalize-events";
 
 export const runtime = "nodejs";
@@ -16,6 +17,7 @@ export async function GET(request: NextRequest) {
     const startedAt = Date.now();
     const weeklyTargets = await buildWeeklyTargets();
     const rawUpdatesYoutube = await collectRawUpdatesFromYoutube();
+    const rawUpdatesSpotify = await collectRawUpdatesFromSpotify();
     const normalizedEvents = await normalizeEventsFromRawUpdates();
     const completedAt = Date.now();
 
@@ -24,6 +26,7 @@ export async function GET(request: NextRequest) {
       durationMs: completedAt - startedAt,
       weeklyTargets,
       rawUpdatesYoutube,
+      rawUpdatesSpotify,
       normalizedEvents,
     });
   } catch (error) {
@@ -36,4 +39,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

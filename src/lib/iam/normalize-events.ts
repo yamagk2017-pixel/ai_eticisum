@@ -23,7 +23,7 @@ type NormalizedEventRow = {
 
 export type NormalizeEventsResult = {
   weekKey: string | null;
-  sourceType: "youtube";
+  sourceType: "youtube_and_spotify";
   rawCount: number;
   processed: number;
   success: number;
@@ -60,8 +60,8 @@ function toSummary(text: string | null) {
 
 function buildDedupeKey(row: RawUpdateRow, eventDateBucket: string) {
   const seed = row.external_item_id
-    ? `youtube|${row.external_item_id}|${eventDateBucket}`
-    : `youtube|${normalizeHeadline(row.title)}|${eventDateBucket}`;
+    ? `${row.source_type}|${row.external_item_id}|${eventDateBucket}`
+    : `${row.source_type}|${normalizeHeadline(row.title)}|${eventDateBucket}`;
   return createHash("sha1").update(seed).digest("hex").slice(0, 40);
 }
 
@@ -90,21 +90,21 @@ async function getWeeklyTargetGroupIds(weekKey: string) {
   return ((res.data ?? []) as WeeklyTargetRow[]).map((row) => row.group_id);
 }
 
-async function getYoutubeRawUpdates(groupIds: string[]) {
+async function getRawUpdates(groupIds: string[]) {
   if (groupIds.length === 0) return [] as RawUpdateRow[];
   const supabase = createServerClient({ requireServiceRole: true });
   const res = await supabase
     .schema("imd")
     .from("raw_updates")
     .select("id,group_id,source_type,source_url,external_item_id,title,body_text,published_at,fetched_at")
-    .eq("source_type", "youtube")
+    .in("source_type", ["youtube", "spotify_release"])
     .eq("status", "success")
     .in("group_id", groupIds)
     .order("fetched_at", { ascending: false })
     .limit(1000);
 
   if (res.error) {
-    throw new Error(`Failed to load youtube raw_updates: ${res.error.message}`);
+    throw new Error(`Failed to load raw_updates: ${res.error.message}`);
   }
   return (res.data ?? []) as RawUpdateRow[];
 }
@@ -113,9 +113,11 @@ async function upsertNormalizedEvent(raw: RawUpdateRow) {
   const supabase = createServerClient({ requireServiceRole: true });
   const eventDate = raw.published_at ?? raw.fetched_at ?? null;
   const eventDateBucket = dayBucket(eventDate);
-  const headline = raw.title?.trim() || "YouTube update";
+  const headline = raw.title?.trim() || (raw.source_type === "spotify_release" ? "Spotify release update" : "YouTube update");
   const summary = toSummary(raw.body_text);
   const dedupeKey = buildDedupeKey(raw, eventDateBucket);
+  const eventType = raw.source_type === "spotify_release" ? "music_release" : "event_update";
+  const importanceScore = raw.source_type === "spotify_release" ? 55 : 40;
 
   const eventRes = await supabase
     .schema("imd")
@@ -123,12 +125,12 @@ async function upsertNormalizedEvent(raw: RawUpdateRow) {
     .upsert(
       {
         group_id: raw.group_id,
-        event_type: "event_update",
+        event_type: eventType,
         headline,
         summary,
         event_date: eventDate,
         event_date_bucket: eventDateBucket,
-        importance_score: 40,
+        importance_score: importanceScore,
         confidence: 0.6,
         is_major: false,
         is_ongoing: false,
@@ -169,7 +171,7 @@ export async function normalizeEventsFromRawUpdates(): Promise<NormalizeEventsRe
   if (!weekKey) {
     return {
       weekKey: null,
-      sourceType: "youtube",
+      sourceType: "youtube_and_spotify",
       rawCount: 0,
       processed: 0,
       success: 0,
@@ -178,11 +180,11 @@ export async function normalizeEventsFromRawUpdates(): Promise<NormalizeEventsRe
   }
 
   const groupIds = await getWeeklyTargetGroupIds(weekKey);
-  const raws = await getYoutubeRawUpdates(groupIds);
+  const raws = await getRawUpdates(groupIds);
 
   const result: NormalizeEventsResult = {
     weekKey,
-    sourceType: "youtube",
+    sourceType: "youtube_and_spotify",
     rawCount: raws.length,
     processed: 0,
     success: 0,
@@ -201,4 +203,3 @@ export async function normalizeEventsFromRawUpdates(): Promise<NormalizeEventsRe
 
   return result;
 }
-
