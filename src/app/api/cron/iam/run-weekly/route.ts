@@ -18,8 +18,66 @@ export async function GET(request: NextRequest) {
 
     const startedAt = Date.now();
     const weeklyTargets = await buildWeeklyTargets();
-    const rawUpdatesYoutube = await collectRawUpdatesFromYoutube();
-    const rawUpdatesSpotify = await collectRawUpdatesFromSpotify();
+    let rawUpdatesYoutube:
+      | Awaited<ReturnType<typeof collectRawUpdatesFromYoutube>>
+      | {
+          weekKey: string | null;
+          targetGroups: number;
+          youtubeSources: number;
+          discoveredVideos: number;
+          processed: number;
+          success: number;
+          failed: number;
+          skipped: number;
+          errors: Array<{ groupId: string; message: string }>;
+        };
+
+    try {
+      rawUpdatesYoutube = await collectRawUpdatesFromYoutube();
+    } catch (error) {
+      rawUpdatesYoutube = {
+        weekKey: weeklyTargets.weekKey,
+        targetGroups: weeklyTargets.unionCount,
+        youtubeSources: 0,
+        discoveredVideos: 0,
+        processed: 0,
+        success: 0,
+        failed: 1,
+        skipped: 0,
+        errors: [{ groupId: "pipeline", message: error instanceof Error ? error.message : "Unknown error" }],
+      };
+    }
+
+    let rawUpdatesSpotify:
+      | Awaited<ReturnType<typeof collectRawUpdatesFromSpotify>>
+      | {
+          weekKey: string | null;
+          targetGroups: number;
+          spotifySources: number;
+          releasesDiscovered: number;
+          processed: number;
+          success: number;
+          failed: number;
+          skipped: number;
+          errors: Array<{ groupId: string; message: string }>;
+        };
+
+    try {
+      rawUpdatesSpotify = await collectRawUpdatesFromSpotify();
+    } catch (error) {
+      rawUpdatesSpotify = {
+        weekKey: weeklyTargets.weekKey,
+        targetGroups: weeklyTargets.unionCount,
+        spotifySources: 0,
+        releasesDiscovered: 0,
+        processed: 0,
+        success: 0,
+        failed: 1,
+        skipped: 0,
+        errors: [{ groupId: "pipeline", message: error instanceof Error ? error.message : "Unknown error" }],
+      };
+    }
+
     const normalizedEvents = await normalizeEventsFromRawUpdates();
     const weeklyDigestCandidates = await buildWeeklyDigestCandidates();
     const weeklyGroupComplements = await buildWeeklyGroupComplements();
