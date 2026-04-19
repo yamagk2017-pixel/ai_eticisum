@@ -298,7 +298,7 @@ export default async function IamConsolePage() {
                         </p>
                       ) : null}
                       {majorTopics.length > 0 ? (
-                        <p className="mt-1 text-sm text-[var(--ui-text)]">継続重要: {majorTopics.join(" / ")}</p>
+                        <p className="mt-1 text-sm text-[var(--ui-text)]">今後6か月の重大予定: {majorTopics.join(" / ")}</p>
                       ) : null}
                       {complementSources.length > 0 ? (
                         <p className="mt-1 text-sm text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
