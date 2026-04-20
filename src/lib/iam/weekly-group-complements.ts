@@ -328,19 +328,20 @@ async function fetchOpenAiComplement(params: {
     new Date()
   );
   const systemPrompt =
-    "あなたはアイドル活動状況の補足調査アシスタントです。与えられた活動情報を踏まえて、Web検索で補足情報を収集し、JSONのみで返してください。推測を避け、要点を短くまとめます。";
+    "あなたは日本の女性アイドルグループ活動状況の補足調査アシスタントです。与えられた活動情報を踏まえて、Web検索で補足情報を収集し、JSONのみで返してください。音楽活動・ライブ活動・体制変更に関係する情報のみ採用し、同名の別分野（企業・一般人物・別ジャンル）は除外してください。推測を避け、要点を短くまとめます。";
   const eventsText = params.events
     .slice(0, 8)
     .map((event, index) => `${index + 1}. [${event.eventType}] ${event.headline} ${event.summary ?? ""}`)
     .join("\n");
   const userPrompt = [
     `対象グループ: ${params.groupName}`,
-    params.slug ? `slug: ${params.slug}` : "",
     "既知アクティビティ:",
     eventsText || "(なし)",
     "",
     "要件:",
     `- 基準日(Asia/Tokyo): ${nowJst}`,
+    "- 調査対象は日本の女性アイドルグループ文脈に限定",
+    "- アイドル文脈でない情報（企業ニュース、同名の別人物、無関係ジャンル）は採用しない",
     "- 通常補足は、過去1週間の活動状況と今後1週間の活動予定を対象に整理",
     "- 重大ニュースは、基準日以降〜今後6か月以内に予定・発表されているものを対象",
     "- major_ongoing_topics には、今後6か月以内に予定される重大ニュースのみを含める",

@@ -417,7 +417,18 @@ export default async function IamConsolePage() {
                         <p className="mt-1 text-sm text-[var(--ui-text)]">今後6か月の重大予定: {majorTopics.join(" / ")}</p>
                       ) : null}
                       {complementSources.length > 0 ? (
-                        <p className="mt-1 text-sm text-[var(--ui-text-subtle)]">参照URL数: {complementSources.length}</p>
+                        <div className="mt-1 text-sm text-[var(--ui-text-subtle)]">
+                          <p>参照URL:</p>
+                          <div className="mt-1 space-y-1">
+                            {complementSources.map((url) => (
+                              <p key={url}>
+                                <a href={url} target="_blank" rel="noopener noreferrer" className="text-[var(--ui-accent)] hover:underline break-all">
+                                  {url}
+                                </a>
+                              </p>
+                            ))}
+                          </div>
+                        </div>
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-lg font-mono">{row.candidate_score}</td>
