@@ -44,9 +44,23 @@ type CandidatesData = {
   candidates: CandidateRow[];
   eventMap: Map<string, EventRow>;
   groupMap: Map<string, GroupRow>;
+  groupXMap: Map<string, string>;
   complementMap: Map<string, ComplementRow>;
   eventSourceMap: Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>;
   error: string | null;
+};
+
+type GroupExternalRow = {
+  group_id: string;
+  service: string | null;
+  url: string | null;
+};
+
+type ParsedComplementSummary = {
+  summary: string | null;
+  bullets: string[];
+  majorTopics: string[];
+  sources: string[];
 };
 
 async function getLatestWeekKey() {
@@ -98,6 +112,89 @@ async function getGroupMap(groupIds: string[]) {
 
   if (error) throw new Error(error.message);
   return new Map(((data ?? []) as GroupRow[]).map((row) => [row.id, row]));
+}
+
+function normalizeXUrl(url: string | null) {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (trimmed.startsWith("@")) return `https://x.com/${trimmed.slice(1)}`;
+  return `https://x.com/${trimmed}`;
+}
+
+async function getGroupXMap(groupIds: string[]) {
+  if (groupIds.length === 0) return new Map<string, string>();
+  const supabase = createServerClient({ requireServiceRole: true });
+  const { data, error } = await supabase
+    .schema("imd")
+    .from("external_ids")
+    .select("group_id,service,url")
+    .in("group_id", groupIds)
+    .in("service", ["x", "twitter", "x_profile", "twitter_profile"]);
+
+  if (error) throw new Error(error.message);
+
+  const map = new Map<string, string>();
+  for (const row of (data ?? []) as GroupExternalRow[]) {
+    if (!row.group_id || !row.url) continue;
+    const normalized = normalizeXUrl(row.url);
+    if (!normalized) continue;
+    const current = map.get(row.group_id);
+    if (!current) {
+      map.set(row.group_id, normalized);
+      continue;
+    }
+    if (current.includes("twitter.com") && normalized.includes("x.com")) {
+      map.set(row.group_id, normalized);
+    }
+  }
+  return map;
+}
+
+function tryParseJsonObject(text: string) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  try {
+    return JSON.parse(trimmed) as Record<string, unknown>;
+  } catch {
+    const match = trimmed.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[0]) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
+  }
+}
+
+function parseStringArray(value: unknown, limit: number) {
+  if (!Array.isArray(value)) return [] as string[];
+  const out: string[] = [];
+  for (const item of value) {
+    if (typeof item !== "string") continue;
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    out.push(trimmed.slice(0, 220));
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+function parseComplementSummary(summary: string | null): ParsedComplementSummary {
+  if (!summary) {
+    return { summary: null, bullets: [], majorTopics: [], sources: [] };
+  }
+  const parsed = tryParseJsonObject(summary);
+  if (!parsed) {
+    return { summary, bullets: [], majorTopics: [], sources: [] };
+  }
+  return {
+    summary: typeof parsed.summary === "string" ? parsed.summary.trim().slice(0, 500) : null,
+    bullets: parseStringArray(parsed.bullets, 3),
+    majorTopics: parseStringArray(parsed.major_ongoing_topics, 3),
+    sources: parseStringArray(parsed.sources, 8),
+  };
 }
 
 async function getComplementMap(weekKey: string, groupIds: string[]) {
@@ -156,6 +253,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
         candidates: [],
         eventMap: new Map<string, EventRow>(),
         groupMap: new Map<string, GroupRow>(),
+        groupXMap: new Map<string, string>(),
         complementMap: new Map<string, ComplementRow>(),
         eventSourceMap: new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>(),
         error: null,
@@ -165,13 +263,14 @@ async function loadCandidatesData(): Promise<CandidatesData> {
     const candidates = await getCandidates(weekKey);
     const eventMap = await getEventMap(candidates.map((row) => row.event_id));
     const groupIds = [...new Set([...eventMap.values()].map((row) => row.group_id))];
-    const [groupMap, complementMap, eventSourceMap] = await Promise.all([
+    const [groupMap, groupXMap, complementMap, eventSourceMap] = await Promise.all([
       getGroupMap(groupIds),
+      getGroupXMap(groupIds),
       getComplementMap(weekKey, groupIds),
       getEventSourceMap(candidates.map((row) => row.event_id)),
     ]);
 
-    return { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceMap, error: null };
+    return { weekKey, candidates, eventMap, groupMap, groupXMap, complementMap, eventSourceMap, error: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
     return {
@@ -179,6 +278,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
       candidates: [],
       eventMap: new Map<string, EventRow>(),
       groupMap: new Map<string, GroupRow>(),
+      groupXMap: new Map<string, string>(),
       complementMap: new Map<string, ComplementRow>(),
       eventSourceMap: new Map<string, { url: string; label: "YouTube" | "Spotify" | "Other" }>(),
       error: message,
@@ -187,7 +287,7 @@ async function loadCandidatesData(): Promise<CandidatesData> {
 }
 
 export default async function IamConsolePage() {
-  const { weekKey, candidates, eventMap, groupMap, complementMap, eventSourceMap, error } = await loadCandidatesData();
+  const { weekKey, candidates, eventMap, groupMap, groupXMap, complementMap, eventSourceMap, error } = await loadCandidatesData();
 
   if (error) {
     return (
@@ -251,15 +351,24 @@ export default async function IamConsolePage() {
                 const event = eventMap.get(row.event_id);
                 const group = event ? groupMap.get(event.group_id) : undefined;
                 const complement = event ? complementMap.get(event.group_id) : undefined;
+                const parsedSummary = parseComplementSummary(complement?.summary ?? null);
                 const complementSummary =
                   complement?.status === "budget_limited"
                     ? "利用限度（料金）の上限に達しました"
-                    : complement?.summary ?? null;
-                const complementBullets = complement?.status === "completed" ? (complement.bullets ?? []) : [];
-                const majorTopics = complement?.status === "completed" ? (complement.major_ongoing_topics ?? []) : [];
-                const complementSources = complement?.status === "completed" ? (complement.sources ?? []) : [];
+                    : parsedSummary.summary ?? complement?.summary ?? null;
+                const complementBullets =
+                  complement?.status === "completed" ? (complement.bullets?.length ? complement.bullets : parsedSummary.bullets) : [];
+                const majorTopics =
+                  complement?.status === "completed"
+                    ? complement.major_ongoing_topics?.length
+                      ? complement.major_ongoing_topics
+                      : parsedSummary.majorTopics
+                    : [];
+                const complementSources =
+                  complement?.status === "completed" ? (complement.sources?.length ? complement.sources : parsedSummary.sources) : [];
                 const eventSource = event ? eventSourceMap.get(event.id) : null;
                 const groupDetailHref = group?.slug ? `/nandatte/${group.slug}` : null;
+                const groupXUrl = event ? groupXMap.get(event.group_id) : null;
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
                     <td className="px-4 py-3 text-lg font-mono">{row.rank_hint ?? index + 1}</td>
@@ -271,6 +380,11 @@ export default async function IamConsolePage() {
                       ) : (
                         <p>{group?.name_ja ?? event?.group_id ?? "-"}</p>
                       )}
+                      {groupXUrl ? (
+                        <a href={groupXUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-sm text-[var(--ui-accent)] hover:underline">
+                          X
+                        </a>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       {eventSource ? (
