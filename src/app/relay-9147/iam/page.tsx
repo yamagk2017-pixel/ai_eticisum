@@ -168,6 +168,41 @@ function tryParseJsonObject(text: string) {
   }
 }
 
+function unescapeJsonString(value: string) {
+  return value
+    .replace(/\\"/g, "\"")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\r")
+    .replace(/\\t/g, "\t")
+    .replace(/\\\\/g, "\\");
+}
+
+function extractQuotedItems(body: string, limit: number) {
+  const out: string[] = [];
+  const itemPattern = /"((?:\\.|[^"\\])*)"/g;
+  let match: RegExpExecArray | null = itemPattern.exec(body);
+  while (match && out.length < limit) {
+    const value = unescapeJsonString(match[1]).trim();
+    if (value) out.push(value.slice(0, 220));
+    match = itemPattern.exec(body);
+  }
+  return out;
+}
+
+function salvageComplementSummaryFromBrokenJson(text: string): ParsedComplementSummary {
+  const summaryMatch = text.match(/"summary"\s*:\s*"((?:\\.|[^"\\])*)"/);
+  const bulletsMatch = text.match(/"bullets"\s*:\s*\[([\s\S]*?)\]/);
+  const majorMatch = text.match(/"major_ongoing_topics"\s*:\s*\[([\s\S]*?)\]/);
+  const sourcesMatch = text.match(/"sources"\s*:\s*\[([\s\S]*?)\]/);
+
+  const summary = summaryMatch ? unescapeJsonString(summaryMatch[1]).trim().slice(0, 500) : null;
+  const bullets = bulletsMatch ? extractQuotedItems(bulletsMatch[1], 3) : [];
+  const majorTopics = majorMatch ? extractQuotedItems(majorMatch[1], 3) : [];
+  const sources = sourcesMatch ? extractQuotedItems(sourcesMatch[1], 8) : [];
+
+  return { summary, bullets, majorTopics, sources };
+}
+
 function parseStringArray(value: unknown, limit: number) {
   if (!Array.isArray(value)) return [] as string[];
   const out: string[] = [];
@@ -187,6 +222,9 @@ function parseComplementSummary(summary: string | null): ParsedComplementSummary
   }
   const parsed = tryParseJsonObject(summary);
   if (!parsed) {
+    if (summary.trim().startsWith("{") && summary.includes("\"summary\"")) {
+      return salvageComplementSummaryFromBrokenJson(summary);
+    }
     return { summary, bullets: [], majorTopics: [], sources: [] };
   }
   return {
