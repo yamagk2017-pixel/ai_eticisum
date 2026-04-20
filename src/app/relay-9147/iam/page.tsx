@@ -381,9 +381,11 @@ export default async function IamConsolePage() {
                         <p>{group?.name_ja ?? event?.group_id ?? "-"}</p>
                       )}
                       {groupXUrl ? (
-                        <a href={groupXUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-sm text-[var(--ui-accent)] hover:underline">
-                          X
-                        </a>
+                        <p className="mt-1 text-sm">
+                          <a href={groupXUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--ui-accent)] hover:underline">
+                            （公式X）
+                          </a>
+                        </p>
                       ) : null}
                     </td>
                     <td className="px-4 py-3">
