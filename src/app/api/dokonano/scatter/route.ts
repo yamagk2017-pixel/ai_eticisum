@@ -53,8 +53,8 @@ type DokonanoApiResponse = {
 const PAGE_SIZE = 1000;
 const GROUP_CHUNK_SIZE = 300;
 const IHC_TABLE_CANDIDATES = ["daily_ranking", "daily_rankings"] as const;
-const SPOTIFY_WEIGHT = 0.7;
-const VOTE_WEIGHT = 0.3;
+const SPOTIFY_WEIGHT = 0.8;
+const VOTE_WEIGHT = 0.2;
 const FRESHNESS_THRESHOLDS = {
   hot: 1,
   warm: 2,
