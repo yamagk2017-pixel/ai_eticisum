@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { normalizeEventsFromRawUpdates } from "@/lib/iam/normalize-events";
+import { internalServerErrorResponse, isAuthorizedCronRequest, unauthorizedCronResponse } from "@/lib/api/cron";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const secret = process.env.CRON_SECRET;
-    const authHeader = request.headers.get("authorization");
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!isAuthorizedCronRequest(request)) return unauthorizedCronResponse();
 
     const result = await normalizeEventsFromRawUpdates();
     return NextResponse.json({
@@ -17,13 +14,6 @@ export async function GET(request: NextRequest) {
       ...result,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return internalServerErrorResponse(error);
   }
 }
-

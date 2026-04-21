@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint --cache --cache-location .eslintcache",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm run build",
     "sanity": "sanity",
     "sanity:deploy": "sanity deploy",
     "report:wp-unmatched-related-groups": "node scripts/wp-unmatched-related-groups-report.mjs --limit=10 --page=1",

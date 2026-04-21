@@ -5,16 +5,13 @@ import { collectRawUpdatesFromSpotify } from "@/lib/iam/raw-updates-spotify";
 import { normalizeEventsFromRawUpdates } from "@/lib/iam/normalize-events";
 import { buildWeeklyDigestCandidates } from "@/lib/iam/weekly-digest-candidates";
 import { buildWeeklyGroupComplements } from "@/lib/iam/weekly-group-complements";
+import { internalServerErrorResponse, isAuthorizedCronRequest, unauthorizedCronResponse } from "@/lib/api/cron";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   try {
-    const secret = process.env.CRON_SECRET;
-    const authHeader = request.headers.get("authorization");
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!isAuthorizedCronRequest(request)) return unauthorizedCronResponse();
 
     const startedAt = Date.now();
     const weeklyTargets = await buildWeeklyTargets();
@@ -94,12 +91,6 @@ export async function GET(request: NextRequest) {
       weeklyGroupComplements,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return internalServerErrorResponse(error);
   }
 }
