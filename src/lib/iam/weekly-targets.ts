@@ -181,10 +181,16 @@ function buildTargetRows(weekKey: string, ihcGroupIds: string[], nandatteRecentG
   return rows;
 }
 
-async function upsertWeeklyTargets(rows: WeeklyTargetInsertRow[]) {
+async function replaceWeeklyTargets(weekKey: string, rows: WeeklyTargetInsertRow[]) {
+  const supabase = createServerClient({ requireServiceRole: true });
+  const deleteRes = await supabase.schema("imd").from("weekly_targets").delete().eq("week_key", weekKey);
+
+  if (deleteRes.error) {
+    throw new Error(`Failed to clear imd.weekly_targets for ${weekKey}: ${deleteRes.error.message}`);
+  }
+
   if (rows.length === 0) return 0;
 
-  const supabase = createServerClient({ requireServiceRole: true });
   const res = await supabase
     .schema("imd")
     .from("weekly_targets")
@@ -204,7 +210,7 @@ export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWe
   const [ihcGroupIds, nandatteRecentGroupIds] = await Promise.all([fetchIhcTop20GroupIds(), fetchNandatteRecentTop20GroupIds()]);
 
   const rows = buildTargetRows(weekKey, ihcGroupIds, nandatteRecentGroupIds);
-  const upsertedCount = await upsertWeeklyTargets(rows);
+  const upsertedCount = await replaceWeeklyTargets(weekKey, rows);
 
   return {
     weekKey,

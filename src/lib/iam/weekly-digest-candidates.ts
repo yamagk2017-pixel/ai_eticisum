@@ -105,23 +105,26 @@ async function getCandidateEvents(groupIds: string[], weekStartTs: number, weekE
   if (groupIds.length === 0) return [] as NormalizedEventRow[];
 
   const supabase = createServerClient({ requireServiceRole: true });
-  const weekStartIso = new Date(weekStartTs).toISOString();
-  const weekEndIso = new Date(weekEndTs).toISOString();
   const res = await supabase
     .schema("imd")
     .from("normalized_events")
     .select("id,group_id,event_type,event_date,created_at")
     .in("group_id", groupIds)
-    .gte("created_at", weekStartIso)
-    .lt("created_at", weekEndIso)
     .order("event_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(2000);
+    .limit(4000);
 
   if (res.error) {
     throw new Error(`Failed to load normalized_events: ${res.error.message}`);
   }
-  return (res.data ?? []) as NormalizedEventRow[];
+
+  const rows = (res.data ?? []) as NormalizedEventRow[];
+  return rows.filter((row) => {
+    const eventTs = row.event_date ? Date.parse(row.event_date) : Number.NaN;
+    const fallbackTs = Date.parse(row.created_at);
+    const ts = Number.isFinite(eventTs) ? eventTs : fallbackTs;
+    return Number.isFinite(ts) && ts >= weekStartTs && ts < weekEndTs;
+  });
 }
 
 async function getEventSourceAgg(eventIds: string[]) {
@@ -200,11 +203,16 @@ export async function buildWeeklyDigestCandidates(weekKeyInput?: string): Promis
     row.rank_hint = index + 1;
   });
 
+  const supabase = createServerClient({ requireServiceRole: true });
+  const deleteRes = await supabase.schema("imd").from("weekly_digest_candidates").delete().eq("week_key", weekKey);
+  if (deleteRes.error) {
+    throw new Error(`Failed to clear weekly_digest_candidates for ${weekKey}: ${deleteRes.error.message}`);
+  }
+
   if (rows.length === 0) {
     return { weekKey, targetGroups: groupIds.length, eligibleEvents: 0, upsertedCount: 0 };
   }
 
-  const supabase = createServerClient({ requireServiceRole: true });
   const upsertRes = await supabase
     .schema("imd")
     .from("weekly_digest_candidates")
