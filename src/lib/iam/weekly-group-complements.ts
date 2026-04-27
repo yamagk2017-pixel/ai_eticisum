@@ -416,8 +416,8 @@ function buildTasks(events: EventRow[], groupMap: Map<string, GroupRow>) {
   return [...map.values()].sort((a, b) => a.groupName.localeCompare(b.groupName));
 }
 
-export async function buildWeeklyGroupComplements(): Promise<BuildWeeklyGroupComplementsResult> {
-  const weekKey = await getLatestWeekKey();
+export async function buildWeeklyGroupComplements(weekKeyInput?: string): Promise<BuildWeeklyGroupComplementsResult> {
+  const weekKey = weekKeyInput ?? (await getLatestWeekKey());
   const defaultResult = {
     weekKey,
     eligibleGroups: 0,

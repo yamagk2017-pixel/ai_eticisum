@@ -158,8 +158,8 @@ async function getEventSourceAgg(eventIds: string[]) {
   return out;
 }
 
-export async function buildWeeklyDigestCandidates(): Promise<BuildWeeklyDigestCandidatesResult> {
-  const weekKey = await getLatestWeekKey();
+export async function buildWeeklyDigestCandidates(weekKeyInput?: string): Promise<BuildWeeklyDigestCandidatesResult> {
+  const weekKey = weekKeyInput ?? (await getLatestWeekKey());
   if (!weekKey) {
     return { weekKey: null, targetGroups: 0, eligibleEvents: 0, upsertedCount: 0 };
   }

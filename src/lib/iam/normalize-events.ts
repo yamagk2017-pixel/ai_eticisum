@@ -166,8 +166,8 @@ async function upsertNormalizedEvent(raw: RawUpdateRow) {
   }
 }
 
-export async function normalizeEventsFromRawUpdates(): Promise<NormalizeEventsResult> {
-  const weekKey = await getLatestWeekKey();
+export async function normalizeEventsFromRawUpdates(weekKeyInput?: string): Promise<NormalizeEventsResult> {
+  const weekKey = weekKeyInput ?? (await getLatestWeekKey());
   if (!weekKey) {
     return {
       weekKey: null,

@@ -229,14 +229,14 @@ async function saveRawUpdate(row: {
   }
 }
 
-export async function collectRawUpdatesFromSpotify(): Promise<CollectRawUpdatesSpotifyResult> {
+export async function collectRawUpdatesFromSpotify(weekKeyInput?: string): Promise<CollectRawUpdatesSpotifyResult> {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     throw new Error("Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET");
   }
 
-  const weekKey = await getLatestWeekKey();
+  const weekKey = weekKeyInput ?? (await getLatestWeekKey());
   if (!weekKey) {
     return {
       weekKey: null,
@@ -312,4 +312,3 @@ export async function collectRawUpdatesFromSpotify(): Promise<CollectRawUpdatesS
 
   return result;
 }
-

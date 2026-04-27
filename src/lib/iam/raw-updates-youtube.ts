@@ -404,13 +404,13 @@ async function saveRawUpdate(row: {
   }
 }
 
-export async function collectRawUpdatesFromYoutube(): Promise<CollectRawUpdatesYoutubeResult> {
+export async function collectRawUpdatesFromYoutube(weekKeyInput?: string): Promise<CollectRawUpdatesYoutubeResult> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     throw new Error("Missing YOUTUBE_API_KEY");
   }
 
-  const weekKey = await getLatestWeekKey();
+  const weekKey = weekKeyInput ?? (await getLatestWeekKey());
   if (!weekKey) {
     return {
       weekKey: null,

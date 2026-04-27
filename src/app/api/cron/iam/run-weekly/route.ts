@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
     const startedAt = Date.now();
     const weeklyTargets = await buildWeeklyTargets();
+    const processingWeekKey = weeklyTargets.weekKey;
     let rawUpdatesYoutube:
       | Awaited<ReturnType<typeof collectRawUpdatesFromYoutube>>
       | {
@@ -30,10 +31,10 @@ export async function GET(request: NextRequest) {
         };
 
     try {
-      rawUpdatesYoutube = await collectRawUpdatesFromYoutube();
+      rawUpdatesYoutube = await collectRawUpdatesFromYoutube(processingWeekKey);
     } catch (error) {
       rawUpdatesYoutube = {
-        weekKey: weeklyTargets.weekKey,
+        weekKey: processingWeekKey,
         targetGroups: weeklyTargets.unionCount,
         youtubeSources: 0,
         discoveredVideos: 0,
@@ -60,10 +61,10 @@ export async function GET(request: NextRequest) {
         };
 
     try {
-      rawUpdatesSpotify = await collectRawUpdatesFromSpotify();
+      rawUpdatesSpotify = await collectRawUpdatesFromSpotify(processingWeekKey);
     } catch (error) {
       rawUpdatesSpotify = {
-        weekKey: weeklyTargets.weekKey,
+        weekKey: processingWeekKey,
         targetGroups: weeklyTargets.unionCount,
         spotifySources: 0,
         releasesDiscovered: 0,
@@ -75,9 +76,9 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    const normalizedEvents = await normalizeEventsFromRawUpdates();
-    const weeklyDigestCandidates = await buildWeeklyDigestCandidates();
-    const weeklyGroupComplements = await buildWeeklyGroupComplements();
+    const normalizedEvents = await normalizeEventsFromRawUpdates(processingWeekKey);
+    const weeklyDigestCandidates = await buildWeeklyDigestCandidates(processingWeekKey);
+    const weeklyGroupComplements = await buildWeeklyGroupComplements(processingWeekKey);
     const completedAt = Date.now();
 
     return NextResponse.json({

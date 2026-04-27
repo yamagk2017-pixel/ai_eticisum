@@ -73,6 +73,17 @@ export function getTokyoWeekKey(now = new Date()) {
   return formatUTCDateAsYYYYMMDD(utcDate);
 }
 
+export function getTokyoPreviousWeekKey(now = new Date()) {
+  const currentWeekKey = getTokyoWeekKey(now);
+  const ts = Date.parse(`${currentWeekKey}T00:00:00Z`);
+  if (Number.isNaN(ts)) {
+    throw new Error(`Invalid current week key: ${currentWeekKey}`);
+  }
+  const previousWeekDate = new Date(ts);
+  previousWeekDate.setUTCDate(previousWeekDate.getUTCDate() - 7);
+  return formatUTCDateAsYYYYMMDD(previousWeekDate);
+}
+
 async function fetchIhcTop20GroupIds() {
   const supabase = createServerClient({ requireServiceRole: true });
 
@@ -188,7 +199,7 @@ async function upsertWeeklyTargets(rows: WeeklyTargetInsertRow[]) {
 }
 
 export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWeeklyTargetsResult> {
-  const weekKey = weekKeyInput ?? getTokyoWeekKey();
+  const weekKey = weekKeyInput ?? getTokyoPreviousWeekKey();
 
   const [ihcGroupIds, nandatteRecentGroupIds] = await Promise.all([fetchIhcTop20GroupIds(), fetchNandatteRecentTop20GroupIds()]);
 
@@ -203,4 +214,3 @@ export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWe
     upsertedCount,
   };
 }
-
