@@ -29,6 +29,13 @@ type TweetListRow = {
 
 type Status = "idle" | "loading" | "saving" | "error" | "success";
 
+type TweetEmbedApiResponse = {
+  data: Record<string, unknown> | null;
+  notFound?: true;
+  tombstone?: true;
+  error?: string;
+};
+
 function formatDate(dateText: string | null): string {
   if (!dateText) return "-";
   const timestamp = Date.parse(dateText);
@@ -40,6 +47,43 @@ function formatDate(dateText: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(timestamp));
+}
+
+function extractTweetId(tweetUrl: string): string | null {
+  const match = tweetUrl.match(/status\/(\d+)/);
+  return match?.[1] ?? null;
+}
+
+async function preflightTweetEmbed(tweetUrl: string): Promise<{ ok: boolean; message?: string }> {
+  const tweetId = extractTweetId(tweetUrl.trim());
+  if (!tweetId) {
+    return { ok: false, message: "tweet_url から tweet id を抽出できませんでした。" };
+  }
+
+  try {
+    const res = await fetch(`/api/tweet/${tweetId}`, { method: "GET" });
+    const payload = (await res.json()) as TweetEmbedApiResponse;
+
+    if (!res.ok || !payload.data) {
+      if (payload.tombstone) {
+        return { ok: false, message: "この投稿は非公開化されているため埋め込めません。" };
+      }
+      if (payload.notFound) {
+        return { ok: false, message: "この投稿は見つからないため埋め込めません。" };
+      }
+      return {
+        ok: false,
+        message: payload.error ?? "埋め込み事前検証に失敗しました。時間を置いて再試行してください。",
+      };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "埋め込み事前検証に失敗しました。",
+    };
+  }
 }
 
 export function BuzzttaraPanel() {
@@ -122,6 +166,13 @@ export function BuzzttaraPanel() {
     if (!payload.tweet_url || !payload.idol_name) {
       setStatus("error");
       setMessage("tweet_url と idol_name は必須です。");
+      return;
+    }
+
+    const preflight = await preflightTweetEmbed(payload.tweet_url);
+    if (!preflight.ok) {
+      setStatus("error");
+      setMessage(preflight.message ?? "埋め込み事前検証に失敗しました。");
       return;
     }
 
