@@ -1359,7 +1359,7 @@ export function VoxelEscapeGame() {
             </button>
           </div>
 
-          <section className="max-h-[calc(100vh-210px)] overflow-y-auto rounded-lg border border-white/20 bg-black/70 p-3 shadow-2xl backdrop-blur sm:p-4 lg:max-h-[70vh]">
+          <section className="max-h-[min(42svh,360px)] overflow-y-auto overscroll-contain rounded-lg border border-white/20 bg-black/70 p-3 shadow-2xl backdrop-blur sm:max-h-[380px] sm:p-4 lg:max-h-[70vh]">
             <div className="mb-3 flex items-end justify-between gap-3">
               <div>
                 <p className="text-[11px] font-bold tracking-[0.12em] text-amber-300">イマキテランキング</p>
