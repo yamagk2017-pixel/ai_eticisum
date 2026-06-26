@@ -1417,6 +1417,12 @@ export function VoxelEscapeGame() {
             </div>
           )}
 
+          {gameStatus === "gameover" && selectedBgm?.spotifyEmbedUrl && (
+            <p className="mt-4 text-xs font-bold text-fuchsia-100 sm:text-sm">
+              BGMを楽しむため、イヤホンまたはヘッドホンの使用をおすすめします。
+            </p>
+          )}
+
           <button
             type="button"
             disabled={gameStatus === "gameover" && Boolean(selectedBgm?.spotifyEmbedUrl) && !spotifyPlayerReady}
