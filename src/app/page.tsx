@@ -278,7 +278,7 @@ async function getHomeSummaries() {
           })
           .filter((row) => row.rank > 0)
           .sort((a, b) => a.rank - b.rank)
-          .slice(0, 3);
+          .slice(0, 10);
 
         const groupIds = Array.from(
           new Set(baseItems.map((row) => row.groupId).filter((id) => id.length > 0))
@@ -520,7 +520,7 @@ async function getHomeSummaries() {
   }
 }
 
-const getCachedHomeSummaries = unstable_cache(getHomeSummaries, ["home-summaries-v2"], {
+const getCachedHomeSummaries = unstable_cache(getHomeSummaries, ["home-summaries-v3"], {
   revalidate,
 });
 
