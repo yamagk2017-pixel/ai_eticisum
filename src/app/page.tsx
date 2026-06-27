@@ -239,7 +239,7 @@ async function getHomeSummaries() {
           .select("*")
           .eq("snapshot_date", latestDate)
           .order("rank", { ascending: true })
-          .limit(10);
+          .limit(3);
         if (rowsRes.error) throw new Error(`IMAKITE rows: ${rowsRes.error.message}`);
 
         const latestRowRecord = asRecord(latest.data ?? null);
@@ -278,7 +278,7 @@ async function getHomeSummaries() {
           })
           .filter((row) => row.rank > 0)
           .sort((a, b) => a.rank - b.rank)
-          .slice(0, 10);
+          .slice(0, 3);
 
         const groupIds = Array.from(
           new Set(baseItems.map((row) => row.groupId).filter((id) => id.length > 0))
@@ -520,7 +520,7 @@ async function getHomeSummaries() {
   }
 }
 
-const getCachedHomeSummaries = unstable_cache(getHomeSummaries, ["home-summaries-v3"], {
+const getCachedHomeSummaries = unstable_cache(getHomeSummaries, ["home-summaries-v4"], {
   revalidate,
 });
 
@@ -566,8 +566,8 @@ export default async function Home() {
         <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.latestDate} 時点</p>
       )}
       {imakiteTop1 ? (
-        <div className="mt-4 max-h-[260px] overflow-y-auto pr-2 [scrollbar-gutter:stable]">
-          <article className="relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
+        <>
+          <article className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
             <div className="absolute inset-0">
               {imakiteTop1.artistImageUrl ? (
                 <Image
@@ -622,7 +622,7 @@ export default async function Home() {
               </li>
             ))}
           </ol>
-        </div>
+        </>
       ) : (
         <div className="mt-4 rounded-md text-xs text-[var(--ui-text-muted)]">データを取得できませんでした。</div>
       )}
