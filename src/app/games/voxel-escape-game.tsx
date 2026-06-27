@@ -139,23 +139,44 @@ class SynthAudio {
     if (!AudioContextCtor) return;
     if (!this.ctx) this.ctx = new AudioContextCtor();
     if (this.ctx.state === "suspended") {
-      void this.ctx.resume();
+      void this.ctx.resume().catch(() => undefined);
+    }
+  }
+
+  private runWhenReady(callback: (ctx: AudioContext) => void) {
+    this.init();
+    if (!this.ctx) return;
+
+    if (this.ctx.state === "suspended") {
+      const ctx = this.ctx;
+      void ctx
+        .resume()
+        .then(() => {
+          if (ctx.state !== "closed") callback(ctx);
+        })
+        .catch(() => undefined);
+      return;
+    }
+
+    if (this.ctx.state !== "closed") {
+      callback(this.ctx);
     }
   }
 
   play(freq: number, endFreq: number, duration: number, type: OscillatorType = "square", vol = 0.1) {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = type;
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(endFreq, this.ctx.currentTime + duration);
-    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-    osc.start();
-    osc.stop(this.ctx.currentTime + duration);
+    this.runWhenReady((ctx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    });
   }
 
   playStart() {
@@ -175,18 +196,19 @@ class SynthAudio {
   }
 
   playScream() {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = "sawtooth";
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.8);
-    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.8);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.8);
+    this.runWhenReady((ctx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(1200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.8);
+    });
   }
 }
 
@@ -1468,11 +1490,11 @@ export function VoxelEscapeGame() {
               window.DreamCoreSDK2?.retry?.({ reason: "retry_button" });
               const replayTrack =
                 gameStatus === "gameover" && selectedBgm?.spotifyEmbedUrl ? selectedBgm : null;
+              startGame(replayTrack);
               if (replayTrack) {
                 spotifyPlayRef.current?.();
                 window.setTimeout(() => spotifyPlayRef.current?.(), 250);
               }
-              startGame(replayTrack);
             }}
             className="mt-6 w-full rounded-lg border-4 border-fuchsia-400 bg-black/85 px-6 py-4 text-lg font-black text-white shadow-[0_0_10px_#ff00ff,inset_0_0_10px_#ff00ff] transition active:translate-y-1 active:bg-fuchsia-500/20 disabled:cursor-wait disabled:border-zinc-500 disabled:text-zinc-400 disabled:shadow-none sm:text-xl"
           >
