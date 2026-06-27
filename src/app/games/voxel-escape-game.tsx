@@ -34,6 +34,7 @@ type SpotifyIframeOptions = {
 type SpotifyEmbedController = {
   play: () => Promise<void> | void;
   resume?: () => Promise<void> | void;
+  setVolume?: (volume: number) => Promise<void> | void;
 };
 
 type SpotifyIframeApi = {
@@ -126,6 +127,7 @@ const ITEM_TYPES: ItemType[] = [
 ];
 
 const SPOTIFY_IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
+const SPOTIFY_BGM_VOLUME = 0.35;
 let spotifyIframeApi: SpotifyIframeApi | null = null;
 let spotifyIframeApiPromise: Promise<SpotifyIframeApi> | null = null;
 
@@ -272,6 +274,18 @@ function loadSpotifyIframeApi() {
   return spotifyIframeApiPromise;
 }
 
+function setSpotifyBgmVolume(controller: SpotifyEmbedController | null) {
+  if (!controller?.setVolume) return;
+  try {
+    const result = controller.setVolume(SPOTIFY_BGM_VOLUME);
+    if (result instanceof Promise) {
+      void result.catch(() => undefined);
+    }
+  } catch {
+    // Spotify embeds do not guarantee programmatic volume support.
+  }
+}
+
 function disposeScene(scene: THREE.Scene) {
   scene.traverse((object: THREE.Object3D) => {
     const mesh = object as THREE.Mesh;
@@ -344,16 +358,19 @@ function SpotifyMiniPlayer({
           },
           (createdController) => {
             controller = createdController;
+            setSpotifyBgmVolume(controller);
             if (cancelled) {
               return;
             }
 
             onPlayReady(() => {
+              setSpotifyBgmVolume(controller);
               const playResult = controller?.play();
               if (playResult instanceof Promise) {
                 void playResult.catch(() => undefined);
               }
               window.setTimeout(() => {
+                setSpotifyBgmVolume(controller);
                 const resumeResult = controller?.resume?.();
                 if (resumeResult instanceof Promise) {
                   void resumeResult.catch(() => undefined);
@@ -388,7 +405,7 @@ function SpotifyMiniPlayer({
   return (
     <div
       className={`pointer-events-auto absolute bottom-3 left-1/2 w-[calc(100%-24px)] max-w-[620px] -translate-x-1/2 overflow-hidden rounded-md border border-white/20 bg-black/70 shadow-2xl backdrop-blur transition-opacity ${
-        visible ? "opacity-100" : "opacity-0"
+        visible ? "opacity-100" : "pointer-events-none opacity-0"
       }`}
     >
       <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
@@ -830,7 +847,6 @@ export function VoxelEscapeGame() {
     function gameOver() {
       if (gameState !== "playing") return;
       setLocalGameState("gameover");
-      setNowPlayingTrack(null);
       audio.playScream();
       audio.playGameOver();
       const score = Math.floor(scoreTime);
@@ -1269,20 +1285,28 @@ export function VoxelEscapeGame() {
     startGameRef.current(track);
   }, []);
 
+  const rankingDateLabel = useMemo(() => formatDate(rankingDate), [rankingDate]);
+  const activeSpotifyTrack =
+    gameStatus === "playing" || gameStatus === "gameover" ? nowPlayingTrack : null;
+  const showMiniPlayer = Boolean(activeSpotifyTrack?.spotifyEmbedUrl);
+  const replayPreloadTrack =
+    gameStatus === "gameover" &&
+    selectedBgm?.spotifyEmbedUrl &&
+    selectedBgm.spotifyEmbedUrl !== activeSpotifyTrack?.spotifyEmbedUrl
+      ? selectedBgm
+      : null;
+  const replayTrackAlreadyPlaying =
+    gameStatus === "gameover" &&
+    Boolean(selectedBgm?.spotifyEmbedUrl) &&
+    selectedBgm?.spotifyEmbedUrl === activeSpotifyTrack?.spotifyEmbedUrl;
+  const replayButtonReady = replayTrackAlreadyPlaying || spotifyPlayerReady;
   const retryLabel =
-    gameStatus === "gameover" && selectedBgm?.spotifyEmbedUrl && !spotifyPlayerReady
+    gameStatus === "gameover" && selectedBgm?.spotifyEmbedUrl && !replayButtonReady
       ? "BGM準備中..."
       : gameStatus === "gameover" && selectedBgm?.spotifyEmbedUrl
       ? "この曲を流しながらリプレイ"
       : "もう一度";
-
-  const rankingDateLabel = useMemo(() => formatDate(rankingDate), [rankingDate]);
-  const activeSpotifyUrl =
-    gameStatus === "playing" ? (nowPlayingTrack?.spotifyEmbedUrl ?? null) : null;
-  const showMiniPlayer = Boolean(activeSpotifyUrl);
-  const spotifyPlayerTrack =
-    (gameStatus === "playing" ? nowPlayingTrack : null) ??
-    (gameStatus === "gameover" ? selectedBgm : null);
+  const ignoreSpotifyPlayReady = useCallback(() => undefined, []);
 
   const handleSpotifyPlayReady = useCallback((play: (() => void) | null) => {
     spotifyPlayRef.current = play;
@@ -1329,12 +1353,20 @@ export function VoxelEscapeGame() {
           />
         </div>
 
-        {spotifyPlayerTrack?.spotifyEmbedUrl && (
+        {activeSpotifyTrack?.spotifyEmbedUrl && (
           <SpotifyMiniPlayer
-            key={`${spotifyPlayerTrack.rank}-${spotifyPlayerTrack.spotifyEmbedUrl}`}
-            onPlayReady={handleSpotifyPlayReady}
-            track={spotifyPlayerTrack}
+            key={`active-${activeSpotifyTrack.rank}-${activeSpotifyTrack.spotifyEmbedUrl}`}
+            onPlayReady={ignoreSpotifyPlayReady}
+            track={activeSpotifyTrack}
             visible={showMiniPlayer}
+          />
+        )}
+        {replayPreloadTrack?.spotifyEmbedUrl && (
+          <SpotifyMiniPlayer
+            key={`replay-${replayPreloadTrack.rank}-${replayPreloadTrack.spotifyEmbedUrl}`}
+            onPlayReady={handleSpotifyPlayReady}
+            track={replayPreloadTrack}
+            visible={false}
           />
         )}
       </div>
@@ -1425,7 +1457,7 @@ export function VoxelEscapeGame() {
 
           <button
             type="button"
-            disabled={gameStatus === "gameover" && Boolean(selectedBgm?.spotifyEmbedUrl) && !spotifyPlayerReady}
+            disabled={gameStatus === "gameover" && Boolean(selectedBgm?.spotifyEmbedUrl) && !replayButtonReady}
             onClick={() => {
               window.DreamCoreSDK2?.retry?.({ reason: "retry_button" });
               const replayTrack =
