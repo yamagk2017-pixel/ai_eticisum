@@ -128,6 +128,7 @@ const ITEM_TYPES: ItemType[] = [
 
 const SPOTIFY_IFRAME_API_SRC = "https://open.spotify.com/embed/iframe-api/v1";
 const SPOTIFY_BGM_VOLUME = 0.35;
+const SPOTIFY_GAMEOVER_BGM_VOLUME = 0.2;
 let spotifyIframeApi: SpotifyIframeApi | null = null;
 let spotifyIframeApiPromise: Promise<SpotifyIframeApi> | null = null;
 
@@ -180,19 +181,19 @@ class SynthAudio {
   }
 
   playStart() {
-    this.play(400, 800, 0.3, "square", 0.1);
+    this.play(400, 800, 0.3, "square", 0.24);
   }
 
   playSpawn() {
-    this.play(100, 50, 0.2, "sawtooth", 0.1);
+    this.play(100, 50, 0.2, "sawtooth", 0.2);
   }
 
   playEvent() {
-    this.play(600, 1200, 0.4, "sine", 0.1);
+    this.play(600, 1200, 0.4, "sine", 0.26);
   }
 
   playGameOver() {
-    this.play(200, 40, 0.8, "sawtooth", 0.15);
+    this.play(200, 40, 0.8, "sawtooth", 0.38);
   }
 
   playScream() {
@@ -204,7 +205,7 @@ class SynthAudio {
       gain.connect(ctx.destination);
       osc.frequency.setValueAtTime(1200, ctx.currentTime);
       osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.8);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
       osc.start();
       osc.stop(ctx.currentTime + 0.8);
@@ -296,10 +297,10 @@ function loadSpotifyIframeApi() {
   return spotifyIframeApiPromise;
 }
 
-function setSpotifyBgmVolume(controller: SpotifyEmbedController | null) {
+function setSpotifyBgmVolume(controller: SpotifyEmbedController | null, volume = SPOTIFY_BGM_VOLUME) {
   if (!controller?.setVolume) return;
   try {
-    const result = controller.setVolume(SPOTIFY_BGM_VOLUME);
+    const result = controller.setVolume(volume);
     if (result instanceof Promise) {
       void result.catch(() => undefined);
     }
@@ -345,19 +346,28 @@ function TrackSummary({ track }: { track: RankingTrack }) {
 function SpotifyMiniPlayer({
   onPlayReady,
   track,
+  volume = SPOTIFY_BGM_VOLUME,
   visible,
 }: {
   onPlayReady: (play: (() => void) | null) => void;
   track: RankingTrack;
+  volume?: number;
   visible: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const controllerRef = useRef<SpotifyEmbedController | null>(null);
   const onPlayReadyRef = useRef(onPlayReady);
+  const volumeRef = useRef(volume);
   const { artistName, latestTrackName, rank, spotifyEmbedUrl } = track;
 
   useEffect(() => {
     onPlayReadyRef.current = onPlayReady;
   }, [onPlayReady]);
+
+  useEffect(() => {
+    volumeRef.current = volume;
+    setSpotifyBgmVolume(controllerRef.current, volume);
+  }, [volume]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -386,19 +396,20 @@ function SpotifyMiniPlayer({
           },
           (createdController) => {
             controller = createdController;
-            setSpotifyBgmVolume(controller);
+            controllerRef.current = createdController;
+            setSpotifyBgmVolume(controller, volumeRef.current);
             if (cancelled) {
               return;
             }
 
             notifyPlayReady(() => {
-              setSpotifyBgmVolume(controller);
+              setSpotifyBgmVolume(controller, volumeRef.current);
               const playResult = controller?.play();
               if (playResult instanceof Promise) {
                 void playResult.catch(() => undefined);
               }
               window.setTimeout(() => {
-                setSpotifyBgmVolume(controller);
+                setSpotifyBgmVolume(controller, volumeRef.current);
                 const resumeResult = controller?.resume?.();
                 if (resumeResult instanceof Promise) {
                   void resumeResult.catch(() => undefined);
@@ -426,6 +437,7 @@ function SpotifyMiniPlayer({
     return () => {
       cancelled = true;
       notifyPlayReady(null);
+      controllerRef.current = null;
       controller = null;
     };
   }, [artistName, latestTrackName, rank, spotifyEmbedUrl]);
@@ -1386,6 +1398,7 @@ export function VoxelEscapeGame() {
             key={`spotify-${activeSpotifyTrack.spotifyEmbedUrl}`}
             onPlayReady={ignoreSpotifyPlayReady}
             track={activeSpotifyTrack}
+            volume={gameStatus === "gameover" ? SPOTIFY_GAMEOVER_BGM_VOLUME : SPOTIFY_BGM_VOLUME}
             visible={showMiniPlayer}
           />
         )}
@@ -1394,6 +1407,7 @@ export function VoxelEscapeGame() {
             key={`spotify-${replayPreloadTrack.spotifyEmbedUrl}`}
             onPlayReady={handleSpotifyPlayReady}
             track={replayPreloadTrack}
+            volume={SPOTIFY_BGM_VOLUME}
             visible={false}
           />
         )}
