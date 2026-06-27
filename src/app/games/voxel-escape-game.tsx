@@ -330,15 +330,21 @@ function SpotifyMiniPlayer({
   visible: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const onPlayReadyRef = useRef(onPlayReady);
   const { artistName, latestTrackName, rank, spotifyEmbedUrl } = track;
+
+  useEffect(() => {
+    onPlayReadyRef.current = onPlayReady;
+  }, [onPlayReady]);
 
   useEffect(() => {
     const container = containerRef.current;
     const uri = toSpotifyUri(spotifyEmbedUrl);
     let cancelled = false;
     let controller: SpotifyEmbedController | null = null;
+    const notifyPlayReady = onPlayReadyRef.current;
 
-    onPlayReady(null);
+    notifyPlayReady(null);
 
     if (!container || !uri) {
       return () => undefined;
@@ -363,7 +369,7 @@ function SpotifyMiniPlayer({
               return;
             }
 
-            onPlayReady(() => {
+            notifyPlayReady(() => {
               setSpotifyBgmVolume(controller);
               const playResult = controller?.play();
               if (playResult instanceof Promise) {
@@ -392,15 +398,15 @@ function SpotifyMiniPlayer({
         iframe.loading = "eager";
         iframe.className = "block";
         containerRef.current.appendChild(iframe);
-        onPlayReady(() => undefined);
+        notifyPlayReady(() => undefined);
       });
 
     return () => {
       cancelled = true;
-      onPlayReady(null);
+      notifyPlayReady(null);
       controller = null;
     };
-  }, [artistName, latestTrackName, onPlayReady, rank, spotifyEmbedUrl]);
+  }, [artistName, latestTrackName, rank, spotifyEmbedUrl]);
 
   return (
     <div
@@ -1355,7 +1361,7 @@ export function VoxelEscapeGame() {
 
         {activeSpotifyTrack?.spotifyEmbedUrl && (
           <SpotifyMiniPlayer
-            key={`active-${activeSpotifyTrack.rank}-${activeSpotifyTrack.spotifyEmbedUrl}`}
+            key={`spotify-${activeSpotifyTrack.spotifyEmbedUrl}`}
             onPlayReady={ignoreSpotifyPlayReady}
             track={activeSpotifyTrack}
             visible={showMiniPlayer}
@@ -1363,7 +1369,7 @@ export function VoxelEscapeGame() {
         )}
         {replayPreloadTrack?.spotifyEmbedUrl && (
           <SpotifyMiniPlayer
-            key={`replay-${replayPreloadTrack.rank}-${replayPreloadTrack.spotifyEmbedUrl}`}
+            key={`spotify-${replayPreloadTrack.spotifyEmbedUrl}`}
             onPlayReady={handleSpotifyPlayReady}
             track={replayPreloadTrack}
             visible={false}
