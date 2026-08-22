@@ -2,6 +2,7 @@ import {groq} from "next-sanity";
 import {getSanityClient} from "@/lib/sanity/client";
 import {hasSanityStudioEnv} from "@/sanity/env";
 import type {NewsArticle, NewsRelatedArticleRef, NewsRelatedGroupRef, NewsTag} from "./types";
+import {NEWS_DISPLAY_TIME_ZONE} from "./datetime";
 
 type SanityRefTag = {
   _id: string;
@@ -122,13 +123,13 @@ const listQuery = groq`
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     defined(publishedAt) &&
-    publishedAt <= now() &&
+    dateTime(publishedAt) <= dateTime(now()) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
     (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
   ]
-  | order(publishedAt desc)[$start...$end]{
+  | order(dateTime(publishedAt) desc)[$start...$end]{
     _type,
     _id,
     title,
@@ -164,7 +165,7 @@ const countQuery = groq`
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     defined(publishedAt) &&
-    publishedAt <= now() &&
+    dateTime(publishedAt) <= dateTime(now()) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
@@ -177,7 +178,7 @@ const bySlugQuery = groq`
     _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] &&
     slug.current == $slug &&
     defined(publishedAt) &&
-    publishedAt <= now()
+    dateTime(publishedAt) <= dateTime(now())
   ][0]{
     _type,
     _id,
@@ -256,12 +257,12 @@ const bySlugQuery = groq`
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       defined(publishedAt) &&
-      publishedAt <= now() &&
+      dateTime(publishedAt) <= dateTime(now()) &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
       !defined(*[_id == ("drafts." + ^._id)][0]._id)
-    ] | order(publishedAt desc){
+    ] | order(dateTime(publishedAt) desc){
       _type,
       _id,
       title,
@@ -367,7 +368,7 @@ const bySlugPreviewQuery = groq`
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id
-    ] | order(publishedAt desc){
+    ] | order(dateTime(publishedAt) desc){
       _type,
       _id,
       title,
@@ -395,7 +396,7 @@ const relatedEventsForHomeQuery = groq`
     isMyRelatedEvent == true &&
     defined(slug.current) &&
     defined(publishedAt) &&
-    publishedAt <= now() &&
+    dateTime(publishedAt) <= dateTime(now()) &&
     (
       (defined(eventDate) && eventDate >= $today) ||
       (defined(eventEndDate) && eventEndDate >= $today) ||
@@ -408,7 +409,7 @@ const relatedEventsForHomeQuery = groq`
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id)
   ]
-  | order(publishedAt desc)[0...$limit]{
+  | order(dateTime(publishedAt) desc)[0...$limit]{
     _id,
     title,
     slug,
@@ -428,7 +429,7 @@ const wpImportedByPostIdQuery = groq`
     _type == "wpImportedArticle" &&
     wpPostId == $wpPostId &&
     defined(publishedAt) &&
-    publishedAt <= now()
+    dateTime(publishedAt) <= dateTime(now())
   ][0]{
     _id,
     title,
@@ -475,12 +476,12 @@ const wpImportedByPostIdQuery = groq`
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       defined(publishedAt) &&
-      publishedAt <= now() &&
+      dateTime(publishedAt) <= dateTime(now()) &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
       !defined(*[_id == ("drafts." + ^._id)][0]._id)
-    ] | order(publishedAt desc){
+    ] | order(dateTime(publishedAt) desc){
       _type,
       _id,
       title,
@@ -554,7 +555,7 @@ const wpImportedByPostIdPreviewQuery = groq`
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id
-    ] | order(publishedAt desc){
+    ] | order(dateTime(publishedAt) desc){
       _type,
       _id,
       title,
@@ -931,7 +932,12 @@ export async function getSanityWpImportedNewsByWpPostId(
 export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRelatedEvent[]> {
   if (!hasSanityStudioEnv()) return [];
   const safeLimit = Math.max(1, Math.min(20, Math.trunc(limit || 3)));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: NEWS_DISPLAY_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 
   const docs = await getSanityClient().fetch<SanityRelatedEventHomeDoc[]>(relatedEventsForHomeQuery, {
     limit: safeLimit,

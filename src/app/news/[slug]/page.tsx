@@ -12,6 +12,7 @@ import {SanityArticleBody} from "@/components/news/sanity-article-body";
 import {getNewsRelatedGroupsInfo} from "@/lib/news/related-groups";
 import {buildArticleMetadata, stripHtmlForText} from "@/lib/news/seo";
 import {getSanityNewsBySlug, type SanityRelatedGroup} from "@/lib/news/sanity";
+import {formatNewsDate} from "@/lib/news/datetime";
 import type {NewsArticle} from "@/lib/news/types";
 import {hasSanityStudioEnv} from "@/sanity/env";
 
@@ -44,36 +45,27 @@ const getCachedNewsRelatedGroupsInfo = unstable_cache(
 );
 
 function formatDate(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(time));
+  });
 }
 
 function formatDateOnly(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(time));
+  });
 }
 
 function formatDateOnlyWithWeekday(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
     weekday: "short",
-  }).format(new Date(time));
+  });
 }
 
 function formatEventDateRange(startDate: string | null, endDate: string | null) {

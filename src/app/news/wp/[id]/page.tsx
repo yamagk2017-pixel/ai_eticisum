@@ -13,6 +13,7 @@ import { buildArticleMetadata, stripHtmlForText } from "@/lib/news/seo";
 import { getWpNewsById } from "@/lib/news/wp";
 import { hasSanityStudioEnv } from "@/sanity/env";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
+import { formatNewsDate } from "@/lib/news/datetime";
 
 export const dynamic = "force-dynamic";
 const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
@@ -22,13 +23,10 @@ type Params =
   | Promise<{ id: string }>;
 
 function formatDate(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(time));
+  });
 }
 
 function TermPills({

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import { getNewsPage } from "@/lib/news";
 import type { NewsArticle } from "@/lib/news/types";
+import { formatNewsDate } from "@/lib/news/datetime";
 
 type SearchParams =
   | Record<string, string | string[] | undefined>
@@ -42,10 +43,7 @@ function buildSearchHref(params: { q: string; newsPage?: number }) {
 }
 
 function formatShortDate(value: string | null) {
-  if (!value) return "-";
-  const ts = Date.parse(value);
-  if (Number.isNaN(ts)) return value;
-  return new Intl.DateTimeFormat("ja-JP", { month: "2-digit", day: "2-digit" }).format(new Date(ts));
+  return formatNewsDate(value, {month: "2-digit", day: "2-digit"});
 }
 
 async function searchAllPaged(q: string, newsPage: number) {

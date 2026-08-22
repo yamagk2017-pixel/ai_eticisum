@@ -1,16 +1,14 @@
 import { fetchLatestWpPost, fetchWpPostById, fetchWpPostBySlug } from "@/lib/wp/client";
 import { WpArticleBody } from "@/components/news/wp-article-body";
+import { formatNewsDate } from "@/lib/news/datetime";
 
 export const dynamic = "force-dynamic";
 
 function formatDate(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(time));
+  });
 }
 
 function TermPills({

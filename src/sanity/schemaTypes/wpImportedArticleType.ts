@@ -23,6 +23,10 @@ export const wpImportedArticleType = defineType({
       name: "publishedAt",
       title: "Published At",
       type: "datetime",
+      options: {
+        displayTimeZone: "Asia/Tokyo",
+        allowTimeZoneSwitch: false,
+      },
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -106,7 +110,9 @@ export const wpImportedArticleType = defineType({
       publishedAt: "publishedAt",
     },
     prepare({title, media, wpPostId, publishedAt}) {
-      const dateText = publishedAt ? new Date(publishedAt).toLocaleDateString("ja-JP") : "-";
+      const dateText = publishedAt
+        ? new Date(publishedAt).toLocaleDateString("ja-JP", {timeZone: "Asia/Tokyo"})
+        : "-";
       return {
         title,
         media,

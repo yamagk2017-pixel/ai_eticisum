@@ -3,6 +3,7 @@ import type {Metadata} from "next";
 import { getNewsPage } from "@/lib/news";
 import { hasWpApiBaseUrlConfigured, WpClientError } from "@/lib/wp/client";
 import { hasSanityStudioEnv } from "@/sanity/env";
+import { formatNewsDate } from "@/lib/news/datetime";
 
 export const revalidate = 60;
 const NEWS_LIST_TITLE_SUFFIX = " | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
@@ -37,13 +38,10 @@ function buildNewsHref(params: { page?: number; category?: string; tag?: string 
 }
 
 function formatDate(value: string | null) {
-  if (!value) return "-";
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(time));
+  });
 }
 
 function PaginationNav({

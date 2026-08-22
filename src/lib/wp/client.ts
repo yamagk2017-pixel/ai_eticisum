@@ -17,6 +17,7 @@ type WpTermApiItem = {
 type WpPostApiItem = {
   id: number;
   date?: string;
+  date_gmt?: string;
   slug?: string;
   link?: string;
   title?: WpRenderedField;
@@ -98,6 +99,28 @@ function readNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function toUtcIsoString(value: string, assumeTimeZone: "UTC" | "Asia/Tokyo"): string | null {
+  const hasExplicitZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  const normalized = hasExplicitZone
+    ? value
+    : assumeTimeZone === "UTC"
+      ? `${value}Z`
+      : `${value}+09:00`;
+  const time = Date.parse(normalized);
+  return Number.isNaN(time) ? null : new Date(time).toISOString();
+}
+
+function readWpPublishedAt(post: WpPostApiItem): string | null {
+  const gmt = readString(post.date_gmt);
+  if (gmt) {
+    const normalized = toUtcIsoString(gmt, "UTC");
+    if (normalized) return normalized;
+  }
+
+  const local = readString(post.date);
+  return local ? toUtcIsoString(local, "Asia/Tokyo") : null;
+}
+
 function sanitizeWpHtml(html: string): string {
   return html
     // Remove embedded CSS blocks from post body to avoid WP/theme color overrides.
@@ -177,7 +200,7 @@ function mapWpPost(post: WpPostApiItem): WpPost {
     id: post.id,
     slug: readString(post.slug) ?? String(post.id),
     url: readString(post.link),
-    date: readString(post.date),
+    date: readWpPublishedAt(post),
     titleHtml: readString(post.title?.rendered) ?? "(no title)",
     excerptHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.excerpt?.rendered) ?? "")),
     contentHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.content?.rendered) ?? "")),

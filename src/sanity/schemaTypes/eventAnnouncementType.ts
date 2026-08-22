@@ -235,6 +235,10 @@ export const eventAnnouncementType = defineType({
       title: "Published At",
       type: "datetime",
       initialValue: () => new Date().toISOString(),
+      options: {
+        displayTimeZone: "Asia/Tokyo",
+        allowTimeZoneSwitch: false,
+      },
       validation: (rule) => rule.required(),
     }),
     defineField({

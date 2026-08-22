@@ -12,6 +12,7 @@ export const sanityClient = createClient({
   dataset,
   apiVersion,
   useCdn: false,
+  perspective: "published",
   token: serverToken || undefined,
 });
 

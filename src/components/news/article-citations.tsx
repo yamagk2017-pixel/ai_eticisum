@@ -1,11 +1,9 @@
 import Link from "next/link";
 import type {NewsRelatedArticleRef} from "@/lib/news/types";
+import {formatNewsDate} from "@/lib/news/datetime";
 
 function formatDate(value: string | null) {
-  if (!value) return null;
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {dateStyle: "medium"}).format(new Date(time));
+  return value ? formatNewsDate(value, {dateStyle: "medium"}) : null;
 }
 
 function RelatedArticleItem({article}: {article: NewsRelatedArticleRef}) {

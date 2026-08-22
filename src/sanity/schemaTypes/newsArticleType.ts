@@ -42,6 +42,10 @@ export const newsArticleType = defineType({
       name: "publishedAt",
       title: "Published At",
       type: "datetime",
+      options: {
+        displayTimeZone: "Asia/Tokyo",
+        allowTimeZoneSwitch: false,
+      },
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -254,7 +258,9 @@ export const newsArticleType = defineType({
       return {
         title,
         media,
-        subtitle: publishedAt ? new Date(publishedAt).toLocaleString("ja-JP") : undefined,
+        subtitle: publishedAt
+          ? new Date(publishedAt).toLocaleString("ja-JP", {timeZone: "Asia/Tokyo"})
+          : undefined,
       };
     },
   },

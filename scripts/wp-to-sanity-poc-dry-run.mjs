@@ -88,6 +88,27 @@ function normalizeBaseUrl(url) {
   return url.replace(/\/+$/, "");
 }
 
+function toUtcIsoString(value, assumeTimeZone) {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+  if (!trimmed) return null;
+
+  const hasExplicitZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed);
+  const normalized = hasExplicitZone
+    ? trimmed
+    : assumeTimeZone === "UTC"
+      ? `${trimmed}Z`
+      : `${trimmed}+09:00`;
+  const time = Date.parse(normalized);
+  return Number.isNaN(time) ? null : new Date(time).toISOString();
+}
+
+function readWpPublishedAt(post) {
+  const gmt = toUtcIsoString(post?.date_gmt, "UTC");
+  if (gmt) return gmt;
+
+  return toUtcIsoString(post?.date, "Asia/Tokyo");
+}
+
 function stripHtml(html) {
   return String(html ?? "")
     .replace(/<[^>]*>/g, " ")
@@ -236,7 +257,7 @@ function mapWpPostApiItem(post) {
 
   return {
     wpPostId: Number(post?.id),
-    publishedAt: typeof post?.date === "string" ? post.date : null,
+    publishedAt: readWpPublishedAt(post),
     title: stripHtml(post?.title?.rendered ?? "(no title)"),
     titleHtml: typeof post?.title?.rendered === "string" ? post.title.rendered : "",
     originalWpUrl: typeof post?.link === "string" ? post.link : null,

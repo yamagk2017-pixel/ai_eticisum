@@ -11,6 +11,7 @@ import {
 import { getNewsList } from "@/lib/news";
 import { getSanityRelatedEventsForHome, type HomeRelatedEvent } from "@/lib/news/sanity";
 import type { NewsArticle } from "@/lib/news/types";
+import { formatNewsDate, parseNewsDate } from "@/lib/news/datetime";
 import { createServerClient } from "@/lib/supabase/server";
 
 export const revalidate = 300;
@@ -122,14 +123,11 @@ function formatPoint(value: number) {
 }
 
 function formatEventDate(value: string | null) {
-  if (!value) return "-";
-  const ts = Date.parse(value);
-  if (Number.isNaN(ts)) return value;
-  return new Intl.DateTimeFormat("ja-JP", {
+  return formatNewsDate(value, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(ts));
+  });
 }
 
 function toNewsArticleFromRelatedEvent(event: HomeRelatedEvent): NewsArticle {
@@ -172,13 +170,11 @@ function buildRelatedEventSubtitle(event: HomeRelatedEvent): string {
 }
 
 function formatMonthDayUpdateLabel(value: string | null) {
-  if (!value) return "最新1件";
-  const ts = Date.parse(value);
-  if (Number.isNaN(ts)) return "最新1件";
-  const formatted = new Intl.DateTimeFormat("ja-JP", {
+  if (!parseNewsDate(value)) return "最新1件";
+  const formatted = formatNewsDate(value, {
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date(ts));
+  });
   return `${formatted} 更新`;
 }
 
