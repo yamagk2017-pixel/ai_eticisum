@@ -4,7 +4,6 @@ import { collectRawUpdatesFromYoutube } from "@/lib/iam/raw-updates-youtube";
 import { collectRawUpdatesFromSpotify } from "@/lib/iam/raw-updates-spotify";
 import { normalizeEventsFromRawUpdates } from "@/lib/iam/normalize-events";
 import { buildWeeklyDigestCandidates } from "@/lib/iam/weekly-digest-candidates";
-import { buildWeeklyGroupComplements } from "@/lib/iam/weekly-group-complements";
 import { internalServerErrorResponse, isAuthorizedCronRequest, unauthorizedCronResponse } from "@/lib/api/cron";
 
 export const runtime = "nodejs";
@@ -78,7 +77,21 @@ export async function GET(request: NextRequest) {
 
     const normalizedEvents = await normalizeEventsFromRawUpdates(processingWeekKey);
     const weeklyDigestCandidates = await buildWeeklyDigestCandidates(processingWeekKey);
-    const weeklyGroupComplements = await buildWeeklyGroupComplements(processingWeekKey);
+    const weeklyGroupComplements = {
+      weekKey: processingWeekKey,
+      disabled: true,
+      reason: "managed_externally",
+      eligibleGroups: 0,
+      processed: 0,
+      completed: 0,
+      budgetLimited: 0,
+      skippedExisting: 0,
+      errors: 0,
+      dailySpentUsd: 0,
+      monthlySpentUsd: 0,
+      dailyBudgetUsd: 0,
+      monthlyBudgetUsd: 0,
+    };
     const completedAt = Date.now();
 
     return NextResponse.json({

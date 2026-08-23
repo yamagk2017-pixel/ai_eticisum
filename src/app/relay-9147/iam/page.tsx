@@ -105,6 +105,18 @@ async function getEventMap(eventIds: string[]) {
   return new Map(((data ?? []) as EventRow[]).map((row) => [row.id, row]));
 }
 
+function dedupeCandidatesByGroup(candidates: CandidateRow[], eventMap: Map<string, EventRow>) {
+  const seenGroupIds = new Set<string>();
+
+  return candidates.filter((candidate) => {
+    const groupId = eventMap.get(candidate.event_id)?.group_id;
+    if (!groupId) return true;
+    if (seenGroupIds.has(groupId)) return false;
+    seenGroupIds.add(groupId);
+    return true;
+  });
+}
+
 async function getGroupMap(groupIds: string[]) {
   if (groupIds.length === 0) return new Map<string, GroupRow>();
   const supabase = createServerClient({ requireServiceRole: true });
@@ -298,9 +310,16 @@ async function loadCandidatesData(): Promise<CandidatesData> {
       };
     }
 
-    const candidates = await getCandidates(weekKey);
-    const eventMap = await getEventMap(candidates.map((row) => row.event_id));
-    const groupIds = [...new Set([...eventMap.values()].map((row) => row.group_id))];
+    const allCandidates = await getCandidates(weekKey);
+    const eventMap = await getEventMap(allCandidates.map((row) => row.event_id));
+    const candidates = dedupeCandidatesByGroup(allCandidates, eventMap);
+    const groupIds = [
+      ...new Set(
+        candidates
+          .map((row) => eventMap.get(row.event_id)?.group_id)
+          .filter((groupId): groupId is string => Boolean(groupId))
+      ),
+    ];
     const [groupMap, groupXMap, complementMap, eventSourceMap] = await Promise.all([
       getGroupMap(groupIds),
       getGroupXMap(groupIds),
@@ -360,7 +379,7 @@ export default async function IamConsolePage() {
           <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--ui-text-subtle)]">Relay 9147 / IAM</p>
           <h1 className="text-2xl font-semibold">週刊ニュース候補</h1>
           <p className="text-sm text-[var(--ui-text-muted)]">
-            week_key: <span className="font-mono">{weekKey}</span> / {candidates.length}件
+            week_key: <span className="font-mono">{weekKey}</span> / {candidates.length}グループ
           </p>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/relay-9147/iam/targets" className="text-[var(--ui-accent)] hover:underline">
@@ -409,7 +428,7 @@ export default async function IamConsolePage() {
                 const groupXUrl = event ? groupXMap.get(event.group_id) : null;
                 return (
                   <tr key={row.id} className="border-t border-[var(--ui-border)] align-top">
-                    <td className="px-4 py-3 text-lg font-mono">{row.rank_hint ?? index + 1}</td>
+                    <td className="px-4 py-3 text-lg font-mono">{index + 1}</td>
                     <td className="px-4 py-3">
                       {groupDetailHref ? (
                         <Link href={groupDetailHref} className="text-[var(--ui-accent)] hover:underline">
