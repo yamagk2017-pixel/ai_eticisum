@@ -563,7 +563,7 @@ export default async function Home() {
       )}
       {imakiteTop1 ? (
         <>
-          <article className="relative mt-4 overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
+          <article className="relative mt-4 aspect-square w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
             <div className="absolute inset-0">
               {imakiteTop1.artistImageUrl ? (
                 <Image
