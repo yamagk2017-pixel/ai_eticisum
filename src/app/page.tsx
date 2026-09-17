@@ -577,7 +577,7 @@ export default async function Home() {
               ) : (
                 <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
               )}
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-slate-950/40 to-slate-950/90" />
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,transparent_66%,rgba(2,6,23,0.9)_100%)]" />
             </div>
             <div className="relative flex h-full flex-col justify-end gap-4 p-5">
               <div className="flex items-start justify-between gap-4">
