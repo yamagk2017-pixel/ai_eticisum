@@ -1,6 +1,7 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
 import {RelatedGroupObjectInput} from "@/sanity/components/related-groups-input/related-group-object-input";
 import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
+import {isUniqueAcrossNewsDocuments} from "@/sanity/slug-is-unique";
 import {
   createCitationSourceArticleField,
   createSeoFields,
@@ -137,7 +138,7 @@ export const radioAnnouncementType = defineType({
       name: "slug",
       title: "Slug",
       type: "slug",
-      options: {source: "title", maxLength: 200},
+      options: {source: "title", maxLength: 200, isUnique: isUniqueAcrossNewsDocuments},
       validation: (rule) => rule.required(),
     }),
     defineField({

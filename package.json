@@ -20,7 +20,8 @@
     "capture:imakite": "node scripts/capture-imakite.mjs",
     "preview:share-link": "node scripts/generate-preview-share-link.mjs",
     "replace:wp-image-host:dry-run": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp",
-    "replace:wp-image-host:apply": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp --apply"
+    "replace:wp-image-host:apply": "node scripts/replace-wp-image-host-in-sanity.mjs --from=https://www.musicite.net --to=http://musicite.sub.jp --apply",
+    "draft:news": "node --experimental-strip-types scripts/news-draft.mts"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.2",
@@ -41,7 +42,8 @@
     "react-dom": "19.2.3",
     "react-tweet": "^3.3.0",
     "sanity": "^5.11.0",
-    "three": "^0.185.0"
+    "three": "^0.185.0",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
