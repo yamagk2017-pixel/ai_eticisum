@@ -328,13 +328,13 @@ node scripts/replace-wp-image-host-in-sanity.mjs --from=https://old.example.com 
 
 ### 2. Sanity StudioのPreview URLを設定する
 
-`sanity.config.ts` の `document.productionUrl` で、次のURLを返します。
+`sanity.config.ts` の `document.productionUrl` は公開ページのURLを返します。
 
 ```text
-{SANITY_STUDIO_PREVIEW_ORIGIN}/api/draft/enable?path={encodedPath}
+{SANITY_STUDIO_PREVIEW_ORIGIN}{path}
 ```
 
-Sanity Studio の `Open preview` 相当の操作から、このURLが開かれます。
+下書きや未来日時の記事を確認するときは、document action の「共有URLをコピー」から署名付きURLを発行します。
 
 ### 3. Next.js draftMode APIを追加する
 
@@ -343,15 +343,13 @@ Sanity Studio の `Open preview` 相当の操作から、このURLが開かれ�
 - `src/app/api/draft/enable/route.ts`
 - `src/app/api/draft/disable/route.ts`
 
-`enable` は `path` を検証してから `draftMode().enable()` し、そのpathへredirectします。
+`enable` は次をすべて検証してから `draftMode().enable()` し、そのpathへredirectします。
 
-現在の実装では、署名パラメータ `exp` と `sig` が付いている場合だけ署名検証します。Sanity Studio からの通常Preview URLは署名なしでも有効です。
+- `path` が `/news` 配下である
+- 有効期限 `exp` が現在時刻より後、かつ30日以内である
+- `path` と `exp` に対するHMAC署名 `sig` が正しい
 
-本番でより厳密にしたい場合:
-
-- `SANITY_STUDIO_PREVIEW_SECRET` を追加する
-- `productionUrl` に `secret` を付ける
-- `/api/draft/enable` 側で secret 必須にする
+署名なしのURLは常に `401` になります。
 
 ### 4. Preview用Sanity clientを使う
 

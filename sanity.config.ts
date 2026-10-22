@@ -37,8 +37,9 @@ export default defineConfig({
     productionUrl: async (_prev, context) => {
       const path = resolvePreviewPath((context.document ?? {}) as PreviewDocumentLike);
       if (!path) return undefined;
-      const query = new URLSearchParams({path}).toString();
-      return `${previewOrigin}/api/draft/enable?${query}`;
+      // Opening a draft requires a signed URL. Use the custom
+      // "共有URLをコピー" action for draft/preview access.
+      return `${previewOrigin}${path}`;
     },
   },
   schema: {

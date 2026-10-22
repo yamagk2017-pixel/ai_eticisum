@@ -1,13 +1,5 @@
 import {NextResponse} from "next/server";
-import {getPreviewShareOrigin, signPreviewLink} from "@/lib/preview/share-link";
-
-function toSafePath(value: string | null) {
-  const path = typeof value === "string" ? value.trim() : "";
-  if (!path) return "/";
-  if (!path.startsWith("/")) return "/";
-  if (path.startsWith("//")) return "/";
-  return path;
-}
+import {getPreviewShareOrigin, normalizePreviewPath, signPreviewLink} from "@/lib/preview/share-link";
 
 function getTtlMinutes(value: string | null) {
   const defaultMinutes = 60 * 24 * 5;
@@ -29,7 +21,13 @@ export async function GET(request: Request) {
     return NextResponse.json({error: "Unauthorized"}, {status: 401});
   }
 
-  const path = toSafePath(url.searchParams.get("path"));
+  const path = normalizePreviewPath(url.searchParams.get("path"));
+  if (!path) {
+    return NextResponse.json(
+      {error: "Invalid preview path"},
+      {status: 400, headers: {"Cache-Control": "private, no-store, max-age=0"}}
+    );
+  }
   const ttlMinutes = getTtlMinutes(url.searchParams.get("ttlMinutes"));
   const exp = Math.floor(Date.now() / 1000) + ttlMinutes * 60;
   const sig = signPreviewLink(path, exp);
@@ -37,10 +35,13 @@ export async function GET(request: Request) {
 
   const previewUrl = `${origin}/api/draft/enable?path=${encodeURIComponent(path)}&exp=${exp}&sig=${encodeURIComponent(sig)}`;
 
-  return NextResponse.json({
-    previewUrl,
-    path,
-    expiresAt: new Date(exp * 1000).toISOString(),
-    ttlMinutes,
-  });
+  return NextResponse.json(
+    {
+      previewUrl,
+      path,
+      expiresAt: new Date(exp * 1000).toISOString(),
+      ttlMinutes,
+    },
+    {headers: {"Cache-Control": "private, no-store, max-age=0"}}
+  );
 }

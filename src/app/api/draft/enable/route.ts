@@ -1,38 +1,48 @@
 import {draftMode} from "next/headers";
-import {redirect} from "next/navigation";
-import {verifyPreviewLinkSignature} from "@/lib/preview/share-link";
+import {NextResponse} from "next/server";
+import {
+  MAX_PREVIEW_TTL_SECONDS,
+  normalizePreviewPath,
+  verifyPreviewLinkSignature,
+} from "@/lib/preview/share-link";
 
-function toSafePath(value: string | null) {
-  const path = typeof value === "string" ? value.trim() : "";
-  if (!path) return "/";
-  if (!path.startsWith("/")) return "/";
-  if (path.startsWith("//")) return "/";
-  return path;
+function unauthorized(message: string) {
+  return new NextResponse(message, {
+    status: 401,
+    headers: {"Cache-Control": "private, no-store, max-age=0"},
+  });
 }
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const path = toSafePath(url.searchParams.get("path"));
+  const path = normalizePreviewPath(url.searchParams.get("path"));
   const expRaw = url.searchParams.get("exp");
   const sig = url.searchParams.get("sig");
 
-  if (expRaw || sig) {
-    if (!expRaw || !sig || !/^\d+$/.test(expRaw)) {
-      return new Response("Invalid preview link", {status: 401});
-    }
+  if (!path || !expRaw || !sig || !/^\d+$/.test(expRaw) || !/^[A-Za-z0-9_-]{43}$/.test(sig)) {
+    return unauthorized("Invalid preview link");
+  }
 
-    const exp = Number(expRaw);
-    const now = Math.floor(Date.now() / 1000);
-    if (exp < now) {
-      return new Response("Preview link expired", {status: 401});
-    }
+  const exp = Number(expRaw);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isSafeInteger(exp) || exp < now) {
+    return unauthorized("Preview link expired");
+  }
+  if (exp > now + MAX_PREVIEW_TTL_SECONDS) {
+    return unauthorized("Preview link expiry is too far in the future");
+  }
 
+  try {
     if (!verifyPreviewLinkSignature(path, exp, sig)) {
-      return new Response("Invalid preview signature", {status: 401});
+      return unauthorized("Invalid preview signature");
     }
+  } catch {
+    return unauthorized("Invalid preview signature");
   }
 
   const draft = await draftMode();
   draft.enable();
-  redirect(path);
+  const response = NextResponse.redirect(new URL(path, request.url));
+  response.headers.set("Cache-Control", "private, no-store, max-age=0");
+  return response;
 }

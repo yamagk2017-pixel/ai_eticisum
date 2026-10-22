@@ -1,3 +1,5 @@
+import sanitizeHtml from "sanitize-html";
+
 type WpRenderedField = {
   rendered?: string;
 };
@@ -121,15 +123,54 @@ function readWpPublishedAt(post: WpPostApiItem): string | null {
   return local ? toUtcIsoString(local, "Asia/Tokyo") : null;
 }
 
-function sanitizeWpHtml(html: string): string {
-  return html
-    // Remove embedded CSS blocks from post body to avoid WP/theme color overrides.
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-    // Remove all inline styles (MVP prioritizes visual consistency over preserving WP styling).
-    .replace(/\sstyle\s*=\s*(['"])[\s\S]*?\1/gi, "")
-    .replace(/\sdata-mce-style\s*=\s*(['"])[\s\S]*?\1/gi, "")
-    .replace(/\scolor\s*=\s*(['"]).*?\1/gi, "")
-    .replace(/\sbgcolor\s*=\s*(['"]).*?\1/gi, "");
+const WP_ALLOWED_TAGS = [
+  ...sanitizeHtml.defaults.allowedTags,
+  "div",
+  "span",
+  "figure",
+  "figcaption",
+  "img",
+  "picture",
+  "source",
+  "video",
+  "audio",
+] as const;
+
+const WP_ALLOWED_ATTRIBUTES: sanitizeHtml.IOptions["allowedAttributes"] = {
+  "*": ["class", "title", "aria-label", "aria-hidden", "role"],
+  a: ["href", "name"],
+  img: ["src", "srcset", "sizes", "alt", "width", "height", "loading", "decoding", "data-src", "data-src-fg"],
+  source: ["src", "srcset", "sizes", "type", "media"],
+  video: ["src", "poster", "controls", "preload", "width", "height"],
+  audio: ["src", "controls", "preload"],
+  td: ["colspan", "rowspan", "headers"],
+  th: ["colspan", "rowspan", "scope", "headers"],
+};
+
+export function sanitizeWpHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: [...WP_ALLOWED_TAGS],
+    allowedAttributes: WP_ALLOWED_ATTRIBUTES,
+    allowedSchemes: ["http", "https", "mailto", "tel"],
+    allowedSchemesByTag: {
+      img: ["http", "https", "data"],
+      source: ["http", "https"],
+      video: ["http", "https"],
+      audio: ["http", "https"],
+    },
+    allowProtocolRelative: false,
+    disallowedTagsMode: "discard",
+    nonTextTags: ["style", "script", "textarea", "option", "noscript"],
+  });
+}
+
+export function sanitizeWpTitleHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: [],
+    allowedAttributes: {},
+    disallowedTagsMode: "discard",
+    nonTextTags: ["style", "script", "textarea", "option", "noscript"],
+  });
 }
 
 function rewriteWpImageUrl(url: string | null): string | null {
@@ -201,7 +242,7 @@ function mapWpPost(post: WpPostApiItem): WpPost {
     slug: readString(post.slug) ?? String(post.id),
     url: readString(post.link),
     date: readWpPublishedAt(post),
-    titleHtml: readString(post.title?.rendered) ?? "(no title)",
+    titleHtml: sanitizeWpTitleHtml(readString(post.title?.rendered) ?? "(no title)"),
     excerptHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.excerpt?.rendered) ?? "")),
     contentHtml: rewriteWpImageUrlsInHtml(sanitizeWpHtml(readString(post.content?.rendered) ?? "")),
     featuredImageUrl: rewriteWpImageUrl(readString(featuredMedia?.source_url)),

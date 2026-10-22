@@ -1,5 +1,7 @@
 import {createHmac, timingSafeEqual} from "node:crypto";
 
+export const MAX_PREVIEW_TTL_SECONDS = 60 * 60 * 24 * 30;
+
 function base64UrlEncode(input: Buffer | string) {
   return Buffer.from(input)
     .toString("base64")
@@ -26,6 +28,25 @@ function createPayload(path: string, exp: number) {
   return `${path}\n${exp}`;
 }
 
+export function normalizePreviewPath(value: string | null | undefined) {
+  const path = typeof value === "string" ? value.trim() : "";
+  if (!path || path.length > 2048) return null;
+  if (/[\\\u0000-\u001f\u007f]/.test(path)) return null;
+  if (path.includes("..") || path.startsWith("//")) return null;
+  if (path !== "/news" && !path.startsWith("/news/") && !path.startsWith("/news?")) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(path, "https://preview.invalid");
+    if (parsed.origin !== "https://preview.invalid") return null;
+    if (parsed.pathname !== "/news" && !parsed.pathname.startsWith("/news/")) return null;
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
+}
+
 export function signPreviewLink(path: string, exp: number) {
   const secret = getSigningSecret();
   const payload = createPayload(path, exp);
@@ -49,4 +70,3 @@ export function getPreviewShareOrigin() {
     "https://www.musicite.net";
   return fromEnv.replace(/\/$/, "");
 }
-
