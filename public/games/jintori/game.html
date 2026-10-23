@@ -104,6 +104,7 @@ const SUMMARY_TIME = 10;                // まとめを出しておく秒数。�
 const PICK_ALPHA = 0.35;                // 予想した色のマスの濃さ(下の絵が透けて見える)
 const STAGE_IMAGE = 'stage-bg.jpg';     // 盤の下に敷く絵
 const SPOTIFY_IFRAME_API_SRC = 'https://open.spotify.com/embed/iframe-api/v1';
+const SPOTIFY_READY_TIMEOUT = 20000;     // 初回の埋め込みはコールドスタートを考慮して長めに待つ
 
 const TEAMS = [
   { name: 'ピンク', color: '#ff7ac8' },
@@ -675,28 +676,35 @@ function prepareTrackForCurrentRound() {
   showSpotifyPlayer();
   const attempt = ++spotifyAttempt;
   spotifyPrepareTimer = window.setTimeout(() => {
-    if (attempt !== spotifyAttempt || spotifyController || loadedSpotifyUri === uri) return;
+    if (attempt !== spotifyAttempt || spotifyReady) return;
     spotifyState = 'error';
     showBgmFallback(`${rank}位のBGM準備がタイムアウトしました`);
     updateControls();
-  }, 8000);
+  }, SPOTIFY_READY_TIMEOUT);
   const onControllerCreated = controller => {
       if (attempt !== spotifyAttempt) {
         try { controller.destroy?.(); } catch { /* 古い試行なので破棄する */ }
         return;
       }
-      window.clearTimeout(spotifyPrepareTimer);
       spotifyController = controller;
       loadedSpotifyUri = uri;
-      spotifyState = 'ready';
-      // createController のコールバックで操作用コントローラは利用できる。
-      // ready イベントが届かないブラウザでもゲーム開始を止めない。
-      spotifyReady = true;
+      spotifyState = 'loading';
+      spotifyReady = false;
       if (controller.addListener) {
         controller.addListener('ready', () => {
+          if (attempt !== spotifyAttempt) return;
+          window.clearTimeout(spotifyPrepareTimer);
+          spotifyState = 'ready';
           spotifyReady = true;
+          showSpotifyPlayer();
           updateControls();
         });
+      } else {
+        window.clearTimeout(spotifyPrepareTimer);
+        spotifyState = 'error';
+        showBgmFallback(`${rank}位のBGMを準備できませんでした`);
+        updateControls();
+        return;
       }
       showSpotifyPlayer();
       updateControls();
