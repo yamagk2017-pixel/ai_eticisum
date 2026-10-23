@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>陣取りボール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+  html, body { margin: 0; height: 100%; background: #0d0726; color: #ffffff;
+    font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif; }
+  #wrap { min-height: 100%; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 10px; padding: 8px; box-sizing: border-box; }
+  #gameStage { position: relative; aspect-ratio: 484 / 612;
+    height: min(calc(100svh - 166px), calc((100vw - 16px) * 612 / 484));
+  }
+  canvas { display: block; width: 100%; height: 100%;
+    border-radius: 12px; box-shadow: 0 0 0 1px rgba(255,216,107,.35), 0 8px 40px #000a; }
+  #bgm { position: relative; width: min(484px, calc(100vw - 16px)); height: 80px;
+    overflow: hidden; border-radius: 10px; border: 1px solid rgba(255,255,255,.2);
+    background: rgba(8,4,26,.9); box-sizing: border-box; }
+  #spotifyPlayer { display: none; width: 100%; height: 80px; }
+  #spotifyPlayer iframe, #spotifyHost { display: block; width: 100%; height: 80px; border: 0; }
+  #bgmFallback { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; padding: 10px 18px; box-sizing: border-box;
+    text-align: center; }
+  #bgmLabel { color: #ffd86b; font: 700 11px 'Fredoka', sans-serif; letter-spacing: .12em; }
+  #bgmText { color: #fff; font-size: 13px; font-weight: 700; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+  #ui { display: flex; gap: 10px; }
+  button, .gameLink { height: 44px; padding: 0 18px; border-radius: 22px; border: 1.5px solid #ffd86b;
+    background: rgba(255,255,255,.06); color: #ffffff; font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: inherit; box-sizing: border-box; }
+  .gameLink { display: inline-flex; align-items: center; text-decoration: none; }
+  button:hover, .gameLink:hover { background: rgba(255,216,107,.18); }
+  button:disabled { cursor: wait; opacity: .45; }
+  #predictPanel { pointer-events: none; position: absolute; z-index: 3; left: 50%; top: 49%;
+    transform: translate(-50%, -50%); display: flex; width: max-content; max-width: calc(100% - 24px);
+    flex-direction: column; align-items: center; gap: 7px; padding: 8px 28px 11px;
+    border: 1.5px solid #ffd86b; border-radius: 999px; background: rgba(18,10,48,.88);
+    box-shadow: 0 5px 16px rgba(0,0,0,.45); box-sizing: border-box; }
+  #predictPanel[hidden] { display: none; }
+  #predictText { margin: 0; white-space: nowrap; font-size: 17px; font-weight: 700; }
+  #btnRandom { pointer-events: auto; min-width: 164px; height: 40px; padding: 0 20px;
+    border-width: 1.5px; background: #1a0f40; box-shadow: 0 0 14px rgba(255,216,107,.35); }
+  #btnRandom:hover { background: #342064; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="gameStage">
+    <canvas id="c"></canvas>
+    <div id="predictPanel">
+      <p id="predictText">勝つと思う色をタップ または「おまかせ」</p>
+      <button id="btnRandom" disabled>おまかせ</button>
+    </div>
+  </div>
+  <div id="bgm" aria-live="polite">
+    <div id="spotifyPlayer"><div id="spotifyHost"></div></div>
+    <div id="bgmFallback">
+      <div id="bgmLabel">IMAKITE RANKING BGM</div>
+      <div id="bgmText">ランキングを読み込んでいます...</div>
+    </div>
+  </div>
+  <div id="ui">
+    <a class="gameLink" href="/games" target="_top">GAMES</a>
+    <button id="btnPause">一時停止</button>
+  </div>
+</div>
+<script>
+(() => {
+'use strict';
+
+// ---- 定数 ----
+const N = 22, CS = 22, TOP = 56;        // 盤は N×N マス、1マス CS px
+const STRIP_H = 72;                     // 盤の下の、陣地の割合の帯の高さ
+const POPUP_RISE = 90;                  // 「○○ GET！」の文字が浮かび上がる出だしの速さ(px/秒)
+const POPUP_DIST = 60;                  // その文字が動く距離(px)。ここに近づくほどゆっくりになって止まる
+const W = N * CS, H = TOP + W + STRIP_H;
+const R = 6, R_BIG = 13, R_PIERCE = 9;   // ボールの半径: ふだん、ビッグ中、貫通中
+const BASE_SPEED = 960, SPEED_GAIN = 0.5;   // 時間切れに向けて速さが (1+SPEED_GAIN) 倍まで上がる
+const ROUND_TIME = 30, RESULT_TIME = 4, STEP = 1 / 120;
+const RESULT_TIME_HIT = 7;              // 予想が当たったときは絵を見せるので長めに止める
+const START_BALLS = 2;                  // 各チームが最初に持つボールの数
+const MAX_BALLS = 10;                   // 1チームのボール数の上限
+const MAX_ITEMS = 6;
+const ITEM_GAP_START = 2.4, ITEM_GAP_END = 0.5;     // アイテムが出る間隔(秒)。時間切れに向けて短くなる
+const BOMB_RADIUS = 3.2, BIG_TIME = 5;
+const PIERCE_TIME = 1.5;                // 貫通弾を拾ったボールが、跳ね返らずに突き抜け続ける秒数
+const PIERCE_SPEED = 0.75;              // 貫通中の速さ(ふだんの速さに対する倍率)
+const PIERCE_CHARGE = 0.4;              // 貫通弾を拾ってから、その場で大きくなり終えて動き出すまでの秒数
+// レアアイテム「スーパーノヴァ」: 拾った場所から波が広がり、通ったマスをすべて自分の色に塗り替える
+const NOVA_CHANCE = 0.4;                // 1ラウンドのうちに1個目が出る確率
+const NOVA_FROM = 15, NOVA_TO = 26;     // 1個目が出る時刻の範囲(開始からの秒)
+const NOVA_DECAY = 0.5;                 // 2個目以降が出る確率は、1個出るたびにこの倍率で下がる(40%→20%→10%…)
+const NOVA_GAP_MIN = 3, NOVA_GAP_MAX = 6;   // 2個目以降は、前の1個が出てからこの秒数のあとに出る
+const NOVA_RADIUS = 14, NOVA_SPEED = 12;    // 波が届く半径(マス)と、広がる速さ(マス/秒)
+const NOVA_SHIELD = 3;                  // 波で獲得したマスが無敵でいる秒数(その間はほかの色に塗り替えられない)
+const READY_SWEEP = 0.7, READY_FADE = 0.3, READY_HOLD = 0.5;    // 予想した色が半透明になる演出: 波が渡りきる秒数、1マスが透ける秒数、そのあと「START!」を出して待つ秒数
+const SET_ROUNDS = 10;                  // この回数で一区切り。終わると当たり外れのまとめを出す
+const SUMMARY_TIME = 10;                // まとめを出しておく秒数。過ぎたら次の区切りを始める
+const PICK_ALPHA = 0.35;                // 予想した色のマスの濃さ(下の絵が透けて見える)
+const STAGE_IMAGE = 'stage-bg.jpg';     // 盤の下に敷く絵
+const SPOTIFY_IFRAME_API_SRC = 'https://open.spotify.com/embed/iframe-api/v1';
+
+const TEAMS = [
+  { name: 'ピンク', color: '#ff7ac8' },
+  { name: 'アクア', color: '#62d9ff' },
+  { name: 'ゴールド', color: '#ffd86b' },
+  { name: 'パープル', color: '#a78bff' },
+];
+const ITEMS = {
+  M: { name: 'マルチ', weight: 4 },     // 拾ったチームのボールが1つ増える
+  B: { name: 'ボム', weight: 3 },       // 周りのマスをまとめて塗り替える
+  L: { name: 'ビッグ', weight: 3 },     // 拾ったボールがしばらく大きくなる
+  P: { name: '貫通弾', weight: 1 },     // 拾ったボールがしばらく、相手のマスで跳ね返らずに塗り替えながら突き抜ける
+};
+const ITEM_KEYS = Object.keys(ITEMS);
+const ITEM_WEIGHT_SUM = ITEM_KEYS.reduce((s, k) => s + ITEMS[k].weight, 0);
+const SPARK_COLORS = ['#ffffff', '#ffe9a8', '#ffc4e8', '#c8f6ff'];
+const SMOKE_SHADES = ['#ffffff', '#f4f2fa', '#e3dff0', '#cdc8de'];   // 白煙
+const GOLD = '#ffd86b', NAVY = '#1a0f40', LAVENDER = '#c9bdf5';
+
+// 最初の陣地の分け方。make() は (列, 段) からチーム番号を返す関数を作る。
+// どの分け方も、最初のマス数がほぼ同じになるようにしてある
+const LAYOUTS = [
+  { name: '四つ角', teams: 4, make: () => (c, r) => (r < N / 2 ? 0 : 2) + (c < N / 2 ? 0 : 1) },
+  { name: '三つ巴', teams: 3, make: () => {
+    // 中心から見た角度の順にマスを並べ、3等分する(端数の1マスがどこに付くかは毎回変わる)
+    const turn = Math.random() * Math.PI * 2, shift = (Math.random() * 3) | 0, cells = [];
+    for (let i = 0; i < N * N; i++) {
+      const a = Math.atan2(((i / N) | 0) + 0.5 - N / 2, i % N + 0.5 - N / 2) + turn;
+      cells.push({ i, a: (a + Math.PI * 4) % (Math.PI * 2) });
+    }
+    cells.sort((p, q) => p.a - q.a);
+    const map = new Int8Array(N * N);
+    cells.forEach((cell, k) => { map[cell.i] = (Math.min(2, Math.floor(k * 3 / (N * N))) + shift) % 3; });
+    return (c, r) => map[r * N + c];
+  } },
+  { name: 'まだら', teams: 4, make: () => {
+    // ランダムな12か所を中心に色を分け、4チームのマス数が揃うまで境目を少しずつ動かす
+    const seeds = [], pull = [0, 0, 0, 0];
+    for (let k = 0; k < 12; k++) seeds.push({ x: Math.random() * N, y: Math.random() * N, team: k % 4 });
+    let bestMap = null, bestGap = Infinity;
+    for (let round = 0; round < 80 && bestGap > 2; round++) {
+      const map = new Int8Array(N * N), n = [0, 0, 0, 0];
+      for (let i = 0; i < N * N; i++) {
+        let team = 0, bd = Infinity;
+        for (const sd of seeds) {
+          const d = (sd.x - i % N) ** 2 + (sd.y - ((i / N) | 0)) ** 2 - pull[sd.team];
+          if (d < bd) { bd = d; team = sd.team; }
+        }
+        map[i] = team; n[team]++;
+      }
+      const gap = Math.max(...n) - Math.min(...n);
+      if (gap < bestGap) { bestGap = gap; bestMap = map; }
+      for (let t = 0; t < 4; t++) pull[t] += (N * N / 4 - n[t]) * 0.04;
+    }
+    return (c, r) => bestMap[r * N + c];
+  } },
+];
+
+// ---- 状態 ----
+let roundNo = 0, teamCount = 4;
+let owner, flash, shield;               // マスごとの持ち主、塗り替えた瞬間の光、無敵の残り秒
+let counts = [];                        // チームごとのマス数
+let balls = [], items = [], particles = [];
+let phase = 'play', timeLeft = 0, resultT = 0, itemT = 0, winner = -1, clock = 0;
+let pick = -1;                          // 予想したチーム
+let readyT = 0, readyX = 0, readyY = 0, readyMax = 1;   // 半透明になる演出の経過秒、波の出どころ(マス単位)、いちばん遠いマスまでの距離
+let reveal = 0;                         // 的中時に盤全体が予想した色へ変わる度合い(0〜1)
+let novaAt = -1, waves = [], notice = 0;    // 次のスーパーノヴァが出る時刻、広がっている波、出現のお知らせの残り秒
+let novaCount = 0;                      // このラウンドで出たスーパーノヴァの数
+let results = [];                       // 今の区切りの各ラウンドの当たり(true)・外れ(false)
+let summaryT = 0;                       // まとめの残り秒
+let popups = [];                        // 盤の上に浮かぶ「○○ GET！」の文字
+let blasts = [], smoke = [];            // ボムの爆発(閃光と衝撃の輪)と、そのあとに立ちのぼる煙
+let paused = false;
+
+// イマキテランキングとSpotify BGM。ラウンド1〜10をランキング1〜10位へ対応させる
+let rankingState = 'loading', rankingItems = [], currentTrack = null;
+let spotifyState = 'loading', spotifyApi = null, spotifyController = null, spotifyReady = false, loadedSpotifyUri = '';
+let spotifyApiTimer = 0, spotifyPrepareTimer = 0, spotifyAttempt = 0;
+let spotifyApiPromise = null;
+
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+
+// 当たり判定に使うボールの半径
+function radiusOf(b) {
+  return b.big > 0 ? R_BIG : b.pierce > 0 ? R_PIERCE : R;
+}
+
+function newBall(team, x, y) {
+  const a = Math.random() * Math.PI * 2;
+  const b = { team, x, y, dx: Math.cos(a), dy: Math.sin(a), big: 0, pierce: 0, charge: 0, trail: [], tick: Math.random() * 6.28 };
+  steer(b, 0);
+  return b;
+}
+
+// 向きを少しずらし、真横・真上に近い軌道にならないようにする
+function steer(b, jitter) {
+  let a = Math.atan2(b.dy, b.dx) + (Math.random() - 0.5) * jitter;
+  b.dx = Math.cos(a); b.dy = Math.sin(a);
+  const MIN = 0.3;
+  if (Math.abs(b.dx) < MIN) { b.dx = (b.dx < 0 ? -1 : 1) * MIN; b.dy = (b.dy < 0 ? -1 : 1) * Math.sqrt(1 - MIN * MIN); }
+  if (Math.abs(b.dy) < MIN) { b.dy = (b.dy < 0 ? -1 : 1) * MIN; b.dx = (b.dx < 0 ? -1 : 1) * Math.sqrt(1 - MIN * MIN); }
+}
+
+function loadRound(n) {
+  roundNo = n;
+  const layout = LAYOUTS[n % LAYOUTS.length], at = layout.make();
+  teamCount = layout.teams;
+  owner = new Int8Array(N * N);
+  flash = new Float32Array(N * N);
+  shield = new Float32Array(N * N);
+  counts = new Array(teamCount).fill(0);
+  const sum = Array.from({ length: teamCount }, () => ({ x: 0, y: 0 }));
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const t = at(c, r);
+    owner[r * N + c] = t;
+    counts[t]++;
+    sum[t].x += c + 0.5; sum[t].y += r + 0.5;
+  }
+  // 各チームのボールは、自分の陣地の重心にいちばん近い自分のマスから出る
+  balls = [];
+  for (let t = 0; t < teamCount; t++) {
+    const gx = sum[t].x / counts[t], gy = sum[t].y / counts[t];
+    let best = 0, bd = Infinity;
+    for (let i = 0; i < N * N; i++) {
+      if (owner[i] !== t) continue;
+      const d = (i % N + 0.5 - gx) ** 2 + (((i / N) | 0) + 0.5 - gy) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    }
+    for (let k = 0; k < START_BALLS; k++) balls.push(newBall(t, (best % N + 0.5) * CS, TOP + (((best / N) | 0) + 0.5) * CS));
+  }
+  items = [];
+  particles = [];
+  timeLeft = ROUND_TIME;
+  itemT = 1.5;
+  winner = -1;
+  popups = [];
+  blasts = [];
+  smoke = [];
+  pick = -1;
+  reveal = 0;
+  novaCount = 0;
+  planNova();
+  waves = [];
+  notice = 0;
+  phase = 'predict';
+  prepareTrackForCurrentRound();
+  updateControls();
+}
+
+// 次のスーパーノヴァを出すかどうかと、その時刻を決める。出るたびに確率が下がる
+function planNova() {
+  if (Math.random() >= NOVA_CHANCE * NOVA_DECAY ** novaCount) { novaAt = -1; return; }
+  novaAt = novaCount === 0
+    ? NOVA_FROM + Math.random() * (NOVA_TO - NOVA_FROM)
+    : ROUND_TIME - timeLeft + NOVA_GAP_MIN + Math.random() * (NOVA_GAP_MAX - NOVA_GAP_MIN);   // 時間切れより後なら出ない
+}
+
+// まとめを閉じて、次の区切りの1戦目を始める
+function nextSet() {
+  results = [];
+  loadRound(roundNo + 1);
+}
+
+// 予想を決めてラウンドを始める
+// tapX, tapY はタップした位置(px)。おまかせのときは、その色の陣地の真ん中から波を出す
+function choose(team, tapX, tapY) {
+  if (!canChoose()) return;
+  pick = team;
+  startRoundTrack();
+  let sx = 0, sy = 0, n = 0;
+  for (let i = 0; i < N * N; i++) if (owner[i] === team) { sx += i % N + 0.5; sy += ((i / N) | 0) + 0.5; n++; }
+  readyX = tapX === undefined ? sx / n : tapX / CS;
+  readyY = tapY === undefined ? sy / n : (tapY - TOP) / CS;
+  readyMax = 1;
+  for (let i = 0; i < N * N; i++) {
+    if (owner[i] === team) readyMax = Math.max(readyMax, Math.hypot(i % N + 0.5 - readyX, ((i / N) | 0) + 0.5 - readyY));
+  }
+  readyT = 0;
+  phase = 'ready';                       // 予想した色が半透明になる演出を見せてから始める
+  updateControls();
+}
+
+// 演出の中で、(c, r) のマスに波が届く時刻(秒)
+function readyAt(c, r) {
+  return Math.hypot(c + 0.5 - readyX, r + 0.5 - readyY) / readyMax * READY_SWEEP;
+}
+
+// ボムの爆発: 閃光と衝撃の輪を出し、煙のかたまりを四方へ吹き出す
+function explode(x, y) {
+  blasts.push({ x, y, t: 0 });
+  for (let k = 0; k < 16 && smoke.length < 200; k++) {
+    const a = Math.random() * Math.PI * 2, d = Math.random() * 22, v = 30 + Math.random() * 80;
+    smoke.push({ x: x + Math.cos(a) * d, y: y + Math.sin(a) * d, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+      r: 7 + Math.random() * 8, grow: 22 + Math.random() * 20, age: 0, life: 0.8 + Math.random() * 0.8,
+      shade: SMOKE_SHADES[(Math.random() * SMOKE_SHADES.length) | 0] });
+  }
+}
+
+function burst(x, y, color, n) {
+  for (let k = 0; k < n && particles.length < 500; k++) {
+    const a = Math.random() * Math.PI * 2, s = 40 + Math.random() * 170;
+    particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0.3 + Math.random() * 0.45, color, size: 2.5 + Math.random() * 3.5 });
+  }
+}
+
+function capture(i, team) {
+  const prev = owner[i];
+  if (prev === team || shield[i] > 0) return;             // 無敵のマスは塗り替えられない
+  counts[prev]--;
+  counts[team]++;
+  owner[i] = team;
+  flash[i] = 1;
+}
+
+function pickItem() {
+  let r = Math.random() * ITEM_WEIGHT_SUM;
+  for (const k of ITEM_KEYS) { r -= ITEMS[k].weight; if (r < 0) return k; }
+  return ITEM_KEYS[0];
+}
+
+function applyItem(it, b) {
+  const cx = (it.i % N + 0.5) * CS, cy = TOP + (((it.i / N) | 0) + 0.5) * CS;
+  const col = TEAMS[b.team].color;
+  burst(cx, cy, '#ffffff', 8);
+  // 拾った場所に、拾ったチームの色で「○○ GET！」と出す
+  popups.push({ x: cx, y: cy, team: b.team, at: clock, big: it.type === 'N',
+    text: `${it.type === 'N' ? 'スーパーノヴァ' : ITEMS[it.type].name} GET！` });
+  if (it.type === 'N') {
+    waves.push({ c: it.i % N, r: (it.i / N) | 0, team: b.team, rad: 0 });
+    burst(cx, cy, GOLD, 40);
+    burst(cx, cy, col, 40);
+  } else if (it.type === 'M') {
+    if (balls.filter(o => o.team === b.team).length < MAX_BALLS) balls.push(newBall(b.team, b.x, b.y));
+  } else if (it.type === 'L') {
+    b.big = BIG_TIME;
+  } else if (it.type === 'P') {
+    b.pierce = PIERCE_TIME;
+    b.charge = PIERCE_CHARGE;
+    burst(b.x, b.y, col, 12);
+  } else {
+    const c0 = it.i % N, r0 = (it.i / N) | 0, rad = Math.ceil(BOMB_RADIUS);
+    for (let r = r0 - rad; r <= r0 + rad; r++) for (let c = c0 - rad; c <= c0 + rad; c++) {
+      if (r < 0 || r >= N || c < 0 || c >= N || (c - c0) ** 2 + (r - r0) ** 2 > BOMB_RADIUS ** 2) continue;
+      capture(r * N + c, b.team);
+    }
+    burst(cx, cy, col, 12);
+    explode(cx, cy);
+  }
+}
+
+// ---- 更新 ----
+function moveBall(b, dt, speed) {
+  const rad = radiusOf(b);
+  const n = Math.max(1, Math.ceil(speed * dt / 3)), h = speed * dt / n;
+  for (let k = 0; k < n; k++) {
+    b.x += b.dx * h; b.y += b.dy * h;
+    if (b.x < rad) { b.x = rad; b.dx = Math.abs(b.dx); }
+    else if (b.x > W - rad) { b.x = W - rad; b.dx = -Math.abs(b.dx); }
+    if (b.y < TOP + rad) { b.y = TOP + rad; b.dy = Math.abs(b.dy); }
+    else if (b.y > TOP + W - rad) { b.y = TOP + W - rad; b.dy = -Math.abs(b.dy); }
+
+    // 触れた相手のマスをすべて塗り替え、いちばん深く食い込んだマスで跳ね返る
+    const c0 = Math.max(0, Math.floor((b.x - rad) / CS)), c1 = Math.min(N - 1, Math.floor((b.x + rad) / CS));
+    const r0 = Math.max(0, Math.floor((b.y - rad - TOP) / CS)), r1 = Math.min(N - 1, Math.floor((b.y + rad - TOP) / CS));
+    // 無敵のマスの中に取り残されたボールは、外へ出るまで無敵のマスをすり抜ける(外からは壁として跳ね返る)
+    const here = clamp(Math.floor((b.y - TOP) / CS), 0, N - 1) * N + clamp(Math.floor(b.x / CS), 0, N - 1);
+    const inShield = shield[here] > 0 && owner[here] !== b.team;
+    let bd = rad * rad, nx = 0, ny = 0, hitAny = false;
+    for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+      const i = r * N + c;
+      const px = clamp(b.x, c * CS, c * CS + CS), py = clamp(b.y, TOP + r * CS, TOP + r * CS + CS);
+      const dx = b.x - px, dy = b.y - py, d2 = dx * dx + dy * dy;
+      if (d2 >= rad * rad) continue;
+      for (let m = items.length - 1; m >= 0; m--) {
+        if (items[m].i === i) { applyItem(items[m], b); items.splice(m, 1); }
+      }
+      if (owner[i] === b.team) continue;
+      if (shield[i] > 0) { if (inShield) continue; }
+      else {
+        capture(i, b.team);
+        if (b.pierce > 0) continue;                         // 貫通中は跳ね返らない
+      }
+      if (d2 > 1e-9 && d2 < bd) { bd = d2; nx = dx; ny = dy; hitAny = true; }
+    }
+    if (hitAny) {
+      const d = Math.sqrt(bd);
+      nx /= d; ny /= d;
+      b.x += nx * (rad - d); b.y += ny * (rad - d);
+      if (Math.abs(nx) > Math.abs(ny)) { if (b.dx * nx < 0) b.dx = -b.dx; }
+      else if (b.dy * ny < 0) b.dy = -b.dy;
+      steer(b, 0.3);
+    }
+  }
+}
+
+function step(dt) {
+  for (let i = 0; i < flash.length; i++) if (flash[i] > 0) flash[i] -= dt * 4;
+  for (let k = particles.length - 1; k >= 0; k--) {
+    const p = particles[k];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt;
+    if (p.life <= 0) particles.splice(k, 1);
+  }
+  for (let k = blasts.length - 1; k >= 0; k--) if ((blasts[k].t += dt) > 0.5) blasts.splice(k, 1);
+  for (let k = smoke.length - 1; k >= 0; k--) {
+    const m = smoke[k], drag = Math.pow(0.04, dt);          // 吹き出した勢いはすぐ弱まり、ゆっくり上へ流れる
+    m.x += m.vx * dt; m.y += m.vy * dt; m.vx *= drag; m.vy = m.vy * drag - 26 * dt; m.r += m.grow * dt;
+    if ((m.age += dt) >= m.life) smoke.splice(k, 1);
+  }
+  if (phase === 'result') {
+    if (winner >= 0 && winner === pick) reveal = Math.min(1, reveal + dt / 0.9);
+    if ((resultT -= dt) <= 0) {
+      if (results.length >= SET_ROUNDS) { phase = 'summary'; summaryT = SUMMARY_TIME; }
+      else loadRound(roundNo + 1);
+    }
+    return;
+  }
+  if (phase === 'summary') {
+    if ((summaryT -= dt) <= 0) nextSet();
+    return;
+  }
+  if (phase === 'predict') {
+    return;
+  }
+  if (phase === 'ready') {
+    if ((readyT += dt) >= READY_SWEEP + READY_FADE + READY_HOLD) phase = 'play';
+    return;
+  }
+
+  for (let i = 0; i < shield.length; i++) if (shield[i] > 0) shield[i] -= dt;
+  const progress = 1 - timeLeft / ROUND_TIME;
+  const speed = BASE_SPEED * (1 + SPEED_GAIN * progress);
+  for (const b of balls.slice()) {
+    if (b.big > 0) b.big -= dt;
+    if (b.charge > 0) { b.charge -= dt; continue; }        // 貫通弾を拾った直後は、大きくなり終えるまでその場で止まる
+    if (b.pierce > 0) b.pierce -= dt;
+    moveBall(b, dt, speed * (b.pierce > 0 ? PIERCE_SPEED : 1));
+  }
+
+  // スーパーノヴァの波: 広がりながら、届いたマスを塗り替える
+  for (let k = waves.length - 1; k >= 0; k--) {
+    const w = waves[k];
+    w.rad += NOVA_SPEED * dt;
+    const reach = Math.min(w.rad, NOVA_RADIUS), span = Math.ceil(reach);
+    for (let r = Math.max(0, w.r - span); r <= Math.min(N - 1, w.r + span); r++) {
+      for (let c = Math.max(0, w.c - span); c <= Math.min(N - 1, w.c + span); c++) {
+        const i = r * N + c;
+        if ((c - w.c) ** 2 + (r - w.r) ** 2 > reach * reach || owner[i] === w.team || shield[i] > 0) continue;
+        capture(i, w.team);
+        shield[i] = NOVA_SHIELD;
+      }
+    }
+    if (w.rad >= NOVA_RADIUS) waves.splice(k, 1);
+  }
+  if (notice > 0) notice -= dt;
+  if (novaAt >= 0 && ROUND_TIME - timeLeft >= novaAt) {
+    // 首位ではないチームの陣地に出す(逆転のきっかけになるように)
+    novaCount++;
+    planNova();
+    const top = Math.max(...counts), free = [];
+    for (let i = 0; i < N * N; i++) if (counts[owner[i]] < top && !items.some(it => it.i === i)) free.push(i);
+    const i = free.length ? free[(Math.random() * free.length) | 0] : (Math.random() * N * N) | 0;
+    items.push({ i, type: 'N', born: clock });
+    notice = 2.5;
+  }
+
+  if ((itemT -= dt) <= 0) {
+    itemT = ITEM_GAP_START + (ITEM_GAP_END - ITEM_GAP_START) * progress;
+    const i = (Math.random() * N * N) | 0;
+    if (items.filter(it => it.type !== 'N').length < MAX_ITEMS && !items.some(it => it.i === i)) items.push({ i, type: pickItem(), born: clock });
+  }
+
+  if ((timeLeft -= dt) <= 0) {
+    timeLeft = 0;
+    pauseRoundTrack();
+    phase = 'result';
+    updateControls();
+    resultT = RESULT_TIME;
+    waves = [];
+    const top = Math.max(...counts);
+    const leaders = counts.map((v, t) => (v === top ? t : -1)).filter(t => t >= 0);
+    winner = leaders.length === 1 ? leaders[0] : -1;      // 同数なら引き分け(予想は外れとして数える)
+    results.push(winner >= 0 && winner === pick);
+    if (winner >= 0 && winner === pick) {
+      // 的中: ボールとアイテムを片づけ、他の色を消して絵の全面を見せる
+      resultT = RESULT_TIME_HIT;
+      for (const b of balls) burst(b.x, b.y, '#ffe9a8', 5);
+      balls = [];
+      items = [];
+    } else if (winner >= 0) {
+      for (let k = 0; k < 6; k++) burst(60 + Math.random() * (W - 120), TOP + 80 + Math.random() * 240, TEAMS[winner].color, 22);
+    }
+  }
+}
+
+// ---- 描画 ----
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const FONT_NUM = "'Fredoka', sans-serif";
+const FONT_JP = "'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif";
+const spotifyPlayer = document.getElementById('spotifyPlayer');
+let spotifyHost = document.getElementById('spotifyHost');
+const bgmFallback = document.getElementById('bgmFallback');
+const bgmText = document.getElementById('bgmText');
+const predictPanel = document.getElementById('predictPanel');
+const predictText = document.getElementById('predictText');
+const btnRandom = document.getElementById('btnRandom');
+
+function currentRank() {
+  return roundNo % SET_ROUNDS + 1;
+}
+
+function toSpotifyUri(url) {
+  if (!url) return '';
+  const match = url.match(/open\.spotify\.com\/(?:embed\/)?(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/);
+  return match ? `spotify:${match[1]}:${match[2]}` : '';
+}
+
+function showBgmFallback(text) {
+  spotifyPlayer.style.display = 'none';
+  bgmFallback.style.display = 'flex';
+  bgmText.textContent = text;
+}
+
+function showSpotifyPlayer() {
+  spotifyPlayer.style.display = 'block';
+  bgmFallback.style.display = 'none';
+}
+
+function canChoose() {
+  if (paused || phase !== 'predict' || rankingState === 'loading') return false;
+  if (!currentTrack?.spotifyEmbedUrl) return true;
+  return spotifyReady;
+}
+
+function canRetrySpotify() {
+  return !paused && phase === 'predict' && Boolean(currentTrack?.spotifyEmbedUrl)
+    && spotifyState === 'error' && !spotifyReady;
+}
+
+function updateControls() {
+  if (!btnRandom) return;
+  predictPanel.hidden = phase !== 'predict';
+  predictText.textContent = rankingState === 'loading'
+    ? 'イマキテランキングを読み込んでいます...'
+    : '勝つと思う色をタップ または「おまかせ」';
+  btnRandom.disabled = !canChoose() && !canRetrySpotify();
+  btnRandom.textContent = rankingState === 'loading'
+    ? '読込中...'
+    : canRetrySpotify()
+    ? 'BGMを再読込'
+    : currentTrack?.spotifyEmbedUrl && !spotifyReady && spotifyState !== 'error'
+    ? 'BGM準備中...'
+    : 'おまかせ';
+}
+
+function resetSpotifyHost() {
+  window.clearTimeout(spotifyPrepareTimer);
+  spotifyAttempt++;
+  try { spotifyController?.destroy?.(); } catch { /* 再生成するので何もしない */ }
+  spotifyController = null;
+  spotifyReady = false;
+  loadedSpotifyUri = '';
+  spotifyPlayer.replaceChildren();
+  spotifyHost = document.createElement('div');
+  spotifyHost.id = 'spotifyHost';
+  spotifyPlayer.appendChild(spotifyHost);
+}
+
+function retrySpotify() {
+  if (!currentTrack?.spotifyEmbedUrl) return;
+  spotifyState = 'loading';
+  resetSpotifyHost();
+  showBgmFallback(`${currentRank()}位 ${currentTrack.artistName} / BGMを再読込しています...`);
+  updateControls();
+  if (spotifyApi) prepareTrackForCurrentRound();
+  else connectSpotifyApi(true);
+}
+
+function withSpotifyAutoplay(embedUrl) {
+  try {
+    const url = new URL(embedUrl);
+    url.searchParams.set('autoplay', '1');
+    url.searchParams.set('utm_source', 'generator');
+    return url.toString();
+  } catch {
+    return `${embedUrl}${embedUrl.includes('?') ? '&' : '?'}autoplay=1&utm_source=generator`;
+  }
+}
+
+function showDirectSpotifyFallback() {
+  if (!currentTrack?.spotifyEmbedUrl) return;
+  resetSpotifyHost();
+  const iframe = document.createElement('iframe');
+  iframe.src = withSpotifyAutoplay(currentTrack.spotifyEmbedUrl);
+  iframe.title = `${currentTrack.artistName} - ${currentTrack.latestTrackName || 'Spotify'}`;
+  iframe.width = '100%';
+  iframe.height = '80';
+  iframe.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
+  iframe.loading = 'eager';
+  spotifyHost.appendChild(iframe);
+  showSpotifyPlayer();
+}
+
+function prepareTrackForCurrentRound() {
+  window.clearTimeout(spotifyPrepareTimer);
+  spotifyReady = false;
+  const rank = currentRank();
+
+  if (rankingState === 'loading') {
+    currentTrack = null;
+    setStageImage(STAGE_IMAGE);
+    showBgmFallback('ランキングを読み込んでいます...');
+    updateControls();
+    return;
+  }
+
+  if (rankingState === 'error') {
+    currentTrack = null;
+    setStageImage(STAGE_IMAGE);
+    pauseRoundTrack();
+    showBgmFallback('ランキングを取得できませんでした（BGMなしでプレイできます）');
+    updateControls();
+    return;
+  }
+
+  currentTrack = rankingItems.find(track => track.rank === rank) || null;
+  setStageImage(currentTrack?.artistImageUrl || STAGE_IMAGE);
+  if (!currentTrack?.spotifyEmbedUrl) {
+    pauseRoundTrack();
+    const detail = currentTrack
+      ? `${rank}位 ${currentTrack.artistName} / ${currentTrack.latestTrackName || '最新曲'}（BGMなし）`
+      : `${rank}位の楽曲データがありません（BGMなし）`;
+    showBgmFallback(detail);
+    updateControls();
+    return;
+  }
+
+  const uri = toSpotifyUri(currentTrack.spotifyEmbedUrl);
+  if (!uri) {
+    showBgmFallback(`${rank}位のSpotify URLを読み込めません（BGMなし）`);
+    spotifyState = 'error';
+    updateControls();
+    return;
+  }
+
+  if (!spotifyApi) {
+    if (spotifyState === 'error') showDirectSpotifyFallback();
+    else showBgmFallback(`${rank}位 ${currentTrack.artistName} / BGMを準備しています...`);
+    updateControls();
+    return;
+  }
+
+  if (spotifyController) {
+    try {
+      spotifyController.pause();
+      spotifyController.loadEntity(uri);
+      loadedSpotifyUri = uri;
+      spotifyReady = true;
+      showSpotifyPlayer();
+    } catch {
+      spotifyState = 'error';
+      showBgmFallback(`${rank}位のBGMを準備できませんでした`);
+    }
+    updateControls();
+    return;
+  }
+
+  showSpotifyPlayer();
+  const attempt = ++spotifyAttempt;
+  spotifyPrepareTimer = window.setTimeout(() => {
+    if (attempt !== spotifyAttempt || spotifyController || loadedSpotifyUri === uri) return;
+    spotifyState = 'error';
+    showBgmFallback(`${rank}位のBGM準備がタイムアウトしました`);
+    updateControls();
+  }, 8000);
+  const onControllerCreated = controller => {
+      if (attempt !== spotifyAttempt) {
+        try { controller.destroy?.(); } catch { /* 古い試行なので破棄する */ }
+        return;
+      }
+      window.clearTimeout(spotifyPrepareTimer);
+      spotifyController = controller;
+      loadedSpotifyUri = uri;
+      spotifyState = 'ready';
+      // createController のコールバックで操作用コントローラは利用できる。
+      // ready イベントが届かないブラウザでもゲーム開始を止めない。
+      spotifyReady = true;
+      if (controller.addListener) {
+        controller.addListener('ready', () => {
+          spotifyReady = true;
+          updateControls();
+        });
+      }
+      showSpotifyPlayer();
+      updateControls();
+  };
+  try {
+    spotifyApi.createController(
+      spotifyHost,
+      { uri, width: '100%', height: 80, theme: 'dark' },
+      onControllerCreated
+    );
+  } catch {
+    window.clearTimeout(spotifyPrepareTimer);
+    spotifyState = 'error';
+    showBgmFallback(`${rank}位のBGMを準備できませんでした`);
+    updateControls();
+  }
+}
+
+function startRoundTrack() {
+  if (!currentTrack?.spotifyEmbedUrl || !spotifyController || !spotifyReady) return;
+  try {
+    const result = loadedSpotifyUri ? spotifyController.play() : undefined;
+    if (result instanceof Promise) {
+      void result.catch(() => {
+        // 自動再生が拒否されても、表示中のSpotifyプレイヤーから手動再生できる
+      });
+    }
+    window.setTimeout(() => {
+      try {
+        const resumeResult = spotifyController?.resume?.();
+        if (resumeResult instanceof Promise) void resumeResult.catch(() => undefined);
+      } catch { /* ESCAPEと同じ再生リトライ。失敗時はプレイヤーを表示したままにする */ }
+    }, 250);
+  } catch {
+    // BGMの失敗でゲーム自体は止めない
+  }
+}
+
+function pauseRoundTrack() {
+  try { spotifyController?.pause(); } catch { /* BGMの失敗でゲーム自体は止めない */ }
+}
+
+function resumeRoundTrack() {
+  if (phase !== 'play' && phase !== 'ready') return;
+  try {
+    const result = spotifyController?.resume?.() ?? spotifyController?.play?.();
+    if (result instanceof Promise) void result.catch(() => undefined);
+  } catch { /* BGMの失敗でゲーム自体は止めない */ }
+}
+
+async function loadRanking() {
+  try {
+    const response = await fetch('/api/imakite/daily-top10', { cache: 'no-store' });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'ランキングの取得に失敗しました');
+    rankingItems = Array.isArray(payload.items) ? payload.items.slice(0, SET_ROUNDS) : [];
+    rankingState = 'ready';
+  } catch {
+    rankingItems = [];
+    rankingState = 'error';
+    spotifyState = 'error';
+  }
+  prepareTrackForCurrentRound();
+}
+
+function loadSpotifyIframeApi(force = false) {
+  if (spotifyApi && !force) return Promise.resolve(spotifyApi);
+  if (spotifyApiPromise && !force) return spotifyApiPromise;
+
+  window.clearTimeout(spotifyApiTimer);
+  if (force) {
+    spotifyApi = null;
+    spotifyApiPromise = null;
+    document.querySelectorAll(`script[src="${SPOTIFY_IFRAME_API_SRC}"]`)
+      .forEach(script => script.remove());
+  }
+
+  spotifyApiPromise = new Promise((resolve, reject) => {
+    const previousReady = window.onSpotifyIframeApiReady;
+    window.onSpotifyIframeApiReady = api => {
+      window.clearTimeout(spotifyApiTimer);
+      spotifyApi = api;
+      previousReady?.(api);
+      resolve(api);
+    };
+
+    spotifyApiTimer = window.setTimeout(() => {
+      spotifyApiPromise = null;
+      reject(new Error('Spotify iFrame API timed out'));
+    }, 8000);
+
+    const existingScript = document.querySelector(`script[src="${SPOTIFY_IFRAME_API_SRC}"]`);
+    if (existingScript) return;
+
+    const script = document.createElement('script');
+    script.src = SPOTIFY_IFRAME_API_SRC;
+    script.async = true;
+    script.onerror = () => {
+      window.clearTimeout(spotifyApiTimer);
+      spotifyApiPromise = null;
+      reject(new Error('Spotify iFrame API failed to load'));
+    };
+    document.body.appendChild(script);
+  });
+
+  return spotifyApiPromise;
+}
+
+function connectSpotifyApi(force = false) {
+  spotifyState = 'loading';
+  loadSpotifyIframeApi(force)
+    .then(api => {
+      spotifyApi = api;
+      spotifyState = 'ready';
+      prepareTrackForCurrentRound();
+    })
+    .catch(() => {
+      spotifyState = 'error';
+      showDirectSpotifyFallback();
+      updateControls();
+    });
+}
+
+const bgGrad = ctx.createLinearGradient(0, 0, 0, H);
+bgGrad.addColorStop(0, '#1d1250'); bgGrad.addColorStop(1, '#120a30');
+const cellShine = ctx.createLinearGradient(0, 0, 0, CS);   // マスの左上を原点にして使う
+cellShine.addColorStop(0, 'rgba(255,255,255,.5)');
+cellShine.addColorStop(0.5, 'rgba(255,255,255,.05)');
+cellShine.addColorStop(1, 'rgba(0,0,0,.16)');
+
+const stageImage = new Image();
+let stageImageSource = '';
+function setStageImage(source) {
+  const nextSource = source || STAGE_IMAGE;
+  if (stageImageSource === nextSource) return;
+  stageImageSource = nextSource;
+  stageImage.src = nextSource;
+}
+stageImage.onerror = () => {
+  if (stageImageSource !== STAGE_IMAGE) setStageImage(STAGE_IMAGE);
+};
+setStageImage(STAGE_IMAGE);
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+// 四つ角の星
+function star(x, y, r) {
+  const k = r * 0.2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - r);
+  ctx.quadraticCurveTo(x + k, y - k, x + r, y);
+  ctx.quadraticCurveTo(x + k, y + k, x, y + r);
+  ctx.quadraticCurveTo(x - k, y + k, x - r, y);
+  ctx.quadraticCurveTo(x - k, y - k, x, y - r);
+  ctx.fill();
+}
+
+function pill(x, y, w, h) {
+  ctx.beginPath(); ctx.roundRect(x, y, w, h, h / 2); ctx.fill();
+}
+
+// マス1つ(左上を原点にして描く)
+function drawCell(team, alpha) {
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = TEAMS[team].color;
+  ctx.fillRect(0, 0, CS, CS);
+  ctx.fillStyle = cellShine;
+  ctx.fillRect(0, 0, CS, CS);
+  ctx.fillStyle = 'rgba(255,255,255,.4)';
+  ctx.fillRect(0, 0, CS, 1); ctx.fillRect(0, 0, 1, CS);
+  ctx.fillStyle = 'rgba(0,0,0,.2)';
+  ctx.fillRect(0, CS - 1, CS, 1); ctx.fillRect(CS - 1, 0, 1, CS);
+  ctx.globalAlpha = 1;
+}
+
+function percent(t) {
+  return Math.round(counts[t] / (N * N) * 100);
+}
+
+function draw() {
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 盤の下に敷く絵(正方形に切り出して全面に)
+  if (stageImage.complete && stageImage.naturalWidth) {
+    const iw = stageImage.naturalWidth, ih = stageImage.naturalHeight, side = Math.min(iw, ih);
+    ctx.drawImage(stageImage, (iw - side) / 2, (ih - side) / 2, side, side, 0, TOP, W, W);
+  }
+
+  // 盤。予想した色のマスだけ半透明にして、下の絵を透かす。
+  // 予想が当たったら、ほかの色のマスも予想した色の半透明に変わっていく
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const i = r * N + c, x = c * CS, y = TOP + r * CS;
+    ctx.translate(x, y);
+    if (owner[i] === pick && phase === 'ready') {
+      // 波が届いたマスから順に、白く光って透けていく
+      const since = readyT - readyAt(c, r), f = clamp(since / READY_FADE, 0, 1);
+      drawCell(pick, 1 + (PICK_ALPHA - 1) * f);
+      if (since > -0.06 && since < READY_FADE) {
+        ctx.fillStyle = `rgba(255,255,255,${0.9 * (1 - Math.max(0, since) / READY_FADE)})`;
+        ctx.fillRect(0, 0, CS, CS);
+      }
+    } else if (owner[i] === pick) drawCell(pick, PICK_ALPHA);
+    else {
+      if (reveal < 1) drawCell(owner[i], 1 - reveal);
+      if (reveal > 0) drawCell(pick, PICK_ALPHA * reveal);
+    }
+    if (shield[i] > 0 && phase === 'play') {
+      // 無敵のマス: 白い枠と光(チームの色と紛れないよう白にする)。切れる直前は点滅する
+      const on = shield[i] > 1 || Math.sin(clock * 30) > 0;
+      ctx.globalAlpha = on ? 0.16 + 0.12 * Math.sin(clock * 6 + r + c) : 0.05;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, CS, CS);
+      ctx.globalAlpha = on ? 0.95 : 0.3;
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.strokeRect(3, 3, CS - 6, CS - 6);
+      ctx.globalAlpha = 1;
+    }
+    if (flash[i] > 0) {
+      ctx.fillStyle = `rgba(255,255,255,${flash[i] * 0.85})`;
+      ctx.fillRect(0, 0, CS, CS);
+    }
+    ctx.translate(-x, -y);
+  }
+
+  // スーパーノヴァの波
+  if (waves.length) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, TOP, W, W); ctx.clip();
+    for (const w of waves) {
+      const x = (w.c + 0.5) * CS, y = TOP + (w.r + 0.5) * CS, rad = Math.min(w.rad, NOVA_RADIUS) * CS;
+      ctx.strokeStyle = TEAMS[w.team].color; ctx.lineWidth = 16; ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 5; ctx.globalAlpha = 1;
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // アイテム(どれも、見れば効果がわかる絵で描く)
+  for (const it of items) {
+    const x = (it.i % N + 0.5) * CS, y = TOP + (((it.i / N) | 0) + 0.5) * CS;
+    const pulse = 0.5 + 0.5 * Math.sin((clock - it.born) * 7);
+    if (it.type === 'N') {
+      ctx.fillStyle = GOLD;
+      ctx.globalAlpha = 0.25 + 0.2 * pulse;
+      ctx.beginPath(); ctx.arc(x, y, 24 + 5 * pulse, 0, 7); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = NAVY;
+      star(x, y, 23 + 3 * pulse);
+      ctx.fillStyle = GOLD;
+      star(x, y, 20 + 3 * pulse);
+      ctx.fillStyle = '#ffffff';
+      star(x, y, 9 + 2 * pulse);
+      continue;
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.globalAlpha = 0.25 + 0.2 * pulse;
+    ctx.beginPath(); ctx.arc(x, y, 15 + 2 * pulse, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    if (it.type === 'B') {
+      // ボムは爆弾の姿: 黒い玉に口金と導火線、先で火花がはぜる
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(x - 1, y + 2, 11.5, 0, 7); ctx.fill();          // どの色の上でも見えるよう白で縁取る
+      ctx.beginPath(); ctx.roundRect(x + 2, y - 13, 9, 8, 2); ctx.fill();
+      ctx.fillStyle = '#1b1530';
+      ctx.beginPath(); ctx.arc(x - 1, y + 2, 9.5, 0, 7); ctx.fill();           // 玉
+      ctx.save();
+      ctx.translate(x + 5.5, y - 7.5); ctx.rotate(0.6);
+      ctx.fillRect(-3.5, -3, 7, 5);                                            // 口金
+      ctx.restore();
+      ctx.fillStyle = 'rgba(255,255,255,.75)';
+      ctx.beginPath(); ctx.ellipse(x - 5, y - 2, 2.2, 3.4, 0.7, 0, 7); ctx.fill();   // つや
+      ctx.strokeStyle = '#8a6a3a'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x + 7.5, y - 10); ctx.quadraticCurveTo(x + 13, y - 15, x + 14, y - 10); ctx.stroke();   // 導火線
+      ctx.fillStyle = '#ff7a3d';
+      star(x + 14, y - 10, 5 + 3 * pulse);
+      ctx.fillStyle = '#fff4c2';
+      star(x + 14, y - 10, 2.5 + 1.5 * pulse);
+      continue;
+    }
+    if (it.type === 'P') {
+      // 貫通弾は弾丸の姿: 真鍮色の薬きょうに銀色の弾頭。右上を向けて置く
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(0.75);
+      ctx.fillStyle = '#ffffff';                                               // どの色の上でも見えるよう白で縁取る
+      ctx.beginPath();
+      ctx.moveTo(-7.5, 13.5); ctx.lineTo(-7.5, 7); ctx.lineTo(-6.5, 7); ctx.lineTo(-6.5, -3);
+      ctx.quadraticCurveTo(-6.5, -12, 0, -16); ctx.quadraticCurveTo(6.5, -12, 6.5, -3);
+      ctx.lineTo(6.5, 7); ctx.lineTo(7.5, 7); ctx.lineTo(7.5, 13.5);
+      ctx.fill();
+      ctx.fillStyle = '#cfd6e2';                                               // 弾頭
+      ctx.beginPath();
+      ctx.moveTo(-4.5, -2); ctx.quadraticCurveTo(-4.5, -10, 0, -13.5); ctx.quadraticCurveTo(4.5, -10, 4.5, -2);
+      ctx.fill();
+      ctx.fillStyle = '#e3b23c';                                               // 薬きょう
+      ctx.fillRect(-4.5, -2, 9, 10);
+      ctx.fillStyle = '#a97b1e';                                               // 底のふち
+      ctx.beginPath(); ctx.roundRect(-5.5, 8, 11, 3.5, 1); ctx.fill();
+      ctx.fillRect(-4.5, -2.6, 9, 1.4);
+      ctx.fillStyle = 'rgba(255,255,255,.7)';                                  // つや
+      ctx.fillRect(-3, -0.5, 1.6, 7.5);
+      ctx.beginPath(); ctx.ellipse(-1.8, -7, 1, 3, 0.25, 0, 7); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = '#ffffff';
+      star(x + 13, y - 13, 3 + 3 * pulse);
+      continue;
+    }
+    if (it.type === 'M') {
+      // マルチはロボットの頭に「+」の印: 盤上のロボットが1体増える
+      ctx.strokeStyle = NAVY; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x - 2, y - 7); ctx.lineTo(x - 2, y - 11.5); ctx.stroke();    // アンテナ
+      ctx.fillStyle = NAVY;
+      ctx.beginPath(); ctx.arc(x - 2, y - 12, 2.6, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(x - 14, y - 3, 24, 7, 2); ctx.fill();                     // 耳
+      ctx.beginPath(); ctx.roundRect(x - 11.5, y - 8.5, 19, 17, 4.5); ctx.fill();              // 頭の縁
+      ctx.fillStyle = GOLD;
+      ctx.beginPath(); ctx.arc(x - 2, y - 12, 1.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.roundRect(x - 10, y - 7, 16, 14, 3.2); ctx.fill();                  // 頭
+      ctx.fillStyle = NAVY;
+      ctx.beginPath(); ctx.roundRect(x - 8, y - 4.5, 12, 6.5, 2.2); ctx.fill();                // 顔の画面
+      ctx.fillRect(x - 5, y + 4, 6, 1.3);                                                      // 口
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(x - 6.2, y - 2.6, 2.8, 2.6); ctx.fillRect(x - 0.6, y - 2.6, 2.8, 2.6);      // 目
+      ctx.fillStyle = '#ffffff';                                                               // 右上の「+」の札
+      ctx.beginPath(); ctx.arc(x + 9, y - 8, 7.5, 0, 7); ctx.fill();
+      ctx.fillStyle = '#22b573';
+      ctx.beginPath(); ctx.arc(x + 9, y - 8, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 5.5, y - 9, 7, 2); ctx.fillRect(x + 8, y - 11.5, 2, 7);
+      continue;
+    }
+    // ビッグはキノコ: 取ると大きくなる
+    ctx.fillStyle = '#ffffff';                                                                 // どの色の上でも見えるよう白で縁取る
+    ctx.beginPath(); ctx.roundRect(x - 7, y - 1, 14, 14, 4); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - 13, y + 3); ctx.quadraticCurveTo(x - 14, y - 13, x, y - 14);
+    ctx.quadraticCurveTo(x + 14, y - 13, x + 13, y + 3); ctx.quadraticCurveTo(x, y + 7, x - 13, y + 3);
+    ctx.fill();
+    ctx.fillStyle = '#fff1d6';                                                                 // 軸
+    ctx.beginPath(); ctx.roundRect(x - 5, y + 1, 10, 10.5, 3); ctx.fill();
+    ctx.fillStyle = '#e3cfa6';
+    ctx.fillRect(x - 5, y + 2.5, 10, 2);
+    ctx.fillStyle = '#ff8a3d';                                                                 // かさ
+    ctx.beginPath();
+    ctx.moveTo(x - 11, y + 2); ctx.quadraticCurveTo(x - 12, y - 11, x, y - 12);
+    ctx.quadraticCurveTo(x + 12, y - 11, x + 11, y + 2); ctx.quadraticCurveTo(x, y + 5, x - 11, y + 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff4dc';                                                                 // かさの水玉
+    ctx.beginPath(); ctx.arc(x - 5, y - 4.5, 2.7, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 3.5, y - 7.5, 2.2, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 6.5, y - 1, 1.7, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    star(x + 12, y - 12, 3 + 3 * pulse);
+  }
+
+  // ボールはロボットの姿で描く。自分の色の陣地の上でも見えるよう、白い頭に濃い縁、目と耳だけチームの色
+  ctx.lineCap = 'round';
+  for (const b of balls) {
+    const col = TEAMS[b.team].color, t = b.trail;
+    let rad = radiusOf(b);
+    if (b.charge > 0) {
+      // 貫通弾を拾った直後: 元の大きさから、いったん行き過ぎるくらいに膨らんで落ち着く。まわりに輪が広がる
+      const f = 1 - b.charge / PIERCE_CHARGE, from = b.big > 0 ? R_BIG : R;
+      rad = from + (rad - from) * (1 + 2.70158 * (f - 1) ** 3 + 1.70158 * (f - 1) ** 2) + 4 * Math.sin(Math.PI * f);
+      ctx.globalAlpha = 1 - f;
+      ctx.strokeStyle = col; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.arc(b.x, b.y, rad + 10 + 34 * f, 0, 7); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(b.x, b.y, rad + 10 + 34 * f, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    const piercing = b.pierce > 0;                          // 貫通中はチームの色の光と太い尾を引く
+    ctx.fillStyle = piercing ? col : '#ffffff';
+    for (let k = 0; k < t.length; k += 2) {
+      ctx.globalAlpha = (piercing ? 0.2 : 0.12) * (k / 2 + 1);
+      star(t[k], t[k + 1], (piercing ? 5 : 2) + k * 0.35);
+    }
+    ctx.globalAlpha = piercing ? 0.6 : 0.3;
+    ctx.beginPath(); ctx.arc(b.x, b.y, rad + (piercing ? 12 : 8), 0, 7); ctx.fill();
+    ctx.globalAlpha = 1;
+    if (piercing) {
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(b.x, b.y, rad + 12, 0, 7); ctx.stroke();
+    }
+
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.dx * 0.3);                                 // 進む向きへ少し体を傾ける
+    ctx.scale(rad / R, rad / R);
+    ctx.strokeStyle = NAVY; ctx.lineWidth = 1.8;
+    // 貫通中は体がチームの色になり、目や耳の飾りは白に入れ替わる
+    const body = piercing ? col : '#ffffff', accent = piercing ? '#ffffff' : col;
+    ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, -12.5); ctx.stroke();          // アンテナ
+    ctx.fillStyle = NAVY;
+    ctx.beginPath(); ctx.arc(0, -13, 2.8, 0, 7); ctx.fill();
+    ctx.fillStyle = Math.sin(clock * 9 + b.tick) > 0 ? col : '#ffffff';              // アンテナの先が点滅する
+    ctx.beginPath(); ctx.arc(0, -13, 1.6, 0, 7); ctx.fill();
+    ctx.fillStyle = NAVY;
+    ctx.beginPath(); ctx.roundRect(-12, -4, 24, 7, 2); ctx.fill();                   // 耳
+    ctx.beginPath(); ctx.roundRect(-9.5, -9.5, 19, 17, 4.5); ctx.fill();             // 頭の縁
+    ctx.beginPath(); ctx.roundRect(-6.5, 6.5, 5, 4.5, 1.5); ctx.fill();              // 足
+    ctx.beginPath(); ctx.roundRect(1.5, 6.5, 5, 4.5, 1.5); ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.fillRect(-10.6, -2.6, 1.6, 4.2); ctx.fillRect(9, -2.6, 1.6, 4.2);
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.roundRect(-8, -8, 16, 14, 3.2); ctx.fill();                 // 頭
+    ctx.fillStyle = NAVY;
+    ctx.beginPath(); ctx.roundRect(-6, -5.5, 12, 6.5, 2.2); ctx.fill();              // 顔の画面
+    ctx.fillStyle = accent;
+    const blink = Math.sin(clock * 2.3 + b.tick) > 0.96 ? 0.5 : 2.6;                 // ときどき瞬きする
+    ctx.fillRect(-4.2, -2.3 - blink / 2, 2.8, blink); ctx.fillRect(1.4, -2.3 - blink / 2, 2.8, blink);
+    ctx.fillStyle = NAVY;
+    ctx.fillRect(-3, 3, 6, 1.3);                                                     // 口
+    ctx.restore();
+  }
+
+  for (const p of particles) {
+    ctx.globalAlpha = Math.min(1, p.life * 3);
+    ctx.fillStyle = p.color;
+    star(p.x, p.y, p.size);
+  }
+  ctx.globalAlpha = 1;
+
+  // ボムの爆発: 煙、衝撃の輪、中心の閃光の順に重ねる
+  if (smoke.length || blasts.length) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, TOP, W, W); ctx.clip();
+    for (const m of smoke) {
+      ctx.globalAlpha = 0.75 * (1 - m.age / m.life);
+      ctx.fillStyle = m.shade;
+      ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 7); ctx.fill();
+    }
+    for (const bl of blasts) {
+      const ring = Math.min(1, bl.t / 0.28);
+      ctx.globalAlpha = 1 - bl.t / 0.5;
+      ctx.strokeStyle = '#ff9a3d'; ctx.lineWidth = 10 * (1 - bl.t / 0.5) + 2;
+      ctx.beginPath(); ctx.arc(bl.x, bl.y, BOMB_RADIUS * CS * ring, 0, 7); ctx.stroke();
+      if (bl.t < 0.22) {
+        const f = bl.t / 0.22;
+        ctx.globalAlpha = 1 - f;
+        ctx.fillStyle = '#ff7a3d';
+        ctx.beginPath(); ctx.arc(bl.x, bl.y, 18 + 58 * f, 0, 7); ctx.fill();
+        ctx.fillStyle = '#fff4c2';
+        ctx.beginPath(); ctx.arc(bl.x, bl.y, 12 + 36 * f, 0, 7); ctx.fill();
+      }
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // 「○○ GET！」: 出た瞬間に少し大きく弾み、浮かび上がりながら消える
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  for (let k = popups.length - 1; k >= 0; k--) {
+    const pop = popups[k], age = clock - pop.at, life = pop.big ? 1.6 : 1;
+    if (age > life) { popups.splice(k, 1); continue; }
+    const size = (pop.big ? 34 : 23) * (1 + 0.35 * Math.max(0, 1 - age / 0.15));
+    ctx.font = `900 ${size}px ${FONT_JP}`;
+    const half = ctx.measureText(pop.text).width / 2 + 6;
+    const x = clamp(pop.x, half, W - half), y = Math.max(TOP + 22, pop.y - 16 - POPUP_DIST * (1 - Math.exp(-age * POPUP_RISE / POPUP_DIST)));
+    ctx.globalAlpha = Math.min(1, (life - age) / 0.4);
+    ctx.strokeStyle = NAVY; ctx.lineWidth = pop.big ? 9 : 6;
+    ctx.strokeText(pop.text, x, y);
+    ctx.fillStyle = TEAMS[pop.team].color;
+    ctx.fillText(pop.text, x, y);
+  }
+  ctx.globalAlpha = 1;
+
+  const hit = phase === 'result' && winner >= 0 && winner === pick;
+  if (phase === 'result' && !hit) { ctx.fillStyle = 'rgba(13,7,38,.6)'; ctx.fillRect(0, TOP, W, W); }
+
+  // 上の帯: ラウンド・残り時間
+  ctx.fillStyle = 'rgba(12,7,34,.78)';
+  ctx.fillRect(0, 0, W, TOP - 4);
+  ctx.fillStyle = 'rgba(255,255,255,.14)';
+  ctx.fillRect(0, TOP - 4, W, 4);
+  const timeCol = timeLeft <= 5 ? '#ff9ab8' : GOLD, timeW = W * timeLeft / ROUND_TIME;
+  ctx.fillStyle = timeCol;
+  ctx.fillRect(0, TOP - 4, timeW, 4);
+  if (timeW > 0) { ctx.fillStyle = '#ffffff'; star(timeW, TOP - 2, 8); }
+  ctx.textBaseline = 'middle';
+  ctx.font = `600 12px ${FONT_NUM}`; ctx.fillStyle = LAVENDER;
+  const done = results.length, hits = results.filter(Boolean).length;
+  const current = phase === 'predict' || phase === 'ready' || phase === 'play' ? done : -1;       // いま戦っているラウンド(0始まり)
+  ctx.textAlign = 'left'; ctx.fillText(`ROUND ${Math.min(SET_ROUNDS, current >= 0 ? done + 1 : done)}/${SET_ROUNDS}`, 14, 14);
+  ctx.textAlign = 'right';
+  ctx.font = `700 12px ${FONT_JP}`; ctx.fillText(`当たり ${hits}　はずれ ${done - hits}`, W - 14, 14);
+  // 10戦ぶんの印: 当たりは金の星、外れは暗い丸、これからは輪、いまのラウンドは白い輪
+  for (let k = 0; k < SET_ROUNDS; k++) {
+    const x = W - 20 - (SET_ROUNDS - 1 - k) * 13;
+    if (k < done && results[k]) { ctx.fillStyle = GOLD; star(x, 35, 6); }
+    else if (k < done) { ctx.fillStyle = '#6a5d9c'; ctx.beginPath(); ctx.arc(x, 35, 3.5, 0, 7); ctx.fill(); }
+    else {
+      ctx.strokeStyle = k === current ? '#ffffff' : 'rgba(201,189,245,.45)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, 35, 4, 0, 7); ctx.stroke();
+    }
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.font = `900 18px ${FONT_JP}`; ctx.fillText(LAYOUTS[roundNo % LAYOUTS.length].name, 14, 35);
+  ctx.textAlign = 'center';
+  ctx.font = `700 34px ${FONT_NUM}`; ctx.fillStyle = timeCol;
+  ctx.shadowColor = timeCol; ctx.shadowBlur = 14;
+  ctx.fillText(timeLeft.toFixed(1), W / 2, 27);
+  ctx.shadowBlur = 0;
+
+  // 下の帯: 陣地の割合
+  // 単独で首位のチームを目立たせる(同数で並んでいる間は、どこも目立たせない)
+  const barY = TOP + W + 16, barW = W - 28, top = Math.max(...counts);
+  const lead = counts.indexOf(top) === counts.lastIndexOf(top) ? counts.indexOf(top) : -1;
+  let bx = 14, leadX = 0, leadW = 0;
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(14, barY, barW, 16, 8); ctx.clip();
+  for (let t = 0; t < teamCount; t++) {
+    const w = barW * counts[t] / (N * N);
+    ctx.globalAlpha = lead >= 0 && t !== lead ? 0.45 : 1;   // 首位以外の帯は薄くする
+    ctx.fillStyle = TEAMS[t].color;
+    ctx.fillRect(bx, barY, w + 0.5, 16);
+    if (t === lead) { leadX = bx; leadW = w; }
+    bx += w;
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = 'rgba(255,255,255,.3)';
+  ctx.fillRect(14, barY, barW, 5);
+  ctx.restore();
+  if (lead >= 0) {
+    // 首位の帯だけ上下にはみ出す太さで描き直し、光と白い枠を付け、上に金の星を載せる
+    const lw = Math.max(8, leadW);
+    ctx.fillStyle = TEAMS[lead].color;
+    ctx.shadowColor = TEAMS[lead].color; ctx.shadowBlur = 14;
+    ctx.beginPath(); ctx.roundRect(leadX, barY - 4, lw, 24, 9); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.beginPath(); ctx.roundRect(leadX + 3, barY - 2, lw - 6, 7, 4); ctx.fill();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect(leadX, barY - 4, lw, 24, 9); ctx.stroke();
+    ctx.fillStyle = GOLD;
+    star(leadX + lw / 2, barY - 9, 8 + Math.sin(clock * 6));
+  }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const colW = barW / teamCount;
+  for (let t = 0; t < teamCount; t++) {
+    const x = 14 + colW * t, y = barY + 39;
+    // 首位は文字をチームの色に変える(ほかは白で、少し薄くする)
+    ctx.globalAlpha = lead >= 0 && t !== lead ? 0.7 : 1;
+    ctx.fillStyle = TEAMS[t].color;
+    ctx.beginPath(); ctx.arc(x + 7, y, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = t === lead ? TEAMS[t].color : '#ffffff';
+    ctx.font = `${t === lead ? 900 : 700} 12px ${FONT_JP}`;
+    ctx.fillText(`${TEAMS[t].name} ${percent(t)}%`, x + 20, y + 1);
+    ctx.globalAlpha = 1;
+    if (t === pick) {                                       // 予想した色は白い枠で囲む
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(x - 5, y - 13, colW - 4, 26, 13); ctx.stroke();
+    }
+  }
+
+  if (notice > 0 && phase === 'play') {
+    ctx.textAlign = 'center';
+    ctx.font = `900 15px ${FONT_JP}`;
+    const msg = 'スーパーノヴァ出現!', w = ctx.measureText(msg).width + 56;
+    ctx.globalAlpha = Math.min(1, notice * 2);
+    ctx.fillStyle = 'rgba(18,10,48,.88)';
+    pill(W / 2 - w / 2, TOP + 12, w, 34);
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(W / 2 - w / 2 + 0.75, TOP + 12.75, w - 1.5, 32.5, 16); ctx.stroke();
+    ctx.fillStyle = GOLD;
+    ctx.fillText(msg, W / 2, TOP + 30);
+    star(W / 2 - w / 2 + 18, TOP + 29, 7); star(W / 2 + w / 2 - 18, TOP + 29, 7);
+    ctx.globalAlpha = 1;
+  }
+  if (phase === 'ready' && readyT > READY_SWEEP + READY_FADE) {
+    // 透けきったら「START!」を弾ませて出す
+    const f = (readyT - READY_SWEEP - READY_FADE) / READY_HOLD;
+    ctx.textAlign = 'center';
+    ctx.font = `700 ${72 * (1 + 0.5 * Math.max(0, 1 - f / 0.25))}px ${FONT_NUM}`;
+    ctx.globalAlpha = Math.min(1, (1 - f) / 0.3);
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = TEAMS[pick].color; ctx.shadowBlur = 30;
+    ctx.fillText('START!', W / 2, TOP + W / 2);
+    ctx.shadowBlur = 16;
+    ctx.fillText('START!', W / 2, TOP + W / 2);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+  }
+  if (hit) {
+    // 的中のときは絵を隠さないよう、結果は下の帯に出す
+    const col = TEAMS[winner].color, y = TOP + W + 14;
+    ctx.fillStyle = '#150c39';
+    ctx.fillRect(0, TOP + W, W, STRIP_H);
+    ctx.fillStyle = 'rgba(255,255,255,.08)';
+    pill(14, y, W - 28, 44);
+    ctx.strokeStyle = GOLD; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(14.75, y + 0.75, W - 29.5, 42.5, 22); ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.font = `900 19px ${FONT_JP}`;
+    ctx.fillStyle = GOLD;
+    ctx.shadowColor = GOLD; ctx.shadowBlur = 12;
+    ctx.fillText(`予想的中! ${TEAMS[winner].name}の勝ち`, W / 2, y + 23);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = col;
+    ctx.globalAlpha = 0.6 + 0.4 * Math.sin(clock * 6);
+    star(40, y + 22, 9); star(W - 40, y + 22, 9);
+    ctx.globalAlpha = 1;
+  } else if (phase === 'result') {
+    const col = winner >= 0 ? TEAMS[winner].color : '#b58cff';
+    ctx.textAlign = 'center';
+    ctx.font = `700 54px ${FONT_NUM}`;
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = col; ctx.shadowBlur = 44;
+    ctx.fillText(winner >= 0 ? 'WINNER' : 'DRAW', W / 2, TOP + W / 2 - 20);
+    ctx.shadowBlur = 20;
+    ctx.fillText(winner >= 0 ? 'WINNER' : 'DRAW', W / 2, TOP + W / 2 - 20);
+    ctx.shadowBlur = 0;
+    ctx.font = `700 17px ${FONT_JP}`;
+    const sub = winner >= 0 ? `${TEAMS[winner].name}の勝ち　予想${winner === pick ? '的中!' : 'はずれ'}` : '引き分け';
+    const w = ctx.measureText(sub).width + 36, y = TOP + W / 2 + 20;
+    ctx.fillStyle = 'rgba(18,10,48,.85)';
+    pill(W / 2 - w / 2, y, w, 34);
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(W / 2 - w / 2 + 0.75, y + 0.75, w - 1.5, 32.5, 16); ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(sub, W / 2, y + 18);
+  }
+  if (phase === 'summary') {
+    // 10戦のまとめ: 当たりの数を大きく、各ラウンドの当たり外れを並べて見せる
+    const miss = SET_ROUNDS - hits, cy = TOP + W / 2;
+    ctx.fillStyle = 'rgba(13,7,38,.9)';
+    ctx.fillRect(0, TOP, W, H - TOP);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = LAVENDER;
+    ctx.font = `900 22px ${FONT_JP}`;
+    ctx.fillText(`${SET_ROUNDS}回戦の結果`, W / 2, cy - 150);
+    ctx.fillStyle = GOLD;
+    ctx.font = `700 96px ${FONT_NUM}`;
+    ctx.shadowColor = GOLD; ctx.shadowBlur = 26;
+    ctx.fillText(`${hits}`, W / 2 - 46, cy - 62);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `700 40px ${FONT_NUM}`;
+    ctx.fillText(`/ ${SET_ROUNDS}`, W / 2 + 52, cy - 50);
+    ctx.font = `900 20px ${FONT_JP}`;
+    ctx.fillText(`当たり ${hits}回　はずれ ${miss}回`, W / 2, cy + 14);
+    for (let k = 0; k < SET_ROUNDS; k++) {
+      const x = W / 2 + (k - (SET_ROUNDS - 1) / 2) * 42, y = cy + 76;
+      if (results[k]) { ctx.fillStyle = GOLD; star(x, y, 15 + 2 * Math.sin(clock * 5 + k)); }
+      else { ctx.fillStyle = '#4a3f78'; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill(); }
+      ctx.fillStyle = results[k] ? '#ffffff' : LAVENDER;
+      ctx.font = `600 12px ${FONT_NUM}`;
+      ctx.fillText(`${k + 1}`, x, y + 28);
+    }
+    ctx.fillStyle = LAVENDER;
+    ctx.font = `700 13px ${FONT_JP}`;
+    ctx.fillText(`タップで次の${SET_ROUNDS}回戦へ(あと ${Math.ceil(summaryT)} 秒で自動で始まります)`, W / 2, cy + 150);
+  }
+  if (paused) {
+    ctx.fillStyle = 'rgba(13,7,38,.66)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `900 26px ${FONT_JP}`; ctx.textAlign = 'center';
+    ctx.fillText('一時停止中', W / 2, H / 2);
+  }
+}
+
+// ---- メインループ ----
+let last = performance.now(), acc = 0;
+
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  if (!paused) {
+    clock += dt;
+    acc += dt;
+    while (acc >= STEP) { step(STEP); acc -= STEP; }
+    if (phase === 'play') for (const b of balls) {
+      b.trail.push(b.x, b.y);
+      if (b.trail.length > 10) b.trail.splice(0, 2);
+    }
+  }
+  draw();
+  requestAnimationFrame(frame);
+}
+
+const btnPause = document.getElementById('btnPause');
+btnPause.onclick = () => {
+  paused = !paused;
+  btnPause.textContent = paused ? '再開' : '一時停止';
+  if (paused) pauseRoundTrack(); else resumeRoundTrack();
+  updateControls();
+};
+btnRandom.onclick = () => {
+  if (canRetrySpotify()) {
+    retrySpotify();
+    return;
+  }
+  if (canChoose()) choose((Math.random() * teamCount) | 0);
+};
+
+// 予想: 盤の上の色、または下の帯のチーム名をタップして選ぶ
+canvas.addEventListener('click', (e) => {
+  if (paused) return;
+  if (phase === 'summary') { nextSet(); return; }
+  if (!canChoose()) return;
+  const box = canvas.getBoundingClientRect();
+  const x = (e.clientX - box.left) * W / box.width, y = (e.clientY - box.top) * H / box.height;
+  if (y >= TOP && y < TOP + W) choose(owner[Math.floor((y - TOP) / CS) * N + clamp(Math.floor(x / CS), 0, N - 1)], x, y);
+  else if (y >= TOP + W) choose(clamp(Math.floor((x - 14) / ((W - 28) / teamCount)), 0, teamCount - 1));
+});
+
+if (document.fonts && document.fonts.load) {         // キャンバスの文字用に先に読み込んでおく
+  document.fonts.load(`700 20px ${FONT_NUM}`);
+  document.fonts.load(`900 18px ${FONT_JP}`);
+}
+window.addEventListener('resize', resize);
+window.addEventListener('beforeunload', () => {
+  window.clearTimeout(spotifyApiTimer);
+  window.clearTimeout(spotifyPrepareTimer);
+  try { spotifyController?.destroy?.(); } catch { /* ページ終了時なので何もしない */ }
+});
+resize();
+connectSpotifyApi();
+loadRound(0);
+void loadRanking();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
