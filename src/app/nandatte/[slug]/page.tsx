@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { GroupDetail } from "./group-detail";
 
 type PageProps = {
-  params: { slug: string } | Promise<{ slug: string }>;
+  params: Promise<{ slug: string }>;
 };
 
 const NANDATTE_TITLE_SUFFIX =

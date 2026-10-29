@@ -1,12 +1,16 @@
 "use client";
 
 import { toPng } from "html-to-image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
 import type { NewsRelatedGroupInfo } from "@/lib/news/related-groups";
 import { createClient } from "@/lib/supabase/client";
+
+const subscribeToHostname = () => () => {};
+const getIsLocalhost = () => ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const getServerIsLocalhost = () => false;
 
 type GroupRow = {
   id: string;
@@ -132,7 +136,7 @@ export function GroupDetail({ slug }: Props) {
   const [expandedProfileGroupId, setExpandedProfileGroupId] = useState<string | null>(null);
   const [chartSaveStatus, setChartSaveStatus] = useState<string>("");
   const [isSavingChart, setIsSavingChart] = useState(false);
-  const [isLocalhostEnv, setIsLocalhostEnv] = useState(false);
+  const isLocalhostEnv = useSyncExternalStore(subscribeToHostname, getIsLocalhost, getServerIsLocalhost);
   const chartCaptureRef = useRef<HTMLDivElement | null>(null);
 
   const applyDetailPayload = (payload: GroupDetailApiResponse) => {
@@ -226,14 +230,6 @@ export function GroupDetail({ slug }: Props) {
       listener.subscription.unsubscribe();
     };
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    const host = window.location.hostname;
-    setIsLocalhostEnv(host === "localhost" || host === "127.0.0.1");
-  }, []);
 
   const sortedCounts = useMemo(() => {
     return [...metricCounts].sort((a, b) => {

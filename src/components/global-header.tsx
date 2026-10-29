@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -37,6 +37,19 @@ const navItems: NavItem[] = [
 
 const POST_AUTH_REDIRECT_KEY = "musicite-post-auth-redirect";
 
+function subscribeToTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+  return () => observer.disconnect();
+}
+
+function getThemeSnapshot(): ThemeMode {
+  const current = document.documentElement.dataset.theme ?? null;
+  return isThemeMode(current) ? current : getInitialThemeMode();
+}
+
+const getServerThemeSnapshot = (): ThemeMode => "pop";
+
 export function GlobalHeader() {
   const pathname = usePathname();
   const currentPathname = pathname ?? "";
@@ -50,7 +63,8 @@ export function GlobalHeader() {
   const [searchText, setSearchText] = useState("");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileHeaderVisible, setMobileHeaderVisible] = useState(true);
-  const [theme, setTheme] = useState<ThemeMode>("pop");
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const [previousPathname, setPreviousPathname] = useState(currentPathname);
   const showDevThemeSwitch = process.env.NODE_ENV !== "production";
   const menuRef = useRef<HTMLDivElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
@@ -87,15 +101,6 @@ export function GlobalHeader() {
   }, [router]);
 
   useEffect(() => {
-    const current = document.documentElement.dataset.theme ?? null;
-    if (isThemeMode(current)) {
-      setTheme(current);
-      return;
-    }
-    setTheme(getInitialThemeMode());
-  }, []);
-
-  useEffect(() => {
     if (!menuOpen && !searchOpen) return;
 
     const onPointerDown = (event: MouseEvent) => {
@@ -122,12 +127,13 @@ export function GlobalHeader() {
     };
   }, [menuOpen, searchOpen]);
 
-  useEffect(() => {
+  if (previousPathname !== currentPathname) {
+    setPreviousPathname(currentPathname);
     setMobileNavOpen(false);
     setMenuOpen(false);
     setSearchOpen(false);
     setMobileHeaderVisible(true);
-  }, [currentPathname]);
+  }
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -181,7 +187,6 @@ export function GlobalHeader() {
   };
 
   const applyTheme = (nextTheme: ThemeMode) => {
-    setTheme(nextTheme);
     applyThemeMode(nextTheme);
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
   };

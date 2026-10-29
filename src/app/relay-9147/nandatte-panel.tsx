@@ -58,34 +58,31 @@ export function NandattePanel() {
     ranking: "idle",
   });
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<Status>("idle");
+  const [status, setStatus] = useState<Status>("loading");
 
-  const fetchLatestTexts = async (successMessage: string) => {
-    setStatus("loading");
-    setMessage("");
-    try {
-      const response = await fetch("/api/nandatte/rankings?limit=5", {
-        method: "GET",
+  const fetchLatestTexts = (successMessage: string) => {
+    return fetch("/api/nandatte/rankings?limit=5", {method: "GET"})
+      .then(async (response) => {
+        const payload = (await response.json()) as {
+          voteTop?: RankingItem[];
+          recentTop?: RankingItem[];
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(payload.error ?? "NANDATTEデータの取得に失敗しました。");
+        }
+        return buildTexts(payload.voteTop ?? [], payload.recentTop ?? []);
+      })
+      .then((texts) => {
+        setUpdatesText(texts.updates);
+        setRankingText(texts.ranking);
+        setStatus("success");
+        setMessage(successMessage);
+      })
+      .catch((error: unknown) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unknown error");
       });
-      const payload = (await response.json()) as {
-        voteTop?: RankingItem[];
-        recentTop?: RankingItem[];
-        error?: string;
-      };
-
-      if (!response.ok) {
-        throw new Error(payload.error ?? "NANDATTEデータの取得に失敗しました。");
-      }
-
-      const texts = buildTexts(payload.voteTop ?? [], payload.recentTop ?? []);
-      setUpdatesText(texts.updates);
-      setRankingText(texts.ranking);
-      setStatus("success");
-      setMessage(successMessage);
-    } catch (error) {
-      setStatus("error");
-      setMessage(error instanceof Error ? error.message : "Unknown error");
-    }
   };
 
   useEffect(() => {
@@ -93,6 +90,8 @@ export function NandattePanel() {
   }, []);
 
   const regenerate = () => {
+    setStatus("loading");
+    setMessage("");
     fetchLatestTexts("最新データで告知文を再生成しました。").catch(() => undefined);
   };
 

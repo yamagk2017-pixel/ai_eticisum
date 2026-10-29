@@ -8,9 +8,7 @@ import { formatNewsDate } from "@/lib/news/datetime";
 export const revalidate = 60;
 const NEWS_LIST_TITLE_SUFFIX = " | IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
-type SearchParams =
-  | Record<string, string | string[] | undefined>
-  | Promise<Record<string, string | string[] | undefined>>;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function firstParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;

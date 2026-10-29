@@ -2,11 +2,7 @@ import Link from "next/link";
 import { Rankings } from "../rankings";
 
 type PageProps = {
-  searchParams?:
-    | {
-        focus?: string | string[];
-      }
-    | Promise<{
+  searchParams?: Promise<{
         focus?: string | string[];
       }>;
 };

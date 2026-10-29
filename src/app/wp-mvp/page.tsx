@@ -46,9 +46,7 @@ function TermPills({
   );
 }
 
-type SearchParams =
-  | Record<string, string | string[] | undefined>
-  | Promise<Record<string, string | string[] | undefined>>;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 function firstParam(value: string | string[] | undefined): string | null {
   if (Array.isArray(value)) return value[0] ?? null;

@@ -18,9 +18,7 @@ import { formatNewsDate } from "@/lib/news/datetime";
 export const dynamic = "force-dynamic";
 const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
-type Params =
-  | { id: string }
-  | Promise<{ id: string }>;
+type Params = Promise<{ id: string }>;
 
 function formatDate(value: string | null) {
   return formatNewsDate(value, {

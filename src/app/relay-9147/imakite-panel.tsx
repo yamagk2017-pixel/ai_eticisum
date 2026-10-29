@@ -47,6 +47,7 @@ export function ImakitePanel() {
   const [captureStatus, setCaptureStatus] = useState<Status>("idle");
   const [captureMessage, setCaptureMessage] = useState<string>("");
   const [post1Draft, setPost1Draft] = useState<string>("");
+  const [previousPost1, setPreviousPost1] = useState("");
 
   const postTexts = useMemo(() => {
     const topRows = rows.slice().sort((a, b) => a.rank - b.rank);
@@ -90,9 +91,10 @@ https://www.musicite.net/imakite`;
     return { post1, post2, post3 };
   }, [rows, selectedDate]);
 
-  useEffect(() => {
+  if (previousPost1 !== postTexts.post1) {
+    setPreviousPost1(postTexts.post1);
     setPost1Draft(postTexts.post1);
-  }, [postTexts.post1]);
+  }
 
   const copyText = async (key: "post1" | "post2" | "post3", text: string) => {
     if (!text) {

@@ -4,9 +4,7 @@ import { getNewsPage } from "@/lib/news";
 import type { NewsArticle } from "@/lib/news/types";
 import { formatNewsDate } from "@/lib/news/datetime";
 
-type SearchParams =
-  | Record<string, string | string[] | undefined>
-  | Promise<Record<string, string | string[] | undefined>>;
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 type NandatteResult = {
   id: string;

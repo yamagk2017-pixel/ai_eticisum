@@ -19,12 +19,8 @@ import {hasSanityStudioEnv} from "@/sanity/env";
 export const revalidate = 60;
 const NEWS_DETAIL_SITE_NAME = "IDOL CROSSING - アイドルと音楽の情報交差点「アイドルクロッシング」";
 
-type Params = {slug: string} | Promise<{slug: string}>;
-type SearchParams =
-  | {
-      p?: string | string[] | undefined;
-    }
-  | Promise<{
+type Params = Promise<{slug: string}>;
+type SearchParams = Promise<{
       p?: string | string[] | undefined;
     }>;
 
