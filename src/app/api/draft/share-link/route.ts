@@ -14,21 +14,15 @@ function isAuthorized(url: URL) {
   return Boolean(provided && expected && provided === expected);
 }
 
-export async function GET(request: Request) {
-  const url = new URL(request.url);
-
-  if (!isAuthorized(url)) {
-    return NextResponse.json({error: "Unauthorized"}, {status: 401});
-  }
-
-  const path = normalizePreviewPath(url.searchParams.get("path"));
+function issueShareLink(pathValue: string | null, ttlValue: string | null) {
+  const path = normalizePreviewPath(pathValue);
   if (!path) {
     return NextResponse.json(
       {error: "Invalid preview path"},
       {status: 400, headers: {"Cache-Control": "private, no-store, max-age=0"}}
     );
   }
-  const ttlMinutes = getTtlMinutes(url.searchParams.get("ttlMinutes"));
+  const ttlMinutes = getTtlMinutes(ttlValue);
   const exp = Math.floor(Date.now() / 1000) + ttlMinutes * 60;
   const sig = signPreviewLink(path, exp);
   const origin = getPreviewShareOrigin();
@@ -43,5 +37,32 @@ export async function GET(request: Request) {
       ttlMinutes,
     },
     {headers: {"Cache-Control": "private, no-store, max-age=0"}}
+  );
+}
+
+function unauthorized() {
+  return NextResponse.json({error: "Unauthorized"}, {
+    status: 401, headers: {"Cache-Control": "private, no-store, max-age=0"},
+  });
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  if (!isAuthorized(url)) return unauthorized();
+  return issueShareLink(url.searchParams.get("path"), url.searchParams.get("ttlMinutes"));
+}
+
+export async function POST(request: Request) {
+  const expected = process.env.PREVIEW_SHARE_SECRET?.trim();
+  if (!expected || request.headers.get("authorization") !== `Bearer ${expected}`) return unauthorized();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({error: "Invalid request"}, {status: 400});
+  }
+  return issueShareLink(
+    typeof body?.path === "string" ? body.path : null,
+    typeof body?.ttlMinutes === "number" ? String(body.ttlMinutes) : null,
   );
 }

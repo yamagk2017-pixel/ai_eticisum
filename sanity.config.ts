@@ -3,17 +3,10 @@ import {structureTool} from "sanity/structure";
 import {schemaTypes} from "./src/sanity/schemaTypes";
 import {deskStructure} from "./src/sanity/desk-structure";
 import {getSanityConfigValues} from "./src/sanity/env";
-import {resolvePreviewPath, type PreviewDocumentLike} from "./src/sanity/preview-path";
-import {CopyPreviewShareLinkAction} from "./src/sanity/document-actions/copy-preview-share-link-action";
+import {CopyPreviewShareLinkAction, OpenPreviewAction} from "./src/sanity/document-actions/copy-preview-share-link-action";
 import "./src/sanity/studio.css";
 
 const {projectId, dataset} = getSanityConfigValues();
-const previewOrigin =
-  typeof process.env.SANITY_STUDIO_PREVIEW_ORIGIN === "string" &&
-  process.env.SANITY_STUDIO_PREVIEW_ORIGIN.trim().length > 0
-    ? process.env.SANITY_STUDIO_PREVIEW_ORIGIN.trim().replace(/\/$/, "")
-    : "https://www.musicite.net";
-
 export default defineConfig({
   name: "default",
   title: "[Studio] musicite AI Studio",
@@ -32,15 +25,10 @@ export default defineConfig({
         type === "newsCategory" ||
         type === "newsTag";
       if (!supported) return prev;
-      return [CopyPreviewShareLinkAction, ...prev];
+      return [OpenPreviewAction, CopyPreviewShareLinkAction, ...prev];
     },
-    productionUrl: async (_prev, context) => {
-      const path = resolvePreviewPath((context.document ?? {}) as PreviewDocumentLike);
-      if (!path) return undefined;
-      // Opening a draft requires a signed URL. Use the custom
-      // "共有URLをコピー" action for draft/preview access.
-      return `${previewOrigin}${path}`;
-    },
+    // Draft access must use the signed URL issued by the custom actions.
+    productionUrl: async () => undefined,
   },
   schema: {
     types: schemaTypes,
