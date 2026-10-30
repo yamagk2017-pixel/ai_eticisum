@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import {randomUUID} from "node:crypto";
+import {pathToFileURL} from "node:url";
+import {readEmailSource, gmailDocumentId} from "./lib/press-release-source.mts";
 import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -14,6 +16,7 @@ type PrepareOptions = {
   documentType: DraftDocumentType;
   hero?: string;
   outputDir?: string;
+  emailSource?: string;
 };
 
 type PushOptions = {
@@ -27,6 +30,8 @@ type DraftMetadata = {
   slug?: unknown;
   publishedAt?: unknown;
   heroImage?: unknown;
+  galleryImages?: unknown;
+  sourceEmail?: unknown;
   categories?: unknown;
   tags?: unknown;
   relatedGroups?: unknown;
@@ -89,6 +94,7 @@ type SanityClientLike = {
     upload(type: "image", body: Buffer, options: {filename: string}): Promise<{_id: string}>;
   };
   transaction(): {
+    create(document: Record<string, unknown>): ReturnType<SanityClientLike["transaction"]>;
     createIfNotExists(document: Record<string, unknown>): ReturnType<SanityClientLike["transaction"]>;
     patch(id: string, patch: {set: Record<string, unknown>}): ReturnType<SanityClientLike["transaction"]>;
     commit(options: {visibility: "sync"}): Promise<unknown>;
@@ -123,6 +129,7 @@ function parsePrepareOptions(args: string[]): PrepareOptions {
     documentType,
     hero: readOption(args, "hero"),
     outputDir: readOption(args, "output-dir"),
+    emailSource: readOption(args, "email-source"),
   };
 }
 
@@ -294,7 +301,8 @@ async function extractManuscript(sourcePath: string) {
   return {title: firstContentLine(text), text};
 }
 
-async function prepareWorkspace(options: PrepareOptions) {
+export async function prepareWorkspace(options: PrepareOptions) {
+  const emailSource = options.emailSource ? await readEmailSource(path.resolve(options.emailSource)) : null;
   const sourcePath = path.resolve(options.source);
   await assertReadableFile(sourcePath, "Manuscript");
 
@@ -312,9 +320,14 @@ async function prepareWorkspace(options: PrepareOptions) {
   const extracted = await extractManuscript(sourcePath);
   const now = tokyoDateParts();
   const workspacePath = path.resolve(
-    options.outputDir ?? path.join(process.cwd(), "tmp", "news-drafts", now.stamp)
+    options.outputDir ?? path.join(process.cwd(), "tmp", "news-drafts", emailSource ? gmailDocumentId(emailSource) : now.stamp)
   );
 
+  if (emailSource && await fs.stat(path.join(workspacePath, "state.json")).catch(() => null)) {
+    const state = await readOrCreateState(workspacePath, SANITY_TYPE_BY_DRAFT_TYPE[options.documentType]);
+    if (state.documentId !== gmailDocumentId(emailSource)) throw new Error("Workspace belongs to a different email");
+    return {mode: "existing", workspacePath, draftPath: path.join(workspacePath, "draft.md"), documentId: state.documentId};
+  }
   await fs.mkdir(workspacePath, {recursive: true});
   const copiedSourcePath = path.join(workspacePath, `source${sourceExtension}`);
   await fs.copyFile(sourcePath, copiedSourcePath);
@@ -325,12 +338,13 @@ async function prepareWorkspace(options: PrepareOptions) {
     await fs.copyFile(heroPath, path.join(workspacePath, `hero${heroExtension}`));
   }
 
+  if (emailSource) await fs.writeFile(path.join(workspacePath, "source-email.json"), `${JSON.stringify(emailSource, null, 2)}\n`, "utf8");
   const extractedPath = path.join(workspacePath, "extracted.txt");
   const draftPath = path.join(workspacePath, "draft.md");
   const statePath = path.join(workspacePath, "state.json");
   const state: DraftState = {
     version: 2,
-    documentId: `${SANITY_TYPE_BY_DRAFT_TYPE[options.documentType]}.local.${randomUUID()}`,
+    documentId: emailSource ? gmailDocumentId(emailSource) : `${SANITY_TYPE_BY_DRAFT_TYPE[options.documentType]}.local.${randomUUID()}`,
     documentType: SANITY_TYPE_BY_DRAFT_TYPE[options.documentType],
     createdAt: new Date().toISOString(),
   };
@@ -343,7 +357,7 @@ async function prepareWorkspace(options: PrepareOptions) {
       publishedAt: now.iso,
       heroPath: copiedHeroRelativePath,
       body: extracted.text,
-    }),
+    }).replace("\n---\n", emailSource ? '\nsourceEmail: "./source-email.json"\ngalleryImages: []\n---\n' : "\n---\n"),
     "utf8"
   );
   await fs.writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
@@ -765,7 +779,7 @@ function setDateField(
   set[field] = value;
 }
 
-async function buildSanityDraft(options: PushOptions) {
+export async function buildSanityDraft(options: PushOptions, suppliedClient?: SanityClientLike) {
   const draftPath = path.resolve(options.draft);
   await assertReadableFile(draftPath, "Draft");
   const workspacePath = path.dirname(draftPath);
@@ -774,7 +788,16 @@ async function buildSanityDraft(options: PushOptions) {
   const documentType = parseDocumentType(metadata.documentType);
   const sanityDocumentType = SANITY_TYPE_BY_DRAFT_TYPE[documentType];
   const state = await readOrCreateState(workspacePath, sanityDocumentType);
-  const client = await createSanityClient();
+  const client = suppliedClient ?? await createSanityClient();
+  const emailSource = textValue(metadata.sourceEmail)
+    ? await readEmailSource(path.resolve(workspacePath, textValue(metadata.sourceEmail))) : null;
+  if (emailSource) {
+    if (state.documentId !== gmailDocumentId(emailSource)) throw new Error("Email identity does not match draft state");
+    const existing = await client.fetch<Array<{_id: string; _type: string}>>(
+      `*[_id in $ids]{_id, _type}`, {ids: [state.documentId, `drafts.${state.documentId}`]}
+    );
+    if (existing.length) return {mode: "existing", documentId: state.documentId, draftId: `drafts.${state.documentId}`, existing, workspacePath};
+  }
   const title = textValue(metadata.title);
   const publishedAt = textValue(metadata.publishedAt);
   const requestedSlug = textValue(metadata.slug) || generatedSlug(title, publishedAt, documentType);
@@ -847,11 +870,22 @@ async function buildSanityDraft(options: PushOptions) {
   const heroExists = heroPath ? (await fs.stat(heroPath).catch(() => null))?.isFile() === true : false;
   if (!heroExists) warnings.push("Missing or unreadable required field: heroImage");
 
+  const galleryInputs = Array.isArray(metadata.galleryImages) ? metadata.galleryImages : [];
+  const gallery = await Promise.all(galleryInputs.map(async (item) => {
+    const entry = typeof item === "string" ? {path: item} : item as {path?: unknown; alt?: unknown; caption?: unknown};
+    const value = entry && typeof entry === "object" ? textValue(entry.path) : "";
+    if (!value) throw new Error("galleryImages entries require a path");
+    const filename = path.resolve(workspacePath, value);
+    await assertReadableFile(filename, "Gallery image");
+    if (!SUPPORTED_IMAGE_EXTENSIONS.has(path.extname(filename).toLowerCase())) throw new Error("Unsupported gallery image format");
+    return {filename, alt: textValue(entry.alt), caption: textValue(entry.caption)};
+  }));
+  if (emailSource) set.pressReleaseSource = emailSource;
   const draftId = `drafts.${state.documentId}`;
 
   // Create the draft before uploading assets. This both verifies write access and
   // preserves an incomplete draft if a later upload or patch fails.
-  if (options.apply) {
+  if (options.apply && !emailSource) {
     await client
       .transaction()
       .createIfNotExists({_id: draftId, _type: sanityDocumentType})
@@ -863,11 +897,22 @@ async function buildSanityDraft(options: PushOptions) {
     set.heroImage = {_type: "image", asset: {_type: "reference", _ref: asset._id}};
   }
 
+  if (options.apply && gallery.length) {
+    set.galleryImages = [];
+    for (const image of gallery) {
+      const asset = await client.assets.upload("image", await fs.readFile(image.filename), {filename: path.basename(image.filename)});
+      (set.galleryImages as unknown[]).push({_type: "image", _key: createKey(), asset: {_type: "reference", _ref: asset._id},
+        ...(image.alt ? {alt: image.alt} : {}), ...(image.caption ? {caption: image.caption} : {})});
+    }
+  }
   const payload = {_id: draftId, _type: sanityDocumentType, ...set};
   await fs.writeFile(path.join(workspacePath, "sanity-payload.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 
   if (options.apply) {
-    await client.transaction().patch(draftId, {set}).commit({visibility: "sync"});
+    // Email imports use create, so retries or concurrent imports cannot overwrite
+    // a draft edited in Studio or create another copy of the same email.
+    if (emailSource) await client.transaction().create(payload).commit({visibility: "sync"});
+    else await client.transaction().patch(draftId, {set}).commit({visibility: "sync"});
   }
 
   return {
@@ -879,6 +924,7 @@ async function buildSanityDraft(options: PushOptions) {
     workspacePath,
     payloadPath: path.join(workspacePath, "sanity-payload.json"),
     relatedGroupsCheck: relatedGroupResult.checks,
+    galleryImageCount: gallery.length,
     warnings,
   };
 }
@@ -893,6 +939,7 @@ Options:
   --type         Required article type: News, Radio, or Event
   --source       Plain text, Markdown, DOCX, or PDF manuscript
   --hero         Optional JPG, PNG, WebP, or GIF hero image
+  --email-source Optional JSON metadata for a Gmail source (stable ID; repeated imports preserve existing drafts)
   --output-dir   Optional explicit workspace directory
   --draft        Prepared draft.md file
   --apply        Create or update the Sanity draft; omitted means dry-run`);
@@ -911,7 +958,7 @@ async function main() {
   console.log(JSON.stringify(result, null, 2));
 }
 
-main().catch((error) => {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main().catch((error) => {
   console.error(error instanceof Error ? error.message : String(error));
   process.exitCode = 1;
 });

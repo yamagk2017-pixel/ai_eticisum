@@ -145,3 +145,22 @@ export function createSeoFields(options: OptionalFieldset = {}) {
 
 export const citationSourceArticleField = createCitationSourceArticleField();
 export const seoFields = createSeoFields();
+
+export function createPressReleaseSourceField() {
+  return defineField({
+    name: "pressReleaseSource",
+    title: "取り込み元のプレスリリース",
+    type: "object",
+    readOnly: true,
+    options: {collapsible: true, collapsed: true},
+    fields: [
+      defineField({name: "subject", title: "メール件名", type: "string"}),
+      defineField({name: "sender", title: "送信者", type: "string"}),
+      defineField({name: "receivedAt", title: "受信日時", type: "datetime"}),
+      defineField({name: "gmailUrl", title: "Gmailで開く", type: "url"}),
+      defineField({name: "embargoNote", title: "解禁情報・確認事項", type: "text"}),
+      defineField({name: "messageId", title: "Gmail Message ID", type: "string"}),
+      defineField({name: "accountEmail", title: "取り込み元アカウント", type: "string"}),
+    ],
+  });
+}

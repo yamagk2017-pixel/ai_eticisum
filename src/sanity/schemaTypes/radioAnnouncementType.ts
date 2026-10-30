@@ -4,6 +4,7 @@ import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
 import {isUniqueAcrossNewsDocuments} from "@/sanity/slug-is-unique";
 import {
   createCitationSourceArticleField,
+  createPressReleaseSourceField,
   createSeoFields,
   createTagReferencesField,
   relatedGroupArrayMembers,
@@ -31,6 +32,7 @@ export const radioAnnouncementType = defineType({
     },
   ],
   fields: [
+    createPressReleaseSourceField(),
     defineField({
       name: "title",
       title: "タイトル",

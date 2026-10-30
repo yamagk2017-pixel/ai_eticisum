@@ -4,6 +4,7 @@ import {isUniqueAcrossNewsDocuments} from "@/sanity/slug-is-unique";
 import {
   createCategoryReferencesField,
   createCitationSourceArticleField,
+  createPressReleaseSourceField,
   createSeoFields,
   createTagReferencesField,
   relatedGroupsField,
@@ -26,6 +27,7 @@ export const newsArticleType = defineType({
     },
   ],
   fields: [
+    createPressReleaseSourceField(),
     defineField({
       name: "title",
       title: "Title",
