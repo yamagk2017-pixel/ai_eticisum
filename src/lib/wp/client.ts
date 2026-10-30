@@ -425,14 +425,63 @@ export async function fetchWpTermIdBySlug(
       next: {revalidate: 300},
       signal: controller.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      throw new WpClientError(`WP taxonomy request failed: ${response.status}`, {
+        kind: "http", endpoint, status: response.status,
+      });
+    }
     const json = (await response.json()) as Array<{id?: number}> | unknown;
-    if (!Array.isArray(json)) return null;
+    if (!Array.isArray(json)) throw new WpClientError("Invalid WP taxonomy response", {kind: "network", endpoint});
     const id = json[0]?.id;
     return typeof id === "number" && Number.isFinite(id) ? id : null;
-  } catch {
-    return null;
+  } catch (error) {
+    if (error instanceof WpClientError) throw error;
+    throw new WpClientError("WP taxonomy request failed", {
+      kind: error instanceof Error && error.name === "AbortError" ? "timeout" : "network", endpoint,
+    });
   } finally {
     clearTimeout(timeoutId);
+  }
+}
+
+// Archive ordering only needs IDs and dates; avoid embedding media and full bodies
+// for thousands of posts. Each request stays within WordPress's 100-post limit.
+export async function fetchWpPostIndexPage(
+  page: number,
+  options?: {categoryId?: number; tagId?: number}
+): Promise<{items: Array<{id: number; publishedAt: string | null}>; totalPages: number}> {
+  const baseUrl = getWpBaseUrlOrNull();
+  if (!baseUrl) return {items: [], totalPages: 0};
+  const params = new URLSearchParams({
+    per_page: "100", page: String(page), _fields: "id,date,date_gmt", orderby: "date", order: "desc",
+  });
+  if (options?.categoryId) params.set("categories", String(options.categoryId));
+  if (options?.tagId) params.set("tags", String(options.tagId));
+  const endpoint = `${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?${params}`;
+  const result = await fetchWpArchivePageWithRetry(endpoint);
+  return {
+    items: result.posts.map((post) => ({id: post.id, publishedAt: post.date})),
+    totalPages: result.totalPages,
+  };
+}
+
+export async function fetchWpArchivePostsByIds(ids: number[]): Promise<WpPost[]> {
+  const baseUrl = getWpBaseUrlOrNull();
+  if (!baseUrl || ids.length === 0) return [];
+  if (ids.length > 100) throw new Error("Archive detail requests must contain at most 100 IDs");
+  const params = new URLSearchParams({
+    include: ids.join(","), per_page: String(ids.length), _embed: "",
+    _fields: "id,date,date_gmt,slug,link,title,excerpt,_links,_embedded",
+  });
+  const result = await fetchWpArchivePageWithRetry(`${normalizeBaseUrl(baseUrl)}/wp-json/wp/v2/posts?${params}`);
+  return result.posts;
+}
+
+async function fetchWpArchivePageWithRetry(endpoint: string): Promise<WpPostsPageResult> {
+  try {
+    return await fetchWpPostsPageFromEndpoint(endpoint);
+  } catch (error) {
+    if (!(error instanceof WpClientError) || (error.kind === "http" && (error.status ?? 0) < 500)) throw error;
+    return fetchWpPostsPageFromEndpoint(endpoint);
   }
 }

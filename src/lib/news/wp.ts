@@ -1,5 +1,7 @@
 import {
   fetchWpPostsListPage,
+  fetchWpPostIndexPage,
+  fetchWpArchivePostsByIds,
   fetchWpPostById,
   fetchWpPostsList,
   fetchWpTermIdBySlug,
@@ -67,3 +69,28 @@ export async function getWpNewsById(id: number): Promise<NewsArticle | null> {
 }
 
 export { toNewsArticle as mapWpPostToNewsArticle };
+
+export async function getWpNewsArchiveIndex(filters: {categorySlug?: string; tagSlug?: string}) {
+  const [categoryId, tagId] = await Promise.all([
+    filters.categorySlug ? fetchWpTermIdBySlug("categories", filters.categorySlug) : null,
+    filters.tagSlug ? fetchWpTermIdBySlug("tags", filters.tagSlug) : null,
+  ]);
+  if ((filters.categorySlug && !categoryId) || (filters.tagSlug && !tagId)) return [];
+  const options = {categoryId: categoryId ?? undefined, tagId: tagId ?? undefined};
+  const first = await fetchWpPostIndexPage(1, options);
+  const items = [...first.items];
+  // Bound concurrency so a cold archive request does not overwhelm WordPress.
+  for (let page = 2; page <= first.totalPages; page += 4) {
+    const pages = await Promise.all(
+      Array.from({length: Math.min(4, first.totalPages - page + 1)}, (_, offset) =>
+        fetchWpPostIndexPage(page + offset, options)
+      )
+    );
+    for (const result of pages) items.push(...result.items);
+  }
+  return items;
+}
+
+export async function getWpNewsArchiveArticles(ids: number[]) {
+  return (await fetchWpArchivePostsByIds(ids)).map(toNewsArticle);
+}

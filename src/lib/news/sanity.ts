@@ -968,3 +968,13 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
     })
     .filter((item): item is HomeRelatedEvent => Boolean(item));
 }
+
+export async function getSanityNewsArchive(filters: {categorySlug?: string; tagSlug?: string}) {
+  const first = await getSanityNewsPage({...filters, page: 1, pageSize: 100});
+  const items = [...first.items];
+  for (let page = 2; (page - 1) * 100 < first.total; page++) {
+    const result = await getSanityNewsPage({...filters, page, pageSize: 100});
+    items.push(...result.items);
+  }
+  return items;
+}

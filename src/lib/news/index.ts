@@ -1,6 +1,7 @@
+import { paginateNewsArchive } from "./pagination";
 import type { NewsArticle } from "./types";
-import { getSanityNewsList, getSanityNewsPage } from "./sanity";
-import { getWpNewsList, getWpNewsPage } from "./wp";
+import { getSanityNewsList, getSanityNewsArchive } from "./sanity";
+import { getWpNewsList, getWpNewsArchiveIndex, getWpNewsArchiveArticles } from "./wp";
 
 export type GetNewsListOptions = {
   limit?: number;
@@ -82,37 +83,11 @@ export async function getNewsPage(options: GetNewsPageOptions = {}): Promise<New
   const categorySlug = options.categorySlug?.trim() || undefined;
   const tagSlug = options.tagSlug?.trim() || undefined;
 
-  const prefetchLimit = page * pageSize;
-
-  const [wpResult, sanityResult] = await Promise.allSettled([
-    getWpNewsPage({page: 1, pageSize: prefetchLimit, categorySlug, tagSlug}),
-    getSanityNewsPage({page: 1, pageSize: prefetchLimit, categorySlug, tagSlug}),
+  // A failed source must fail the request, rather than shrink the archive to
+  // the remaining source and silently move the user onto a different page.
+  const [wpIndex, sanityArticles] = await Promise.all([
+    getWpNewsArchiveIndex({categorySlug, tagSlug}),
+    getSanityNewsArchive({categorySlug, tagSlug}),
   ]);
-
-  const wpPage = wpResult.status === "fulfilled" ? wpResult.value : {items: [], total: 0};
-  const sanityPage = sanityResult.status === "fulfilled" ? sanityResult.value : {items: [], total: 0};
-
-  if (wpResult.status === "rejected" && sanityResult.status === "rejected") {
-    throw wpResult.reason instanceof Error
-      ? wpResult.reason
-      : sanityResult.reason instanceof Error
-        ? sanityResult.reason
-        : new Error("Failed to fetch both WP and Sanity news sources");
-  }
-
-  const merged = dedupeByPathPreferSource([...wpPage.items, ...sanityPage.items]).sort((a, b) => {
-    const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
-    const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;
-    return bTime - aTime;
-  });
-
-  // When WP and Sanity overlap (migrated wpImportedArticle), exact global unique count is expensive to compute.
-  // Use the larger source total so pagination stays stable and avoids over-counting by simple sum.
-  const total = Math.max(wpPage.total, sanityPage.total);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * pageSize;
-  const items = merged.slice(start, start + pageSize);
-
-  return {items, total, page: safePage, pageSize, totalPages};
+  return paginateNewsArchive({page, pageSize, wpIndex, sanityArticles, loadWpArticles: getWpNewsArchiveArticles});
 }
