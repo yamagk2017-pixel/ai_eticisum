@@ -174,29 +174,29 @@ export default async function NewsIndexPage({
             />
           </div>
 
-          <div className="divide-y divide-zinc-400">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {pageResult.items.map((article) => (
               <article
                 key={article.path}
-                className="grid gap-4 py-5 sm:grid-cols-[180px_minmax(0,1fr)]"
+                className="flex h-[460px] min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)]"
               >
-                <Link href={article.path} className="block">
+                <Link href={article.path} className="block h-60 shrink-0 overflow-hidden">
                   {article.featuredImageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={article.featuredImageUrl}
                       alt={article.featuredImageAlt ?? ""}
-                      className="h-28 w-full rounded-lg object-cover sm:h-full"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-28 items-center justify-center rounded-lg bg-[var(--ui-panel-soft)] text-xs text-[var(--ui-text-subtle)] sm:h-full">
+                    <div className="flex h-full items-center justify-center bg-[var(--ui-panel-soft)] text-xs text-[var(--ui-text-subtle)]">
                       No Image
                     </div>
                   )}
                 </Link>
 
-                <div className="min-w-0">
-                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-subtle)]">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col p-4">
+                  <div className="mb-2 flex h-9 shrink-0 flex-wrap content-start items-center gap-x-3 gap-y-1 overflow-hidden text-xs text-[var(--ui-text-subtle)]">
                     <span>{formatDate(article.publishedAt)}</span>
                     {article.categories.slice(0, 2).map((category) =>
                       category.slug ? (
@@ -215,26 +215,26 @@ export default async function NewsIndexPage({
 
                   <Link href={article.path} className="block">
                     <h2
-                      className="font-mincho-jp text-xl font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
+                      className="line-clamp-3 font-mincho-jp text-lg font-semibold leading-snug text-[var(--ui-text)] underline decoration-zinc-400 underline-offset-4 dark:decoration-zinc-500"
                       dangerouslySetInnerHTML={{ __html: article.titleHtml }}
                     />
                   </Link>
 
                   {article.tags.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-auto flex max-h-8 shrink-0 flex-wrap gap-2 overflow-hidden pt-1">
                       {article.tags.slice(0, 4).map((tag) =>
                         tag.slug ? (
                           <Link
                             key={tag.id}
                             href={buildNewsHref({ tag: tag.slug, category: categorySlug })}
-                            className="rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
+                            className="max-w-full truncate rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
                           >
                             {tag.name}
                           </Link>
                         ) : (
                           <span
                             key={tag.id}
-                            className="rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
+                            className="max-w-full truncate rounded-full border border-zinc-400 px-2 py-1 text-xs text-[var(--ui-text)]"
                           >
                             {tag.name}
                           </span>
