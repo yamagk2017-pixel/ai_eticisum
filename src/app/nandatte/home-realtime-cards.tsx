@@ -127,9 +127,9 @@ export function HomeNandatteVoteRealtimeCard({
       <ol className="mt-4 space-y-2 text-sm">
         {voteItems.length > 0 ? (
           voteItems.map((item, index) => (
-            <li key={`nandatte-vote-${item.groupId}-${index}`} className={index === 0 ? "space-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}>
-              <div className={index === 0 ? "min-w-0 space-y-2" : "flex min-w-0 items-center gap-3"}>
-                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
+            <li key={`nandatte-vote-${item.groupId}-${index}`} className={index === 0 ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}>
+              <div className={index === 0 ? "contents" : "flex min-w-0 items-center gap-3"}>
+                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "col-span-2 aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
                   {item.imageUrl ? (
                     <Image src={item.imageUrl} alt={item.name} fill sizes={index === 0 ? "(max-width: 1024px) 100vw, 33vw" : "40px"} className="object-cover" unoptimized />
                   ) : (
