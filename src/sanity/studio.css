@@ -1,4 +1,9 @@
 /* Sanity Studio Portable Text editor heading size tuning */
+/* Use the available editor width in fullscreen; retain Sanity's block padding. */
+[data-testid="pt-editor"][data-fullscreen="true"] .pt-editable > .pt-block {
+  max-width: none;
+}
+
 [data-slate-editor] h2 {
   font-size: 1.45rem !important;
   line-height: 1.35 !important;
