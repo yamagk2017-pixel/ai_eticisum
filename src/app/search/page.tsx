@@ -1,3 +1,4 @@
+import { NewsArchiveCard } from "@/components/news/news-archive-card";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import { getNewsPage } from "@/lib/news";
@@ -287,34 +288,10 @@ export default async function SearchPage({ searchParams }: { searchParams?: Sear
                     )}
                   </nav>
                 ) : null}
-                <ul className="mt-4 space-y-3">
+                <ul className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                   {result.news.map((article) => (
-                    <li key={`search-news-${article.path}`} className="rounded-lg p-3">
-                      <div className="flex items-center gap-3">
-                        <Link href={article.path} className="shrink-0">
-                          {article.featuredImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={article.featuredImageUrl}
-                              alt={article.featuredImageAlt ?? ""}
-                              className="h-12 w-20 rounded-md object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-12 w-20 items-center justify-center rounded-md bg-[var(--ui-panel-soft)] text-[10px] text-[var(--ui-text-subtle)]">
-                              No Image
-                            </div>
-                          )}
-                        </Link>
-                        <div className="min-w-0 flex-1">
-                          <Link
-                            href={article.path}
-                            className="block truncate text-sm font-medium underline underline-offset-2"
-                            dangerouslySetInnerHTML={{ __html: article.titleHtml }}
-                          />
-                          <p className="mt-1 text-xs text-[var(--ui-text-subtle)]">{formatShortDate(article.publishedAt)}</p>
-                        </div>
-                      </div>
+                    <li key={`search-news-${article.path}`} className="min-w-0">
+                      <NewsArchiveCard article={article} tagSlug={q.toLowerCase()} titleAs="h3" />
                     </li>
                   ))}
                 </ul>
