@@ -74,6 +74,48 @@ function toSummaryItems(rows: RankingApiRow[] | undefined): NandatteSummaryItem[
   }));
 }
 
+function HomeNandatteFirstPlace({item, metric}: {item: NandatteSummaryItem; metric: string}) {
+  return (
+    <article className="relative aspect-square w-full overflow-hidden rounded-xl border border-white/10 bg-slate-900/70 shadow-lg">
+      <div className="absolute inset-0">
+        {item.imageUrl ? (
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 33vw"
+            className="object-cover opacity-70"
+            unoptimized
+          />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950" />
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,transparent_66%,rgba(2,6,23,0.9)_100%)]" />
+      </div>
+      <div className="relative flex h-full flex-col justify-end gap-4 p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-amber-300">1位</p>
+            <h3 className="mt-1 break-words text-xl font-semibold text-white sm:text-2xl">
+              {item.slug ? (
+                <Link
+                  href={`/nandatte/${item.slug}`}
+                  className="underline decoration-amber-200/70 underline-offset-4 hover:text-amber-100"
+                >
+                  {item.name}
+                </Link>
+              ) : item.name}
+            </h3>
+          </div>
+          <div className="shrink-0 whitespace-nowrap rounded-full bg-black/40 px-3 py-1 text-sm font-semibold text-amber-200">
+            {metric}
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function HomeNandatteVoteRealtimeCard({
   initialVoteTop,
 }: HomeNandatteVoteRealtimeCardProps) {
@@ -126,12 +168,16 @@ export function HomeNandatteVoteRealtimeCard({
       </div>
       <ol className="mt-4 space-y-2 text-sm">
         {voteItems.length > 0 ? (
-          voteItems.map((item, index) => (
-            <li key={`nandatte-vote-${item.groupId}-${index}`} className={index === 0 ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}>
-              <div className={index === 0 ? "contents" : "flex min-w-0 items-center gap-3"}>
-                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "col-span-2 aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
+          voteItems.map((item, index) => index === 0 ? (
+            <li key={`nandatte-vote-${item.groupId}-${index}`} className="pb-2">
+              <HomeNandatteFirstPlace item={item} metric={`${item.voteCount}票`} />
+            </li>
+          ) : (
+            <li key={`nandatte-vote-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                   {item.imageUrl ? (
-                    <Image src={item.imageUrl} alt={item.name} fill sizes={index === 0 ? "(max-width: 1024px) 100vw, 33vw" : "40px"} className="object-cover" unoptimized />
+                    <Image src={item.imageUrl} alt={item.name} fill sizes="40px" className="object-cover" unoptimized />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
@@ -204,15 +250,19 @@ export function HomeNandatteRecentRealtimeCard({
       </div>
       <ol className="mt-4 space-y-2 text-sm">
         {recentItems.length > 0 ? (
-          recentItems.map((item, index) => (
+          recentItems.map((item, index) => index === 0 ? (
+            <li key={`nandatte-recent-${item.groupId}-${index}`} className="pb-2">
+              <HomeNandatteFirstPlace item={item} metric={formatShortDate(item.lastVoteAt)} />
+            </li>
+          ) : (
             <li
               key={`nandatte-recent-${item.groupId}-${index}`}
-              className={index === 0 ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}
+              className="flex items-center justify-between gap-3 rounded-md"
             >
-              <div className={index === 0 ? "contents" : "flex min-w-0 items-center gap-3"}>
-                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "col-span-2 aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
                   {item.imageUrl ? (
-                    <Image src={item.imageUrl} alt={item.name} fill sizes={index === 0 ? "(max-width: 1024px) 100vw, 33vw" : "40px"} className="object-cover" unoptimized />
+                    <Image src={item.imageUrl} alt={item.name} fill sizes="40px" className="object-cover" unoptimized />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
