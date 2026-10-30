@@ -127,16 +127,16 @@ export function HomeNandatteVoteRealtimeCard({
       <ol className="mt-4 space-y-2 text-sm">
         {voteItems.length > 0 ? (
           voteItems.map((item, index) => (
-            <li key={`nandatte-vote-${item.groupId}-${index}`} className="flex items-center justify-between gap-3 rounded-md">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+            <li key={`nandatte-vote-${item.groupId}-${index}`} className={index === 0 ? "space-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}>
+              <div className={index === 0 ? "min-w-0 space-y-2" : "flex min-w-0 items-center gap-3"}>
+                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
                   {item.imageUrl ? (
-                    <Image src={item.imageUrl} alt={item.name} fill sizes="40px" className="object-cover" unoptimized />
+                    <Image src={item.imageUrl} alt={item.name} fill sizes={index === 0 ? "(max-width: 1024px) 100vw, 33vw" : "40px"} className="object-cover" unoptimized />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
                 </div>
-                <span className="truncate">
+                <span className="block truncate">
                   <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
                   {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
                 </span>
@@ -207,17 +207,17 @@ export function HomeNandatteRecentRealtimeCard({
           recentItems.map((item, index) => (
             <li
               key={`nandatte-recent-${item.groupId}-${index}`}
-              className="flex items-center justify-between gap-3 rounded-md"
+              className={index === 0 ? "space-y-2 rounded-md" : "flex items-center justify-between gap-3 rounded-md"}
             >
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-[var(--ui-panel)]">
+              <div className={index === 0 ? "min-w-0 space-y-2" : "flex min-w-0 items-center gap-3"}>
+                <div className={`relative overflow-hidden rounded-md bg-[var(--ui-panel)] ${index === 0 ? "aspect-square w-full" : "h-10 w-10 shrink-0"}`}>
                   {item.imageUrl ? (
-                    <Image src={item.imageUrl} alt={item.name} fill sizes="40px" className="object-cover" unoptimized />
+                    <Image src={item.imageUrl} alt={item.name} fill sizes={index === 0 ? "(max-width: 1024px) 100vw, 33vw" : "40px"} className="object-cover" unoptimized />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-700 dark:to-zinc-800" />
                   )}
                 </div>
-                <span className="truncate">
+                <span className="block truncate">
                   <span className="mr-2 text-xs text-[var(--ui-text-subtle)]">#{index + 1}</span>
                   {item.slug ? <Link href={`/nandatte/${item.slug}`}>{item.name}</Link> : item.name}
                 </span>
