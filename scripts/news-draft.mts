@@ -471,7 +471,10 @@ function markdownToPortableText(markdown: string) {
       text = text.replace(/^>\s?/gm, "");
     }
 
-    const inline = inlineSpans(text);
+    // A paragraph that is only a URL stays plain text so the site can auto-embed it (YouTube / Spotify).
+    const inline = style === "normal" && /^https?:\/\/\S+$/.test(text)
+      ? {children: [{_type: "span" as const, _key: createKey(), text, marks: []}], markDefs: []}
+      : inlineSpans(text);
     return {
       _type: "block",
       _key: createKey(),
