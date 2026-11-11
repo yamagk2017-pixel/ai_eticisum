@@ -20,6 +20,15 @@ export default function ImakiteWeeklyPage() {
           </h1>
           <p className="max-w-2xl text-base text-[var(--ui-text-muted)] sm:text-lg">
             {IMAKITE_PLAYLIST.description}
+            {" "}
+            <a
+              href={IMAKITE_PLAYLIST.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--ui-link)] underline underline-offset-2"
+            >
+              Spotifyで開く ↗
+            </a>
           </p>
           <nav aria-label="イマキテ" className="flex flex-wrap gap-2">
             <Link
@@ -44,29 +53,12 @@ export default function ImakiteWeeklyPage() {
               title={IMAKITE_PLAYLIST.name}
               src={IMAKITE_PLAYLIST.embedUrl}
               width="100%"
-              height={552}
+              height={2900}
               className="block"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
             />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={IMAKITE_PLAYLIST.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="imakite-chip-active inline-flex rounded-full border border-[var(--ui-border)] px-5 py-3 text-sm font-semibold"
-            >
-              Spotifyで開く ↗
-            </a>
-            <p className="text-xs text-[var(--ui-text-muted)]">
-              プレーヤーが表示されない場合も、リンクからお聴きいただけます。
-            </p>
-          </div>
-          <p className="text-sm leading-relaxed text-[var(--ui-text-muted)]">
-            毎週土曜0:00（日本時間）から集計を開始し、準備が整い次第更新します。
-            新たに追加した曲から順に掲載しています。
-          </p>
         </section>
 
         <section aria-labelledby="weekly-archive-heading" className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">

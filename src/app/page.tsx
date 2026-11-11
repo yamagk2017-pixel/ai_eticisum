@@ -609,7 +609,7 @@ export default async function Home() {
         <div>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
-              イマキテ
+              イマキテ：アイドルジャパン
             </Link>
             <span className="text-xs text-[var(--ui-text-muted)]">毎週土曜更新</span>
           </div>
@@ -621,7 +621,6 @@ export default async function Home() {
           </div>
         </div>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-[var(--ui-text-muted)]">{IMAKITE_PLAYLIST.description}</p>
       <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
         <iframe
           title={IMAKITE_PLAYLIST.name}
@@ -632,14 +631,6 @@ export default async function Home() {
           loading="lazy"
         />
       </div>
-      <a
-        href={IMAKITE_PLAYLIST.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-3 inline-block text-xs font-semibold text-[var(--ui-link)]"
-      >
-        Spotifyで開く ↗
-      </a>
     </div>
   );
 
