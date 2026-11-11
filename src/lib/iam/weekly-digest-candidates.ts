@@ -1,4 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
+import { targetSourceBonus } from "@/lib/iam/weekly-target-policy";
 
 type WeeklyTargetRow = {
   group_id: string;
@@ -56,8 +57,7 @@ function computeCandidateScore(params: {
   eventDate: string | null;
   sourceCount: number;
   sourceTypes: string[];
-  hasIhcReason: boolean;
-  hasNandatteReason: boolean;
+  targetReasons: readonly string[];
 }) {
   let score = 0;
 
@@ -65,8 +65,7 @@ function computeCandidateScore(params: {
   if (params.sourceCount >= 2) score += 15;
   score += eventTypeScore(params.eventType);
   score += recencyScore(params.eventDate);
-  if (params.hasIhcReason) score += 10;
-  if (params.hasNandatteReason) score += 5;
+  score += targetSourceBonus(params.targetReasons);
 
   return Math.max(0, Math.min(100, score));
 }
@@ -183,8 +182,7 @@ export async function buildWeeklyDigestCandidates(weekKeyInput?: string): Promis
       eventDate: event.event_date,
       sourceCount: sourceAgg.sourceCount,
       sourceTypes: sourceAgg.sourceTypes,
-      hasIhcReason: reasons.includes("ihc_top20"),
-      hasNandatteReason: reasons.includes("nandatte_recent_top20"),
+      targetReasons: reasons,
     });
     return {
       week_key: weekKey,

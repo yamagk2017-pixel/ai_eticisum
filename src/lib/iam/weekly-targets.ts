@@ -1,17 +1,8 @@
 import { createServerClient } from "@/lib/supabase/server";
-
-type SourceType = "ihc_top20" | "nandatte_recent_top20";
-
-type WeeklyTargetInsertRow = {
-  week_key: string;
-  group_id: string;
-  target_reasons: SourceType[];
-  priority: 1 | 2 | 3;
-};
-
-type IHCWeeklyRow = {
-  group_id: string | null;
-};
+import {
+  PLAYLIST_PROJECT_SLUG, buildTargetRows, getPlaylistCutoffForWeek, parsePlaylistSnapshot,
+  type PlaylistSnapshotRow, type WeeklyTargetInsertRow,
+} from "@/lib/iam/weekly-target-policy";
 
 type NandatteRankingRow = {
   group_id: string | null;
@@ -19,6 +10,11 @@ type NandatteRankingRow = {
 
 export type BuildWeeklyTargetsResult = {
   weekKey: string;
+  playlistGroupCount: number;
+  playlistTrackCount: number;
+  playlistCutoff: string;
+  playlistRunId: string;
+  /** @deprecated Compatibility alias for playlistGroupCount; no longer IHC top 20. */
   ihcCount: number;
   nandatteRecentCount: number;
   unionCount: number;
@@ -84,41 +80,21 @@ export function getTokyoPreviousWeekKey(now = new Date()) {
   return formatUTCDateAsYYYYMMDD(previousWeekDate);
 }
 
-async function fetchIhcTop20GroupIds() {
+async function fetchPlaylistGroupIds(weekKey: string) {
   const supabase = createServerClient({ requireServiceRole: true });
-
-  const latestDateRes = await supabase
+  const cutoff = getPlaylistCutoffForWeek(weekKey);
+  const result = await supabase
     .schema("ihc")
-    .from("weekly_rankings")
-    .select("week_end_date")
-    .order("week_end_date", { ascending: false })
-    .limit(1)
+    .from("release_playlist_runs")
+    .select("id,cutoff,status,committed_at,target_tracks")
+    .eq("project_slug", PLAYLIST_PROJECT_SLUG)
+    .eq("cutoff", cutoff)
+    .eq("status", "committed")
     .maybeSingle();
-
-  if (latestDateRes.error) {
-    throw new Error(`Failed to get latest ihc.weekly_rankings date: ${latestDateRes.error.message}`);
+  if (result.error) {
+    throw new Error(`Failed to load committed playlist snapshot for ${cutoff}: ${result.error.message}`);
   }
-
-  const latestWeekEndDate = latestDateRes.data?.week_end_date;
-  if (!latestWeekEndDate) {
-    throw new Error("ihc.weekly_rankings has no data");
-  }
-
-  const rowsRes = await supabase
-    .schema("ihc")
-    .from("weekly_rankings")
-    .select("group_id")
-    .eq("week_end_date", latestWeekEndDate)
-    .order("rank", { ascending: true })
-    .limit(20);
-
-  if (rowsRes.error) {
-    throw new Error(`Failed to load ihc.weekly_rankings top20 rows: ${rowsRes.error.message}`);
-  }
-
-  return ((rowsRes.data ?? []) as IHCWeeklyRow[])
-    .map((row) => row.group_id)
-    .filter((groupId): groupId is string => typeof groupId === "string" && groupId.length > 0);
+  return parsePlaylistSnapshot((result.data ?? null) as PlaylistSnapshotRow | null, cutoff);
 }
 
 async function fetchNandatteRecentTop20GroupIds() {
@@ -147,40 +123,6 @@ async function fetchNandatteRecentTop20GroupIds() {
   throw new Error(lastError ?? "NANDATTE recent ranking RPC unavailable");
 }
 
-function buildTargetRows(weekKey: string, ihcGroupIds: string[], nandatteRecentGroupIds: string[]) {
-  const sourcesByGroupId = new Map<string, Set<SourceType>>();
-
-  for (const groupId of ihcGroupIds) {
-    const current = sourcesByGroupId.get(groupId) ?? new Set<SourceType>();
-    current.add("ihc_top20");
-    sourcesByGroupId.set(groupId, current);
-  }
-
-  for (const groupId of nandatteRecentGroupIds) {
-    const current = sourcesByGroupId.get(groupId) ?? new Set<SourceType>();
-    current.add("nandatte_recent_top20");
-    sourcesByGroupId.set(groupId, current);
-  }
-
-  const rows: WeeklyTargetInsertRow[] = [];
-
-  for (const [groupId, sources] of sourcesByGroupId.entries()) {
-    const hasIhc = sources.has("ihc_top20");
-    const hasNandatteRecent = sources.has("nandatte_recent_top20");
-    const priority: 1 | 2 | 3 = hasIhc && hasNandatteRecent ? 1 : hasIhc ? 2 : 3;
-
-    rows.push({
-      week_key: weekKey,
-      group_id: groupId,
-      target_reasons: Array.from(sources),
-      priority,
-    });
-  }
-
-  rows.sort((a, b) => a.priority - b.priority || a.group_id.localeCompare(b.group_id));
-  return rows;
-}
-
 async function replaceWeeklyTargets(weekKey: string, rows: WeeklyTargetInsertRow[]) {
   const supabase = createServerClient({ requireServiceRole: true });
   const deleteRes = await supabase.schema("imd").from("weekly_targets").delete().eq("week_key", weekKey);
@@ -204,19 +146,28 @@ async function replaceWeeklyTargets(weekKey: string, rows: WeeklyTargetInsertRow
   return (res.data ?? []).length;
 }
 
-export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWeeklyTargetsResult> {
+export async function planWeeklyTargets(weekKeyInput?: string) {
   const weekKey = weekKeyInput ?? getTokyoPreviousWeekKey();
-
-  const [ihcGroupIds, nandatteRecentGroupIds] = await Promise.all([fetchIhcTop20GroupIds(), fetchNandatteRecentTop20GroupIds()]);
-
-  const rows = buildTargetRows(weekKey, ihcGroupIds, nandatteRecentGroupIds);
-  const upsertedCount = await replaceWeeklyTargets(weekKey, rows);
-
+  const [playlist, nandatteRecentGroupIds] = await Promise.all([
+    fetchPlaylistGroupIds(weekKey), fetchNandatteRecentTop20GroupIds(),
+  ]);
+  const rows = buildTargetRows(weekKey, playlist.groupIds, nandatteRecentGroupIds);
   return {
     weekKey,
-    ihcCount: ihcGroupIds.length,
+    playlistGroupCount: playlist.groupIds.length,
+    playlistTrackCount: playlist.trackCount,
+    playlistCutoff: playlist.cutoff,
+    playlistRunId: playlist.runId,
+    ihcCount: playlist.groupIds.length,
     nandatteRecentCount: nandatteRecentGroupIds.length,
     unionCount: rows.length,
-    upsertedCount,
+    targets: rows,
   };
+}
+
+export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWeeklyTargetsResult> {
+  // Planning and snapshot validation finish before any existing targets are cleared.
+  const { targets, ...summary } = await planWeeklyTargets(weekKeyInput);
+  const upsertedCount = await replaceWeeklyTargets(summary.weekKey, targets);
+  return { ...summary, upsertedCount };
 }

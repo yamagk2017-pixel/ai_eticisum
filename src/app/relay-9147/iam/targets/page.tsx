@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
+import { targetReasonLabel } from "@/lib/iam/weekly-target-policy";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -165,7 +166,7 @@ export default async function IamTargetsPage() {
                       {(row.target_reasons ?? []).length > 0 ? (
                         <ul className="list-disc pl-4">
                           {(row.target_reasons ?? []).map((reason) => (
-                            <li key={reason}>{reason}</li>
+                            <li key={reason}>{targetReasonLabel(reason)}</li>
                           ))}
                         </ul>
                       ) : (
