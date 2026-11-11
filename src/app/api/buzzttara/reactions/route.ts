@@ -55,7 +55,16 @@ export async function POST(request: Request) {
   const existingUserKey = userCookie?.split("=")[1] ?? null;
   const userKey = existingUserKey || randomUUID();
 
-  const supabase = createServerClient();
+  let supabase: ReturnType<typeof createServerClient>;
+  try {
+    supabase = createServerClient({ requireServiceRole: true });
+  } catch {
+    console.error("[buzzttara/reactions] Server database configuration is unavailable");
+    return NextResponse.json<ReactionApiResponse>(
+      { ok: false, added: false, error: "Reactions are temporarily unavailable" },
+      { status: 503 }
+    );
+  }
   const reactionRow = {
     user_key: userKey,
     tweet_id: parsed.tweetId,
