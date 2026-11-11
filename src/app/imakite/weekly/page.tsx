@@ -1,41 +1,85 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import { ImakiteRankingList } from "../ranking-list";
+import { IMAKITE_PLAYLIST } from "@/lib/imakite-playlist";
+
+export const metadata: Metadata = {
+  title: `${IMAKITE_PLAYLIST.name} | IDOL CROSSING`,
+  description: IMAKITE_PLAYLIST.description,
+};
 
 export default function ImakiteWeeklyPage() {
   return (
-    <div className="min-h-screen bg-[var(--ui-page)] text-white">
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-10 py-16 sm:px-12">
+    <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-12 sm:py-16">
         <header className="flex flex-col gap-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-400">
-            毎週火曜日発表！
+          <p className="text-xs font-semibold tracking-[0.15em] text-[var(--ui-link)]">
+            毎週土曜更新 · 50曲
           </p>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-serif text-3xl font-semibold leading-tight text-zinc-900 sm:text-5xl">
-              イマキテ週間ランキング
-            </h1>
-          </div>
-          <p className="max-w-2xl text-base text-zinc-700 sm:text-lg">
-            イマキテランキングの一週間のデータを集計。週間TOP20を発表します。
+          <h1 className="font-mincho-jp text-balance text-3xl font-semibold leading-tight sm:text-5xl">
+            {IMAKITE_PLAYLIST.name}
+          </h1>
+          <p className="max-w-2xl text-base text-[var(--ui-text-muted)] sm:text-lg">
+            {IMAKITE_PLAYLIST.description}
           </p>
-          <div className="flex flex-wrap gap-2">
+          <nav aria-label="イマキテ" className="flex flex-wrap gap-2">
             <Link
               href="/imakite"
-              className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-black hover:border-zinc-400"
+              className="rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs hover:text-[var(--ui-link)]"
             >
               Daily
             </Link>
             <Link
               href="/imakite/weekly"
-              className="imakite-chip-active rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
+              aria-current="page"
+              className="imakite-chip-active rounded-full border border-[var(--ui-border)] px-4 py-2 text-xs font-semibold"
             >
-              Weekly
+              {IMAKITE_PLAYLIST.name}
             </Link>
-          </div>
+          </nav>
         </header>
 
-        <ImakiteRankingList source="weekly" showArchiveLink />
+        <section aria-label="Spotifyプレイリスト" className="flex flex-col gap-4">
+          <div className="overflow-hidden rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)]">
+            <iframe
+              title={IMAKITE_PLAYLIST.name}
+              src={IMAKITE_PLAYLIST.embedUrl}
+              width="100%"
+              height={552}
+              className="block"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={IMAKITE_PLAYLIST.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="imakite-chip-active inline-flex rounded-full border border-[var(--ui-border)] px-5 py-3 text-sm font-semibold"
+            >
+              Spotifyで開く ↗
+            </a>
+            <p className="text-xs text-[var(--ui-text-muted)]">
+              プレーヤーが表示されない場合も、リンクからお聴きいただけます。
+            </p>
+          </div>
+          <p className="text-sm leading-relaxed text-[var(--ui-text-muted)]">
+            毎週土曜0:00（日本時間）から集計を開始し、準備が整い次第更新します。
+            新たに追加した曲から順に掲載しています。
+          </p>
+        </section>
+
+        <section aria-labelledby="weekly-archive-heading" className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
+          <h2 id="weekly-archive-heading" className="text-lg font-semibold">過去の週間ランキング</h2>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--ui-text-muted)]">
+            旧週間ランキングの自動集計は休止しています。
+            これまでの週間ランキングと当時のプレイリストは、アーカイブからご覧いただけます。
+            日次ランキングは引き続き毎日更新しています。
+          </p>
+          <Link href="/imakite/weekly/archive" className="mt-4 inline-block text-sm font-semibold text-[var(--ui-link)] hover:underline">
+            過去の週間ランキング・プレイリストを見る →
+          </Link>
+        </section>
       </main>
     </div>
   );

@@ -24,9 +24,9 @@ export default function ImakiteWeeklyRankingDatePage() {
             </Link>
             <Link
               href="/imakite/weekly"
-              className="imakite-chip-active rounded-full border border-zinc-500 bg-zinc-100 px-4 py-2 text-xs font-semibold text-black"
+              className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-black hover:border-zinc-400"
             >
-              Weekly
+              イマキテアイドル：ジャパン
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -42,7 +42,7 @@ export default function ImakiteWeeklyRankingDatePage() {
                 href="/imakite/weekly"
                 className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-zinc-800 hover:border-zinc-400"
               >
-                最新週間ランキングへ →
+                プレイリストの紹介へ →
               </Link>
             </div>
           </div>

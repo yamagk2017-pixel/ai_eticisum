@@ -28,7 +28,7 @@ const navItems: NavItem[] = [
   },
   {
     href: "/imakite/weekly",
-    label: "イマキテWEEKLY",
+    label: "イマキテアイドル：ジャパン",
     match: (pathname) => pathname.startsWith("/imakite/weekly"),
   },
   { href: "/nandatte", label: "ナンダッテ", match: (pathname) => pathname.startsWith("/nandatte") },

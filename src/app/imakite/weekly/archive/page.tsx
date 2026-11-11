@@ -119,11 +119,11 @@ export default function ImakiteWeeklyArchivePage() {
               href="/imakite/weekly"
               className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-zinc-800 hover:border-zinc-400"
             >
-              最新週間ランキングへ →
+              プレイリストの紹介へ →
             </Link>
           </div>
           <p className="text-sm text-zinc-700">
-            日付を選択すると、その週のランキング詳細へ移動します。
+            旧週間ランキングの自動集計は休止しています。日付を選択すると、当時のランキング詳細へ移動します。
           </p>
         </header>
 

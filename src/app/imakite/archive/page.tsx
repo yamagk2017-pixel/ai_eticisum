@@ -87,6 +87,9 @@ function ImakiteArchiveContent() {
               Weekly Archive
             </Link>
           </div>
+          <Link href="/imakite/weekly" className="text-sm text-[var(--ui-link)] hover:underline">
+            イマキテアイドル：ジャパンを聴く →
+          </Link>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="font-mincho-jp text-3xl font-semibold text-zinc-900 sm:text-4xl">過去のランキング</h1>
             <Link

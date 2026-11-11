@@ -13,6 +13,7 @@ import { getSanityRelatedEventsForHome, type HomeRelatedEvent } from "@/lib/news
 import type { NewsArticle } from "@/lib/news/types";
 import { formatNewsDate, parseNewsDate } from "@/lib/news/datetime";
 import { createServerClient } from "@/lib/supabase/server";
+import { IMAKITE_PLAYLIST } from "@/lib/imakite-playlist";
 
 export const revalidate = 300;
 
@@ -33,9 +34,6 @@ type ImakiteSummary = {
   latestDate: string | null;
   latestUpdatedAt: string | null;
   items: ImakiteSummaryItem[];
-  weeklyPlaylistDate: string | null;
-  weeklyUpdatedAt: string | null;
-  weeklyPlaylistEmbedUrl: string | null;
 };
 
 type NandatteSummaryItem = {
@@ -194,9 +192,6 @@ async function getHomeSummaries() {
       latestDate: null,
       latestUpdatedAt: null,
       items: [] as ImakiteSummaryItem[],
-      weeklyPlaylistDate: null,
-      weeklyUpdatedAt: null,
-      weeklyPlaylistEmbedUrl: null,
     } satisfies ImakiteSummary,
     nandatte: { voteTop: [] as NandatteSummaryItem[], recentTop: [] as NandatteSummaryItem[] },
     buzz: { items: [] as BuzzSummaryItem[] },
@@ -312,24 +307,7 @@ async function getHomeSummaries() {
           });
         }
 
-        const weeklyRes = await supabase
-          .schema("ihc")
-          .from("weekly_playlists")
-          .select("*")
-          .order("week_end_date", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        const weeklyRow = asRecord(weeklyRes.data ?? null);
-        const weeklyPlaylistEmbedUrl = weeklyRes.error
-          ? null
-          : pickString(weeklyRow, ["spotify_embed_url", "spotify_playlist_url"]);
-        const weeklyPlaylistDate = weeklyRes.error ? null : pickString(weeklyRow, ["week_end_date"]);
-        const weeklyUpdatedAt = weeklyRes.error
-          ? null
-          : pickString(weeklyRow, ["updated_at", "created_at", "refreshed_at", "generated_at"]) ?? weeklyPlaylistDate;
-
-        return { latestDate, latestUpdatedAt, items, weeklyPlaylistDate, weeklyUpdatedAt, weeklyPlaylistEmbedUrl };
+        return { latestDate, latestUpdatedAt, items };
       } catch (error) {
         errors.push(error instanceof Error ? error.message : "IMAKITE summary error");
         return fallback.imakite;
@@ -625,40 +603,45 @@ export default async function Home() {
     </div>
   );
 
-  const imakiteWeeklyCard =
-    summaries.imakite.weeklyPlaylistEmbedUrl ? (
-      <div className="mb-12 break-inside-avoid">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
-                イマキテランキング
-              </Link>
-              <span className="text-xs text-[var(--ui-text-muted)]">毎週火曜日発表！</span>
-            </div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <h2 className="font-mincho-jp text-2xl font-semibold">週間ランキング</h2>
-              <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
-                more...
-              </Link>
-            </div>
+  const imakitePlaylistCard = (
+    <div className="mb-12 break-inside-avoid">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link href="/imakite/weekly" className="text-xs font-semibold tracking-[0.08em] text-amber-500 underline">
+              イマキテ
+            </Link>
+            <span className="text-xs text-[var(--ui-text-muted)]">毎週土曜更新</span>
+          </div>
+          <div className="mt-2 flex items-baseline gap-3">
+            <h2 className="font-mincho-jp text-balance text-2xl font-semibold">{IMAKITE_PLAYLIST.name}</h2>
+            <Link href="/imakite/weekly" className="shrink-0 whitespace-nowrap text-xs text-[var(--ui-text-muted)]">
+              more...
+            </Link>
           </div>
         </div>
-        {summaries.imakite.weeklyPlaylistDate && (
-          <p className="mt-2 text-xs text-[var(--ui-text-subtle)]">{summaries.imakite.weeklyPlaylistDate} 時点</p>
-        )}
-        <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
-          <iframe
-            title="IMAKITE Weekly Ranking Playlist"
-            src={summaries.imakite.weeklyPlaylistEmbedUrl}
-            width="100%"
-            height={352}
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-          />
-        </div>
       </div>
-    ) : null;
+      <p className="mt-3 text-xs leading-relaxed text-[var(--ui-text-muted)]">{IMAKITE_PLAYLIST.description}</p>
+      <div className="mt-4 overflow-hidden rounded-lg border border-[var(--ui-border)]">
+        <iframe
+          title={IMAKITE_PLAYLIST.name}
+          src={IMAKITE_PLAYLIST.embedUrl}
+          width="100%"
+          height={352}
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+        />
+      </div>
+      <a
+        href={IMAKITE_PLAYLIST.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 inline-block text-xs font-semibold text-[var(--ui-link)]"
+      >
+        Spotifyで開く ↗
+      </a>
+    </div>
+  );
 
   const nandatteVoteRealtimeCard = (
     <HomeNandatteVoteRealtimeCard
@@ -894,10 +877,11 @@ export default async function Home() {
       node: imakiteDailyCard,
     },
     {
-      key: "imakite-weekly",
-      sortValue: toSortValue(summaries.imakite.weeklyUpdatedAt ?? summaries.imakite.weeklyPlaylistDate),
+      key: "imakite-playlist",
+      // Keep the playlist beside the daily card without claiming a publication timestamp.
+      sortValue: toSortValue(summaries.imakite.latestUpdatedAt ?? summaries.imakite.latestDate),
       tiePriority: 0,
-      node: imakiteWeeklyCard,
+      node: imakitePlaylistCard,
     },
     {
       key: "nandatte-vote",

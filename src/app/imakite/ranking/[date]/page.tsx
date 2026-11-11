@@ -26,7 +26,7 @@ export default function ImakiteRankingDatePage() {
               href="/imakite/weekly"
               className="rounded-full border border-zinc-500 px-4 py-2 text-xs text-black hover:border-zinc-400"
             >
-              Weekly
+              イマキテアイドル：ジャパン
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
