@@ -12,7 +12,7 @@ export default function ImakiteWeeklyPage() {
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-12 sm:py-16">
         <header className="flex flex-col gap-4">
-          <p className="text-xs font-semibold tracking-[0.15em] text-[var(--ui-link)]">
+          <p className="text-xs font-semibold tracking-[0.15em] text-zinc-400">
             毎週土曜更新 · 50曲
           </p>
           <h1 className="font-mincho-jp text-balance text-3xl font-semibold leading-tight sm:text-5xl">
