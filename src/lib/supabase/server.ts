@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 type CreateServerClientOptions = {
   requireServiceRole?: boolean;
+  noStore?: boolean;
 };
 
 export function createServerClient(options?: CreateServerClientOptions) {
@@ -42,6 +43,9 @@ export function createServerClient(options?: CreateServerClientOptions) {
   }
 
   return createClient(url, key, {
+    ...(options?.noStore ? {
+      global: { fetch: (input, init) => fetch(input, { ...init, cache: "no-store" }) },
+    } : {}),
     auth: {
       persistSession: false,
       autoRefreshToken: false,

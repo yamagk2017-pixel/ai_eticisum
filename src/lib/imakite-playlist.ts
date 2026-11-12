@@ -1,4 +1,5 @@
 export const IMAKITE_PLAYLIST = {
+  id: "6ACBBRFex0KOvF1V82ppvH",
   name: "イマキテアイドル：ジャパン",
   url: "https://open.spotify.com/playlist/6ACBBRFex0KOvF1V82ppvH",
   embedUrl: "https://open.spotify.com/embed/playlist/6ACBBRFex0KOvF1V82ppvH",

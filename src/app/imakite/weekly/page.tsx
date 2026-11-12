@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { IMAKITE_PLAYLIST } from "@/lib/imakite-playlist";
+import { getWeeklyFeature } from "@/lib/imakite-weekly";
+import { FeaturedIdols } from "./featured-idols";
 
 export const metadata: Metadata = {
   title: `${IMAKITE_PLAYLIST.name} | IDOL CROSSING`,
   description: IMAKITE_PLAYLIST.description,
 };
 
-export default function ImakiteWeeklyPage() {
+export default async function ImakiteWeeklyPage() {
+  await connection();
+  const feature = await getWeeklyFeature();
   return (
     <div className="min-h-screen bg-[var(--ui-page)] text-[var(--ui-text)]">
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-12 sm:py-16">
@@ -53,13 +58,15 @@ export default function ImakiteWeeklyPage() {
               title={IMAKITE_PLAYLIST.name}
               src={IMAKITE_PLAYLIST.embedUrl}
               width="100%"
-              height={2900}
+              height={552}
               className="block"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
               allowFullScreen
             />
           </div>
         </section>
+
+        {feature && <FeaturedIdols idols={feature.idols} />}
 
         <section aria-labelledby="weekly-archive-heading" className="rounded-2xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-6">
           <h2 id="weekly-archive-heading" className="text-lg font-semibold">過去の週間ランキング</h2>
