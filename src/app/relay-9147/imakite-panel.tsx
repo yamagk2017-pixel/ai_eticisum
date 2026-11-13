@@ -240,8 +240,6 @@ https://www.musicite.net/imakite`;
         </div>
       </div>
 
-      <ImakitePlaylistPost />
-
       <div className="mt-6 border-t border-[var(--ui-border)] pt-6">
         <h3 className="text-base font-semibold text-[var(--ui-text)]">イマキテランキング X告知文</h3>
       </div>
@@ -385,6 +383,8 @@ https://www.musicite.net/imakite`;
           </div>
         </>
       )}
+
+      <ImakitePlaylistPost />
     </section>
   );
 }
