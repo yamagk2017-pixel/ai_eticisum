@@ -101,7 +101,7 @@ export function ImakitePlaylistPost() {
           value={draft}
           onChange={(event) => { setDraft(event.target.value); setCopyStatus("idle"); }}
           rows={18}
-          className="mt-3 w-full resize-y rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel-soft)] p-4 text-sm leading-relaxed text-[var(--ui-text)]"
+          className="mt-3 w-full resize-y rounded-xl border border-[var(--ui-border)] bg-transparent p-4 text-sm leading-relaxed text-[var(--ui-text)]"
         />
       )}
     </section>
