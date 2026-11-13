@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { FeaturedIdol } from "@/lib/imakite-weekly-data";
 import { IdolProfile } from "./idol-profile";
 
@@ -20,7 +21,15 @@ function IdolIntroduction({ idol, cover = false }: { idol: FeaturedIdol; cover?:
       )}
       <div className="flex min-w-0 flex-col gap-4">
         <div className="space-y-3">
-          {idol.name && <h3 className={`font-mincho-jp break-words font-semibold leading-tight ${cover ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}>{idol.name}</h3>}
+          {idol.name && (
+            <h3 className={`font-mincho-jp break-words font-semibold leading-tight ${cover ? "text-3xl sm:text-4xl" : "text-xl sm:text-2xl"}`}>
+              {idol.nandatteUrl ? (
+                <Link href={idol.nandatteUrl} className="underline decoration-[var(--ui-border)] underline-offset-4 hover:text-[var(--ui-link)] hover:decoration-current">
+                  {idol.name}
+                </Link>
+              ) : idol.name}
+            </h3>
+          )}
           {idol.trackName && (
             <p className="break-words text-base font-medium leading-relaxed">
               <span className="mb-1 block text-xs font-normal tracking-wider text-[var(--ui-text-subtle)]">今回の掲載曲</span>

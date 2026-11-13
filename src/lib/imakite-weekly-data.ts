@@ -1,13 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Track = { group_id: string; track_name?: string | null };
-type Group = { id: string; name_ja: string | null; artist_image_url: string | null };
+type Group = { id: string; name_ja: string | null; slug: string | null; artist_image_url: string | null };
 type Profile = { group_id: string; body: string | null };
 type ExternalLink = { group_id: string; service: string; url: string | null };
 
 export type FeaturedIdol = {
   groupId: string;
   name: string | null;
+  nandatteUrl: string | null;
   imageUrl: string | null;
   trackName: string | null;
   profile: string | null;
@@ -60,7 +61,7 @@ export async function loadWeeklyFeature(client: SupabaseClient, playlistId: stri
   if (!tracks.length) return null;
   const ids = tracks.map((track) => track.group_id);
   const [groups, profiles, links] = await Promise.all([
-    client.schema("imd").from("groups").select("id,name_ja,artist_image_url").in("id", ids),
+    client.schema("imd").from("groups").select("id,name_ja,slug,artist_image_url").in("id", ids),
     client.schema("imd").from("group_profiles").select("group_id,body").in("group_id", ids).eq("locale", "ja"),
     client.schema("imd").from("external_ids").select("group_id,service,url").in("group_id", ids).order("service"),
   ]);
@@ -82,6 +83,7 @@ export async function loadWeeklyFeature(client: SupabaseClient, playlistId: stri
     return {
       groupId: track.group_id,
       name: group?.name_ja || null,
+      nandatteUrl: group?.slug?.trim() ? `/nandatte/${encodeURIComponent(group.slug.trim())}` : null,
       imageUrl: registeredWebUrl(group?.artist_image_url),
       trackName: typeof track.track_name === "string" && track.track_name ? track.track_name : null,
       profile: profileMap.get(track.group_id) || null,

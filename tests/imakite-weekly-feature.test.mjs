@@ -56,7 +56,7 @@ const fixture = () => ({
     { ...committed, status: "prepared", committed_at: null, target_tracks: [tracks[3]] },
     { ...committed, project_slug: "another-project", committed_at: "2026-11-20T10:00:00Z", target_tracks: [tracks[3]] },
   ],
-  "imd.groups": [...tracks].reverse().map(({ group_id }) => ({ id: group_id, name_ja: group_id, artist_image_url: `https://images.example/${group_id}` })),
+  "imd.groups": [...tracks].reverse().map(({ group_id }) => ({ id: group_id, name_ja: group_id, slug: `${group_id}-registered`, artist_image_url: `https://images.example/${group_id}` })),
   "imd.group_profiles": [{ group_id: "cover", locale: "ja", body: "  登録された本文\n改行も保持する。  " }],
   "imd.external_ids": [
     { group_id: "cover", service: "website", url: "https://example.com/" },
@@ -76,6 +76,7 @@ test("uses latest committed result in the fixed playlist, preserving track order
     { label: "公式サイト", url: "https://example.com/" }, { label: "X", url: "https://x.com/example" },
   ]);
   assert.equal(result.idols[1].profile, null);
+  assert.deepEqual(result.idols.map((idol) => idol.nandatteUrl), ["/nandatte/cover-registered", "/nandatte/second-registered", "/nandatte/third-registered"]);
 });
 
 test("a newly committed run replaces all featured artists without changing display code", async () => {
@@ -91,7 +92,7 @@ test("missing IMDB fields do not promote the next artist or infer a name, image,
   tables["imd.group_profiles"] = [];
   tables["imd.external_ids"] = [];
   const result = await loadWeeklyFeature(database(tables), "playlist");
-  assert.deepEqual(result.idols[0], { groupId: "cover", name: null, imageUrl: null, profile: null, trackName: "cover song", links: [] });
+  assert.deepEqual(result.idols[0], { groupId: "cover", name: null, nandatteUrl: null, imageUrl: null, profile: null, trackName: "cover song", links: [] });
 });
 
 test("no committed result or unknown playlist renders no feature and reads no profiles", async () => {

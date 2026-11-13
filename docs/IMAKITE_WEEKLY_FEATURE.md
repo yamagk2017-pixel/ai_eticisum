@@ -11,6 +11,7 @@
 - 対象企画の `ihc.release_playlist_runs` から `status = 'committed'` かつ `committed_at IS NOT NULL` の最新行を取得する。確定日時降順、同時刻はcutoff降順。
 - `target_tracks` の先頭から3組。重複グループは最初の掲載曲を採用する。初期実装時の選曲処理は1組1曲。
 - `group_id` で `imd.groups` の名前・画像、`imd.group_profiles` の日本語本文、`imd.external_ids` の登録済みURLを取得する。NANDATTE詳細APIと同じ情報源。
+- グループ名は `imd.groups.slug` から組み立てた `/nandatte/[slug]` へのリンクにする。slug未登録なら名前のみを表示する。
 - 紹介文は書き換えず改行も保持。200文字を超える場合は「続きを読む」で全文を表示する。
 - 未登録の値は省略。外部IDからURLを組み立てない。リンクはHTTP(S)のみ。
 - 確定行がない場合や取得障害時は紹介欄を省略し、既存プレーヤーとアーカイブ導線を表示する。取得障害はサーバーログへ記録する。
