@@ -36,9 +36,9 @@ export function ReleaseTracks({ tracks }: { tracks: ReleaseTrack[] }) {
         </label>
       </div>
       <p role="status" className="mb-3 text-xs text-[var(--ui-text-muted)]">{tracks.length}曲中 {visible.length}曲を表示</p>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col divide-y divide-[var(--ui-border)]">
         {visible.map((track) => (
-          <article key={track.position} aria-label={`掲載順${track.position} ${track.group} ${track.name}`} className="min-w-0 rounded-xl border border-[var(--ui-border)] bg-[var(--ui-panel)] p-4 sm:p-5">
+          <article key={track.position} aria-label={`掲載順${track.position} ${track.group} ${track.name}`} className="min-w-0 py-5 sm:py-6">
             <div className="flex items-start gap-3 sm:gap-5">
               <span className="w-8 shrink-0 pt-1 font-mono text-lg text-[var(--ui-text-subtle)]" aria-label={`掲載順 ${track.position}`}>{String(track.position).padStart(2, "0")}</span>
               <div className="min-w-0 flex-1">
@@ -68,7 +68,7 @@ export function ReleaseTracks({ tracks }: { tracks: ReleaseTrack[] }) {
             </div>
           </article>
         ))}
-        {visible.length === 0 && <p className="rounded-xl border border-[var(--ui-border)] p-8 text-center text-sm text-[var(--ui-text-muted)]">該当する追加曲はありません。検索や絞り込み条件を変更してください。</p>}
+        {visible.length === 0 && <p className="py-8 text-center text-sm text-[var(--ui-text-muted)]">該当する追加曲はありません。検索や絞り込み条件を変更してください。</p>}
       </div>
     </section>
   );
