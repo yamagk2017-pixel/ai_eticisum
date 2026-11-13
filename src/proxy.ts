@@ -12,7 +12,7 @@ function unauthorizedResponse() {
   });
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const expectedUser = process.env.RELAY9147_BASIC_AUTH_USER;
   const expectedPass = process.env.RELAY9147_BASIC_AUTH_PASS;
 

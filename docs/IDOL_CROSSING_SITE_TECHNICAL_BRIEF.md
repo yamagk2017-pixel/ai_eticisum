@@ -131,7 +131,7 @@ Vercel 想定の実装がある。
 ### 認証・管理画面
 
 - Supabase Auth: Googleログイン。グローバルヘッダー、ナンダッテ投票、マイ投票で利用
-- Basic認証: `/relay-9147/:path*` を `middleware.ts` で保護
+- Basic認証: `/relay-9147/:path*` を `src/proxy.ts` で保護
 - Sanity Studio: `/studio` に同居。Sanity側のログイン/権限はSanityの仕組みに依存
 - Cron API: `CRON_SECRET` の Bearer 認証
 - Preview share API: `PREVIEW_SHARE_SECRET` と署名付きURL
@@ -714,7 +714,7 @@ URL構造:
 - `src/app/relay-9147/imakite-panel.tsx`
 - `src/app/relay-9147/nandatte-panel.tsx`
 - `src/app/relay-9147/buzzttara-panel.tsx`
-- `middleware.ts`
+- `src/proxy.ts`
 
 注意点:
 
@@ -1793,7 +1793,7 @@ Studioでは `RelatedGroupObjectInput` が `/api/sanity/imd-groups-search` を�
 - Sanity `relatedGroups.imdGroupId`
 - WordPress画像URL書き換え
 - `next.config.ts` のredirectsとimage remotePatterns
-- `middleware.ts` のBasic認証
+- `src/proxy.ts` のBasic認証
 - `createServerClient({ requireServiceRole: true })` を使うAPI
 - Cron secret
 - YouTube/Spotify/OpenAI APIキー

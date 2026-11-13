@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { DailyTopRow } from "../imakite/ranking-list";
+import { ImakitePlaylistPost } from "./imakite-playlist-post";
 
 type Status = "idle" | "loading" | "error" | "success";
 type CopyStatus = "idle" | "success" | "error";
@@ -237,6 +238,12 @@ https://www.musicite.net/imakite`;
             /imakite/archive
           </Link>
         </div>
+      </div>
+
+      <ImakitePlaylistPost />
+
+      <div className="mt-6 border-t border-[var(--ui-border)] pt-6">
+        <h3 className="text-base font-semibold text-[var(--ui-text)]">イマキテランキング X告知文</h3>
       </div>
 
       {status === "error" && (
