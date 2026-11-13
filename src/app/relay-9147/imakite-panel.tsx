@@ -226,6 +226,12 @@ https://www.musicite.net/imakite`;
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
+            href="/relay-9147/imakite/releases"
+            className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs font-semibold text-[var(--ui-link)] hover:border-zinc-500"
+          >
+            毎週の追加曲・選曲根拠
+          </Link>
+          <Link
             href="/imakite"
             className="rounded-full border border-[var(--ui-border)] px-3 py-1 text-xs text-[var(--ui-text)] hover:border-zinc-500"
           >
