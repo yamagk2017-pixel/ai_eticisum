@@ -4,6 +4,7 @@ import {hasSanityStudioEnv} from "@/sanity/env";
 import type {NewsArticle, NewsRelatedArticleRef, NewsRelatedGroupRef, NewsTag} from "./types";
 import {NEWS_DISPLAY_TIME_ZONE, normalizeNewsDate} from "./datetime";
 import {rewriteWpImageUrl, rewriteWpImageUrlsInHtml} from "@/lib/wp/images";
+import {normalizeSpeakerColors, type InterviewSpeakerColor} from "./speaker-colors";
 
 type SanityRefTag = {
   _id: string;
@@ -79,6 +80,7 @@ export type SanityNewsArticleDetail = {
   categories: NewsTag[];
   tags: NewsTag[];
   body: unknown;
+  speakerColors?: InterviewSpeakerColor[];
   galleryImages: Array<{
     url: string;
     alt: string | null;
@@ -196,6 +198,7 @@ const bySlugQuery = groq`
     publishedAt,
     excerpt,
     body,
+    speakerColors,
     "galleryImages": galleryImages[]{
       "url": asset->url,
       alt,
@@ -306,6 +309,7 @@ const bySlugPreviewQuery = groq`
     publishedAt,
     excerpt,
     body,
+    speakerColors,
     "galleryImages": galleryImages[]{
       "url": asset->url,
       alt,
@@ -737,6 +741,7 @@ export async function getSanityNewsBySlug(
     publishedAt?: string | null;
     excerpt?: string | null;
     body?: unknown;
+    speakerColors?: unknown;
     galleryImages?:
       | Array<{
           url?: string | null;
@@ -805,6 +810,7 @@ export async function getSanityNewsBySlug(
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
     body: doc.body ?? [],
+    speakerColors: normalizeSpeakerColors(doc.speakerColors),
     galleryImages: (doc.galleryImages ?? [])
       .map((item) => ({
         url: typeof item?.url === "string" ? item.url.trim() : "",

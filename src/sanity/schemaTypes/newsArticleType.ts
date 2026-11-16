@@ -1,5 +1,8 @@
 import {defineArrayMember, defineField, defineType} from "sanity";
 import {Well3StylePreview} from "@/sanity/components/well3-style-preview";
+import {OrangeTextPreview} from "@/sanity/components/orange-text-preview";
+import {SpeakerColorInput} from "@/sanity/components/speaker-color-input";
+import {normalizeSpeakerName, SPEAKER_COLOR_PATTERN} from "@/lib/news/speaker-colors";
 import {isUniqueAcrossNewsDocuments} from "@/sanity/slug-is-unique";
 import {
   createCategoryReferencesField,
@@ -59,12 +62,58 @@ export const newsArticleType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: "speakerColors",
+      title: "話者名の文字色（インタビュー）",
+      description: "話者名と色を1回設定すると、本文の各段落の先頭にある「話者名：」すべてに適用します。本文と同じ呼び名を入力してください（例：ミッポ）。コロンの入力は不要です。",
+      type: "array",
+      of: [defineArrayMember({
+        name: "interviewSpeakerColor",
+        title: "話者の色",
+        type: "object",
+        fields: [
+          defineField({
+            name: "speakerName", title: "話者名", type: "string",
+            validation: (rule) => rule.required().custom((value) =>
+              !value || normalizeSpeakerName(value).length > 0 ? true : "話者名を入力してください"
+            ),
+          }),
+          defineField({
+            name: "color", title: "文字色", type: "string", initialValue: "#f97316",
+            description: "色見本・カラーピッカーから選択するか、#から始まる6桁の色コードを入力できます。",
+            components: {input: SpeakerColorInput},
+            validation: (rule) => rule.required().regex(SPEAKER_COLOR_PATTERN, {name: "#RRGGBB形式の色コード"}),
+          }),
+        ],
+        preview: {
+          select: {title: "speakerName", subtitle: "color"},
+          prepare: ({title, subtitle}) => ({title: title ? `${normalizeSpeakerName(title)}：` : "話者名を入力", subtitle}),
+        },
+      })],
+      validation: (rule) => rule.custom((value) => {
+        const names = (value ?? []).flatMap((item) => {
+          if (!item || typeof item !== "object" || !("speakerName" in item)) return [];
+          return [normalizeSpeakerName(String(item.speakerName ?? ""))];
+        }).filter(Boolean);
+        return new Set(names).size === names.length || "同じ話者名の色は1つにまとめてください";
+      }),
+    }),
+    defineField({
       name: "body",
       title: "Body (Portable Text)",
       type: "array",
       of: [
         defineArrayMember({
           type: "block",
+          marks: {
+            decorators: [
+              {title: "Strong", value: "strong"},
+              {title: "Emphasis", value: "em"},
+              {title: "Code", value: "code"},
+              {title: "Underline", value: "underline"},
+              {title: "Strike", value: "strike-through"},
+              {title: "オレンジ", value: "orange", component: OrangeTextPreview},
+            ],
+          },
           styles: [
             {title: "Normal", value: "normal"},
             {title: "H2", value: "h2"},

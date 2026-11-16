@@ -7,6 +7,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {parse as parseYaml} from "yaml";
+import {normalizeSpeakerColors} from "../src/lib/news/speaker-colors.ts";
 
 type DraftDocumentType = "News" | "Radio" | "Event";
 type SanityDocumentType = "newsArticle" | "radioAnnouncement" | "eventAnnouncement";
@@ -35,6 +36,7 @@ type DraftMetadata = {
   categories?: unknown;
   tags?: unknown;
   relatedGroups?: unknown;
+  speakerColors?: unknown;
   excerpt?: unknown;
   seoTitle?: unknown;
   seoDescription?: unknown;
@@ -225,6 +227,10 @@ function buildDraftMarkdown(params: {
     "categories: []",
     "tags: []",
     "relatedGroups: []",
+    ...(params.documentType === "News" ? [
+      "speakerColors: []",
+      '# 例: speakerColors: [{speakerName: "ミッポ", color: "#f97316"}]',
+    ] : []),
   ];
   const typeFields = params.documentType === "Radio"
     ? [
@@ -829,6 +835,16 @@ export async function buildSanityDraft(options: PushOptions, suppliedClient?: Sa
   else warnings.push("Missing or invalid required field: publishedAt");
   if (bodyBlocks.length > 0) set.body = bodyBlocks;
   else warnings.push("Missing required field: body");
+
+  if (documentType === "News" && metadata.speakerColors !== undefined) {
+    const speakerColors = normalizeSpeakerColors(metadata.speakerColors);
+    if (!Array.isArray(metadata.speakerColors) || speakerColors.length !== metadata.speakerColors.length) {
+      throw new Error("speakerColors requires unique speakerName values and #RRGGBB color codes");
+    }
+    set.speakerColors = speakerColors.map((item, index) => ({
+      _type: "interviewSpeakerColor", _key: `speaker-${index}`, ...item,
+    }));
+  }
 
   for (const field of ["excerpt", "seoTitle", "seoDescription"] as const) {
     const value = textValue(metadata[field]);

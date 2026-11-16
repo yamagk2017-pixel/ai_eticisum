@@ -1,6 +1,7 @@
 import {PortableText, type PortableTextComponents} from "@portabletext/react";
 import {Children, cloneElement, isValidElement, type ReactNode} from "react";
 import {urlForSanityImage} from "@/lib/sanity/image";
+import {normalizeSpeakerColors, type InterviewSpeakerColor} from "@/lib/news/speaker-colors";
 
 type BodyImageValue = {
   asset?: {
@@ -22,7 +23,7 @@ type CalloutBoxValue = {
 
 type PortableTextBlockLike = {
   _type?: string;
-  children?: Array<{_type?: string; text?: string}>;
+  children?: Array<{_type?: string; text?: string; marks?: string[]}>;
 };
 
 function resolveImageUrl(value: BodyImageValue) {
@@ -85,16 +86,36 @@ function extractPlainTextFromBlock(value: unknown): string {
     .join("");
 }
 
-function extractSpeakerPrefix(text: string): {prefix: string; rest: string} | null {
+function extractSpeakerPrefix(text: string): {speaker: string; prefix: string; end: number} | null {
   const source = text.trimStart();
   const match = source.match(/^([^：:\n]{1,80})([：:])([\s\S]*)$/);
   if (!match) return null;
   const speaker = match[1].trim();
   if (!speaker) return null;
   return {
+    speaker,
     prefix: `${speaker}${match[2]}`,
-    rest: match[3] ?? "",
+    end: text.length - source.length + match[1].length + match[2].length,
   };
+}
+
+// Slice through rendered marks as well as plain text, preserving links and
+// emphasis in the answer when the speaker prefix is rendered separately.
+function afterTextOffset(children: ReactNode, offset: number): ReactNode {
+  let remaining = offset;
+  const visit = (node: ReactNode): ReactNode => {
+    if (typeof node === "string" || typeof node === "number") {
+      const text = String(node);
+      const rest = text.slice(remaining);
+      remaining = Math.max(0, remaining - text.length);
+      return rest || null;
+    }
+    if (!isValidElement<{children?: ReactNode}>(node)) return node;
+    if (!("children" in node.props)) return node;
+    const nextChildren = Children.map(node.props.children, visit);
+    return nextChildren?.some(Boolean) ? cloneElement(node, undefined, nextChildren) : null;
+  };
+  return Children.map(children, visit);
 }
 
 function renderTextWithAutoLinks(text: string) {
@@ -134,15 +155,16 @@ function linkifyNode(node: ReactNode): ReactNode {
   if (!isValidElement(node)) {
     return node;
   }
-
-  const props = node.props as {children?: ReactNode};
+  const props = node.props as {children?: ReactNode; markType?: string};
+  if (node.type === "a" || props.markType === "link") return node;
   if (!("children" in props)) return node;
   const nextChildren = Children.map(props.children, (child) => linkifyNode(child));
   return cloneElement(node, undefined, nextChildren);
 }
 
-function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}): PortableTextComponents {
+function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean; speakerColors?: InterviewSpeakerColor[]}): PortableTextComponents {
   const boldSpeakerParagraph = options?.boldSpeakerParagraph === true;
+  const speakerColors = new Map(normalizeSpeakerColors(options?.speakerColors).map(({speakerName, color}) => [speakerName, color]));
 
   return {
     block: {
@@ -185,17 +207,24 @@ function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}
       }
 
       const shouldBoldSpeaker = boldSpeakerParagraph && /^――/.test(trimmed);
-      const speakerPrefix = boldSpeakerParagraph && !shouldBoldSpeaker ? extractSpeakerPrefix(text) : null;
+      const speakerPrefix = (boldSpeakerParagraph || speakerColors.size > 0) && !/^――/.test(trimmed)
+        ? extractSpeakerPrefix(text) : null;
+      const firstSpan = (value as PortableTextBlockLike).children?.find((child) => child.text?.trim());
+      const orangeSpeaker = firstSpan?.marks?.includes("orange") === true;
+      const speakerColor = speakerPrefix
+        ? speakerColors.get(speakerPrefix.speaker) ?? (orangeSpeaker ? "#f97316" : undefined)
+        : undefined;
+      const showSpeaker = speakerPrefix && (boldSpeakerParagraph || speakerColor);
       return (
         <p
           className={`my-4 px-2 text-[17px] leading-[2.1] whitespace-pre-wrap text-[var(--ui-text)] sm:px-3 ${
             shouldBoldSpeaker ? "font-bold" : ""
           }`}
         >
-          {speakerPrefix ? (
+          {showSpeaker ? (
             <>
-              <strong>{speakerPrefix.prefix}</strong>
-              {renderTextWithAutoLinks(speakerPrefix.rest)}
+              <strong style={speakerColor ? {color: speakerColor} : undefined}>{speakerPrefix.prefix}</strong>
+              {Children.map(afterTextOffset(children, speakerPrefix.end), (child) => linkifyNode(child))}
             </>
           ) : (
             Children.map(children, (child) => linkifyNode(child))
@@ -232,6 +261,7 @@ function createPortableTextComponents(options?: {boldSpeakerParagraph?: boolean}
     },
     listItem: ({children}) => <li className="text-[17px] leading-8 text-[var(--ui-text)]">{children}</li>,
     marks: {
+      orange: ({children}) => <span style={{color: "#f97316"}}>{children}</span>,
       link: ({children, value}) => {
       const href = typeof value?.href === "string" ? value.href : undefined;
       return (
@@ -335,13 +365,15 @@ export function SanityArticleBody({
   value,
   className,
   boldSpeakerParagraph,
+  speakerColors,
 }: {
   value: unknown;
   className?: string;
   boldSpeakerParagraph?: boolean;
+  speakerColors?: InterviewSpeakerColor[];
 }) {
   if (!Array.isArray(value)) return null;
-  const components = createPortableTextComponents({boldSpeakerParagraph});
+  const components = createPortableTextComponents({boldSpeakerParagraph, speakerColors});
 
   return (
     <div

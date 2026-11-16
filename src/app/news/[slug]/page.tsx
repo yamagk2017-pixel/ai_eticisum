@@ -666,6 +666,7 @@ export default async function SanityNewsArticlePage({
               value={currentBody}
               className={highlightLeadBlock ? "news-intro-cream" : undefined}
               boldSpeakerParagraph={isInterviewArticle}
+              speakerColors={article.speakerColors}
             />
             {totalBodyPages > 1 ? (
               <nav
