@@ -4,6 +4,7 @@ import {unstable_cache} from "next/cache";
 import Image from "next/image";
 import Link from "next/link";
 import {notFound} from "next/navigation";
+import {FeatureArticleHero} from "@/components/news/feature-article-hero";
 import {ArticleCitations} from "@/components/news/article-citations";
 import {NandatteRelatedChart} from "@/components/news/nandatte-related-chart";
 import {RelatedGroupsSidebar} from "@/components/news/related-groups-sidebar";
@@ -188,6 +189,9 @@ export default async function SanityNewsArticlePage({
   const titleText = stripHtmlForText(article.titleHtml).toLowerCase();
   const isInterviewArticle = article.tags.some((tag) => tag.name.trim() === "インタビュー");
   const highlightLeadBlock = titleText.includes("vol.205") && titleText.includes("lizz");
+  const showFeatureHero = Boolean(
+    article.featuredImageUrl && article.categories.some((category) => category.slug === "sp")
+  );
   const eventInfo = article.eventInfo;
   const isRadioAnnouncement = article.type === "radioAnnouncement";
   const ticketHref = toSafeHref(eventInfo?.ticketSalesUrl ?? null);
@@ -324,8 +328,18 @@ export default async function SanityNewsArticlePage({
           </nav>
         </div>
 
-        <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
-          {article.featuredImageUrl ? (
+        {showFeatureHero && article.featuredImageUrl ? (
+          <FeatureArticleHero
+            titleHtml={article.titleHtml}
+            imageUrl={article.featuredImageUrl}
+            publishedAt={article.publishedAt}
+            categories={article.categories}
+            tags={article.tags}
+          />
+        ) : null}
+
+        <div className={showFeatureHero ? undefined : "md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8"}>
+          {!showFeatureHero && article.featuredImageUrl ? (
             <div className="md:order-2">
               <Image
                 src={article.featuredImageUrl}
@@ -339,32 +353,36 @@ export default async function SanityNewsArticlePage({
             </div>
           ) : null}
 
-          <div className={article.featuredImageUrl ? "md:order-1" : undefined}>
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
-              <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
-              {article.categories.map((category) => (
-                category.slug ? (
-                  <Link
-                    key={`${article.id}-${category.name}`}
-                    href={`/news?category=${category.slug}`}
-                    className="text-xs underline underline-offset-2"
-                  >
-                    {category.name}
-                  </Link>
-                ) : (
-                  <span key={`${article.id}-${category.name}`} className="text-xs underline underline-offset-2">
-                    {category.name}
-                  </span>
-                )
-              ))}
-            </div>
+          <div className={!showFeatureHero && article.featuredImageUrl ? "md:order-1" : undefined}>
+            {!showFeatureHero ? (
+              <>
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
+                  <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
+                  {article.categories.map((category) => (
+                    category.slug ? (
+                      <Link
+                        key={`${article.id}-${category.name}`}
+                        href={`/news?category=${category.slug}`}
+                        className="text-xs underline underline-offset-2"
+                      >
+                        {category.name}
+                      </Link>
+                    ) : (
+                      <span key={`${article.id}-${category.name}`} className="text-xs underline underline-offset-2">
+                        {category.name}
+                      </span>
+                    )
+                  ))}
+                </div>
 
-            <h1
-              className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
-              dangerouslySetInnerHTML={{__html: article.titleHtml}}
-            />
+                <h1
+                  className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
+                  dangerouslySetInnerHTML={{__html: article.titleHtml}}
+                />
+              </>
+            ) : null}
 
-            {article.tags.length > 0 ? (
+            {!showFeatureHero && article.tags.length > 0 ? (
               <div className="mt-4 flex flex-wrap gap-2">
                 {article.tags.map((tag) => (
                   tag.slug ? (

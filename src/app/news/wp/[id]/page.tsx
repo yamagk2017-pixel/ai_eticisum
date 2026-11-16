@@ -3,6 +3,7 @@ import { draftMode } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {FeatureArticleHero} from "@/components/news/feature-article-hero";
 import { ArticleCitations } from "@/components/news/article-citations";
 import { NandatteRelatedChart } from "@/components/news/nandatte-related-chart";
 import { RelatedGroupsSidebar } from "@/components/news/related-groups-sidebar";
@@ -156,6 +157,9 @@ export default async function WpNewsArticlePage({
   }
 
   if (!article) notFound();
+  const showFeatureHero = Boolean(
+    article.featuredImageUrl && article.categories.some((category) => category.slug === "sp")
+  );
   const relatedGroups =
     article.source === "sanity_wp_import" && Array.isArray(article.relatedGroups)
       ? article.relatedGroups
@@ -190,8 +194,19 @@ export default async function WpNewsArticlePage({
           </nav>
         </div>
 
-        <div className="md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8">
-          {article.featuredImageUrl ? (
+        {showFeatureHero && article.featuredImageUrl ? (
+          <FeatureArticleHero
+            titleHtml={article.titleHtml}
+            imageUrl={article.featuredImageUrl}
+            imageAlt={article.featuredImageAlt ?? ""}
+            publishedAt={article.publishedAt}
+            categories={article.categories}
+            tags={article.tags}
+          />
+        ) : null}
+
+        <div className={showFeatureHero ? undefined : "md:grid md:grid-cols-[minmax(0,1fr)_40%] md:items-start md:gap-8"}>
+          {!showFeatureHero && article.featuredImageUrl ? (
             <div className="md:order-2">
               <Image
                 src={article.featuredImageUrl}
@@ -205,24 +220,30 @@ export default async function WpNewsArticlePage({
             </div>
           ) : null}
 
-          <div className={article.featuredImageUrl ? "md:order-1" : undefined}>
-            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
-                <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
-                <div className="mt-0">
-                  <TermPills items={article.categories} kind="category" variant="plain" />
+          <div className={!showFeatureHero && article.featuredImageUrl ? "md:order-1" : undefined}>
+            {!showFeatureHero ? (
+              <>
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 md:mt-0">
+                  <p className="text-xs tracking-wide text-[var(--ui-text-subtle)]">{formatDate(article.publishedAt)}</p>
+                  <div className="mt-0">
+                    <TermPills items={article.categories} kind="category" variant="plain" />
+                  </div>
                 </div>
-              </div>
 
-            <h1
-              className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
-              dangerouslySetInnerHTML={{ __html: article.titleHtml }}
-            />
+                <h1
+                  className="mt-4 font-mincho-jp text-2xl font-semibold leading-tight sm:text-3xl"
+                  dangerouslySetInnerHTML={{ __html: article.titleHtml }}
+                />
+              </>
+            ) : null}
 
+            {!showFeatureHero ? (
               <div className="mt-4">
                 <TermPills items={article.tags} kind="tag" />
               </div>
-            </div>
+            ) : null}
           </div>
+        </div>
 
         <div className={`pt-6 ${relatedGroupPanels.length > 0 ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8" : ""}`}>
           <div>
