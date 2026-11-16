@@ -22,6 +22,10 @@ export function parseNewsDate(value: string | null | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+export function normalizeNewsDate(value: string | null | undefined): string | null {
+  return parseNewsDate(value)?.toISOString() ?? null;
+}
+
 export function formatNewsDate(
   value: string | null | undefined,
   options: Intl.DateTimeFormatOptions,

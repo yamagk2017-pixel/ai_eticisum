@@ -1,4 +1,5 @@
 import sanitizeHtml from "sanitize-html";
+import {rewriteWpImageUrl, rewriteWpImageUrlsInHtml} from "./images";
 
 type WpRenderedField = {
   rendered?: string;
@@ -85,10 +86,6 @@ function getWpBaseUrlOrNull() {
   return readString(process.env.WP_API_BASE_URL);
 }
 
-function getWpImageCdnBaseUrlOrNull() {
-  return readString(process.env.WP_IMAGE_CDN_BASE_URL);
-}
-
 export function hasWpApiBaseUrlConfigured() {
   return Boolean(getWpBaseUrlOrNull());
 }
@@ -171,41 +168,6 @@ export function sanitizeWpTitleHtml(html: string): string {
     disallowedTagsMode: "discard",
     nonTextTags: ["style", "script", "textarea", "option", "noscript"],
   });
-}
-
-function rewriteWpImageUrl(url: string | null): string | null {
-  if (!url) return null;
-
-  try {
-    const original = new URL(url);
-    const isWpUploads =
-      original.hostname === "musicite.sub.jp" && original.pathname.startsWith("/inm/wp-content/uploads/");
-    if (!isWpUploads) return url;
-
-    const cdnBaseUrl = getWpImageCdnBaseUrlOrNull();
-    if (!cdnBaseUrl) {
-      if (original.protocol === "http:") {
-        original.protocol = "https:";
-        return original.toString();
-      }
-      return url;
-    }
-
-    const cdn = new URL(cdnBaseUrl);
-    const cdnPathPrefix = cdn.pathname.replace(/\/+$/, "");
-    cdn.pathname = `${cdnPathPrefix}${original.pathname}`;
-    cdn.search = original.search;
-    return cdn.toString();
-  } catch {
-    return url;
-  }
-}
-
-function rewriteWpImageUrlsInHtml(html: string): string {
-  return html.replace(
-    /https?:\/\/musicite\.sub\.jp\/inm\/wp-content\/uploads\/[^\s"'()<>]+/gi,
-    (rawUrl) => rewriteWpImageUrl(rawUrl) ?? rawUrl
-  );
 }
 
 function extractTerms(post: WpPostApiItem, taxonomy: "category" | "post_tag"): WpTerm[] {

@@ -2,7 +2,8 @@ import {groq} from "next-sanity";
 import {getSanityClient} from "@/lib/sanity/client";
 import {hasSanityStudioEnv} from "@/sanity/env";
 import type {NewsArticle, NewsRelatedArticleRef, NewsRelatedGroupRef, NewsTag} from "./types";
-import {NEWS_DISPLAY_TIME_ZONE} from "./datetime";
+import {NEWS_DISPLAY_TIME_ZONE, normalizeNewsDate} from "./datetime";
+import {rewriteWpImageUrl, rewriteWpImageUrlsInHtml} from "@/lib/wp/images";
 
 type SanityRefTag = {
   _id: string;
@@ -115,6 +116,14 @@ export type SanityNewsArticleDetail = {
   citedByArticles: NewsRelatedArticleRef[];
 };
 
+// Early WP imports store Japan-local timestamps without a timezone. Keep their
+// compatibility fallback inside the query so visibility, counts and sorting agree.
+// Native Sanity articles still require a timezone-qualified timestamp.
+const publishedAtDateTime = groq`coalesce(
+  dateTime(publishedAt),
+  select(_type == "wpImportedArticle" => dateTime(publishedAt + "+09:00"))
+)`;
+
 const listQuery = groq`
   *[
     _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
@@ -123,13 +132,13 @@ const listQuery = groq`
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     defined(publishedAt) &&
-    dateTime(publishedAt) <= dateTime(now()) &&
+    ${publishedAtDateTime} <= dateTime(now()) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
     (!defined($tagSlug) || count((tags[]->slug.current)[@ == $tagSlug]) > 0)
   ]
-  | order(dateTime(publishedAt) desc)[$start...$end]{
+  | order(${publishedAtDateTime} desc)[$start...$end]{
     _type,
     _id,
     title,
@@ -165,7 +174,7 @@ const countQuery = groq`
       (_type == "wpImportedArticle" && defined(wpPostId))
     ) &&
     defined(publishedAt) &&
-    dateTime(publishedAt) <= dateTime(now()) &&
+    ${publishedAtDateTime} <= dateTime(now()) &&
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id) &&
     (!defined($categorySlug) || count((categories[]->slug.current)[@ == $categorySlug]) > 0) &&
@@ -178,7 +187,7 @@ const bySlugQuery = groq`
     _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement"] &&
     slug.current == $slug &&
     defined(publishedAt) &&
-    dateTime(publishedAt) <= dateTime(now())
+    ${publishedAtDateTime} <= dateTime(now())
   ][0]{
     _type,
     _id,
@@ -257,12 +266,12 @@ const bySlugQuery = groq`
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       defined(publishedAt) &&
-      dateTime(publishedAt) <= dateTime(now()) &&
+      ${publishedAtDateTime} <= dateTime(now()) &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
       !defined(*[_id == ("drafts." + ^._id)][0]._id)
-    ] | order(dateTime(publishedAt) desc){
+    ] | order(${publishedAtDateTime} desc){
       _type,
       _id,
       title,
@@ -368,7 +377,7 @@ const bySlugPreviewQuery = groq`
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id
-    ] | order(dateTime(publishedAt) desc){
+    ] | order(${publishedAtDateTime} desc){
       _type,
       _id,
       title,
@@ -396,7 +405,7 @@ const relatedEventsForHomeQuery = groq`
     isMyRelatedEvent == true &&
     defined(slug.current) &&
     defined(publishedAt) &&
-    dateTime(publishedAt) <= dateTime(now()) &&
+    ${publishedAtDateTime} <= dateTime(now()) &&
     (
       (defined(eventDate) && eventDate >= $today) ||
       (defined(eventEndDate) && eventEndDate >= $today) ||
@@ -409,7 +418,7 @@ const relatedEventsForHomeQuery = groq`
     !(_id in path("drafts.**")) &&
     !defined(*[_id == ("drafts." + ^._id)][0]._id)
   ]
-  | order(dateTime(publishedAt) desc)[0...$limit]{
+  | order(${publishedAtDateTime} desc)[0...$limit]{
     _id,
     title,
     slug,
@@ -429,7 +438,7 @@ const wpImportedByPostIdQuery = groq`
     _type == "wpImportedArticle" &&
     wpPostId == $wpPostId &&
     defined(publishedAt) &&
-    dateTime(publishedAt) <= dateTime(now())
+    ${publishedAtDateTime} <= dateTime(now())
   ][0]{
     _id,
     title,
@@ -476,12 +485,12 @@ const wpImportedByPostIdQuery = groq`
     "citedByArticles": *[
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       defined(publishedAt) &&
-      dateTime(publishedAt) <= dateTime(now()) &&
+      ${publishedAtDateTime} <= dateTime(now()) &&
       references(^._id) &&
       _id != ^._id &&
       !(_id in path("drafts.**")) &&
       !defined(*[_id == ("drafts." + ^._id)][0]._id)
-    ] | order(dateTime(publishedAt) desc){
+    ] | order(${publishedAtDateTime} desc){
       _type,
       _id,
       title,
@@ -555,7 +564,7 @@ const wpImportedByPostIdPreviewQuery = groq`
       _type in ["newsArticle", "eventAnnouncement", "radioAnnouncement", "wpImportedArticle"] &&
       references(^._id) &&
       _id != ^._id
-    ] | order(dateTime(publishedAt) desc){
+    ] | order(${publishedAtDateTime} desc){
       _type,
       _id,
       title,
@@ -617,8 +626,8 @@ function mapRelatedArticle(doc: SanityRelatedArticleDoc | null | undefined): New
   return {
     title: (doc.title ?? "").trim() || "(untitled)",
     path,
-    publishedAt: doc.publishedAt ?? null,
-    featuredImageUrl: doc.heroImageUrl ?? null,
+    publishedAt: normalizeNewsDate(doc.publishedAt),
+    featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
   };
@@ -641,11 +650,11 @@ function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | n
       id: wpPostId,
       slug: String(wpPostId),
       url: doc.originalWpUrl ?? null,
-      publishedAt: doc.publishedAt ?? null,
+      publishedAt: normalizeNewsDate(doc.publishedAt),
       titleHtml: escapeHtml(title),
       excerptHtml: escapeHtml((doc.excerpt ?? "").trim()),
       contentHtml: "",
-      featuredImageUrl: doc.heroImageUrl ?? null,
+      featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
       featuredImageAlt: null,
       categories: mapRefTags(doc.categories),
       tags: mapRefTags(doc.tags),
@@ -663,11 +672,11 @@ function mapListDocToNewsArticle(doc: SanityNewsArticleListDoc): NewsArticle | n
     id: Math.abs(Array.from(doc._id).reduce((acc, c) => ((acc << 5) - acc + c.charCodeAt(0)) | 0, 0)),
     slug,
     url: null,
-    publishedAt: doc.publishedAt ?? null,
+    publishedAt: normalizeNewsDate(doc.publishedAt),
     titleHtml: escapeHtml(title),
     excerptHtml: escapeHtml((doc.excerpt ?? "").trim()),
     contentHtml: "",
-    featuredImageUrl: doc.heroImageUrl ?? null,
+    featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
     featuredImageAlt: null,
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
@@ -790,9 +799,9 @@ export async function getSanityNewsBySlug(
     path: `/news/${currentSlug}`,
     title,
     titleHtml: escapeHtml(title),
-    publishedAt: doc.publishedAt ?? null,
+    publishedAt: normalizeNewsDate(doc.publishedAt),
     excerpt: doc.excerpt ?? null,
-    featuredImageUrl: doc.heroImageUrl ?? null,
+    featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
     body: doc.body ?? [],
@@ -913,11 +922,11 @@ export async function getSanityWpImportedNewsByWpPostId(
     id: Number(doc.wpPostId),
     slug: String(doc.wpPostId),
     url: doc.originalWpUrl ?? null,
-    publishedAt: doc.publishedAt ?? null,
+    publishedAt: normalizeNewsDate(doc.publishedAt),
     titleHtml: escapeHtml(title),
     excerptHtml: escapeHtml((doc.excerpt ?? "").trim()),
-    contentHtml: doc.legacyBodyHtml ?? "",
-    featuredImageUrl: doc.heroImageUrl ?? null,
+    contentHtml: rewriteWpImageUrlsInHtml(doc.legacyBodyHtml ?? ""),
+    featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
     featuredImageAlt: null,
     categories: mapRefTags(doc.categories),
     tags: mapRefTags(doc.tags),
@@ -954,8 +963,7 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
         id: doc._id,
         title: (doc.title ?? "").trim() || "(untitled)",
         path: `/news/${slug}`,
-        publishedAt:
-          typeof doc.publishedAt === "string" && doc.publishedAt.trim() ? doc.publishedAt.trim() : null,
+        publishedAt: normalizeNewsDate(doc.publishedAt),
         eventDate,
         eventEndDate,
         eventTimeText: typeof doc.eventTimeText === "string" && doc.eventTimeText.trim() ? doc.eventTimeText.trim() : null,
@@ -963,18 +971,37 @@ export async function getSanityRelatedEventsForHome(limit = 3): Promise<HomeRela
           typeof doc.ticketSalesUrl === "string" && doc.ticketSalesUrl.trim() ? doc.ticketSalesUrl.trim() : null,
         streamingDeadline:
           typeof doc.streamingDeadline === "string" && doc.streamingDeadline.trim() ? doc.streamingDeadline.trim() : null,
-        featuredImageUrl: doc.heroImageUrl ?? null,
+        featuredImageUrl: rewriteWpImageUrl(doc.heroImageUrl ?? null),
       } satisfies HomeRelatedEvent;
     })
     .filter((item): item is HomeRelatedEvent => Boolean(item));
 }
 
 export async function getSanityNewsArchive(filters: {categorySlug?: string; tagSlug?: string}) {
-  const first = await getSanityNewsPage({...filters, page: 1, pageSize: 100});
-  const items = [...first.items];
-  for (let page = 2; (page - 1) * 100 < first.total; page++) {
-    const result = await getSanityNewsPage({...filters, page, pageSize: 100});
-    items.push(...result.items);
+  if (!hasSanityStudioEnv()) return [];
+  const client = getSanityClient();
+  const params = {
+    categorySlug: filters.categorySlug?.trim() || null,
+    tagSlug: filters.tagSlug?.trim() || null,
+  };
+  // Thousands of legacy imports are readable again. Fetch larger batches with
+  // bounded concurrency, and count once instead of repeating it for every page.
+  const batchSize = 500;
+  const concurrency = 4;
+  const [first, total] = await Promise.all([
+    client.fetch<SanityNewsArticleListDoc[]>(listQuery, {...params, start: 0, end: batchSize}),
+    client.fetch<number>(countQuery, params),
+  ]);
+  const docs = [...first];
+  for (let start = batchSize; start < total; start += batchSize * concurrency) {
+    const pages = await Promise.all(
+      Array.from({length: Math.min(concurrency, Math.ceil((total - start) / batchSize))}, (_, index) =>
+        client.fetch<SanityNewsArticleListDoc[]>(listQuery, {
+          ...params, start: start + index * batchSize, end: start + (index + 1) * batchSize,
+        })
+      )
+    );
+    for (const page of pages) docs.push(...page);
   }
-  return items;
+  return docs.map(mapListDocToNewsArticle).filter((item): item is NewsArticle => Boolean(item));
 }
