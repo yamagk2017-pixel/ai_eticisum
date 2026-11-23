@@ -1,7 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server";
 import {
-  PLAYLIST_PROJECT_SLUG, buildTargetRows, getPlaylistCutoffForWeek, parsePlaylistSnapshot,
-  type PlaylistSnapshotRow, type WeeklyTargetInsertRow,
+  buildTargetRows, getWeeklyRankingEndForWeek, parseWeeklyRanking, WeeklyRankingNotReadyError,
+  type WeeklyTargetInsertRow,
 } from "@/lib/iam/weekly-target-policy";
 
 type NandatteRankingRow = {
@@ -10,11 +10,8 @@ type NandatteRankingRow = {
 
 export type BuildWeeklyTargetsResult = {
   weekKey: string;
-  playlistGroupCount: number;
-  playlistTrackCount: number;
-  playlistCutoff: string;
-  playlistRunId: string;
-  /** @deprecated Compatibility alias for playlistGroupCount; no longer IHC top 20. */
+  rankingWeekEndDate: string;
+  rankingAlgorithmVersion: "v1";
   ihcCount: number;
   nandatteRecentCount: number;
   unionCount: number;
@@ -80,21 +77,19 @@ export function getTokyoPreviousWeekKey(now = new Date()) {
   return formatUTCDateAsYYYYMMDD(previousWeekDate);
 }
 
-async function fetchPlaylistGroupIds(weekKey: string) {
+async function fetchIhcTop20GroupIds(weekKey: string, persist: boolean) {
   const supabase = createServerClient({ requireServiceRole: true });
-  const cutoff = getPlaylistCutoffForWeek(weekKey);
-  const result = await supabase
-    .schema("ihc")
-    .from("release_playlist_runs")
-    .select("id,cutoff,status,committed_at,target_tracks")
-    .eq("project_slug", PLAYLIST_PROJECT_SLUG)
-    .eq("cutoff", cutoff)
-    .eq("status", "committed")
-    .maybeSingle();
+  const weekEndDate = getWeeklyRankingEndForWeek(weekKey);
+  const result = await supabase.schema("imd").rpc("compute_iam_weekly_ranking", {
+    p_week_end_date: weekEndDate, p_persist: persist,
+  });
   if (result.error) {
-    throw new Error(`Failed to load committed playlist snapshot for ${cutoff}: ${result.error.message}`);
+    if (result.error.message.includes("iam_weekly_ranking_not_ready")) {
+      throw new WeeklyRankingNotReadyError(weekEndDate);
+    }
+    throw new Error(`Failed to compute IAM weekly ranking for ${weekEndDate}: ${result.error.message}`);
   }
-  return parsePlaylistSnapshot((result.data ?? null) as PlaylistSnapshotRow | null, cutoff);
+  return parseWeeklyRanking(result.data, weekEndDate);
 }
 
 async function fetchNandatteRecentTop20GroupIds() {
@@ -146,28 +141,30 @@ async function replaceWeeklyTargets(weekKey: string, rows: WeeklyTargetInsertRow
   return (res.data ?? []).length;
 }
 
-export async function planWeeklyTargets(weekKeyInput?: string) {
+async function createWeeklyTargetsPlan(weekKeyInput: string | undefined, persistRanking: boolean) {
   const weekKey = weekKeyInput ?? getTokyoPreviousWeekKey();
-  const [playlist, nandatteRecentGroupIds] = await Promise.all([
-    fetchPlaylistGroupIds(weekKey), fetchNandatteRecentTop20GroupIds(),
+  const [ranking, nandatteRecentGroupIds] = await Promise.all([
+    fetchIhcTop20GroupIds(weekKey, persistRanking), fetchNandatteRecentTop20GroupIds(),
   ]);
-  const rows = buildTargetRows(weekKey, playlist.groupIds, nandatteRecentGroupIds);
+  const rows = buildTargetRows(weekKey, ranking.groupIds, nandatteRecentGroupIds);
   return {
     weekKey,
-    playlistGroupCount: playlist.groupIds.length,
-    playlistTrackCount: playlist.trackCount,
-    playlistCutoff: playlist.cutoff,
-    playlistRunId: playlist.runId,
-    ihcCount: playlist.groupIds.length,
+    rankingWeekEndDate: ranking.weekEndDate,
+    rankingAlgorithmVersion: ranking.algorithmVersion,
+    ihcCount: ranking.groupIds.length,
     nandatteRecentCount: nandatteRecentGroupIds.length,
     unionCount: rows.length,
     targets: rows,
   };
 }
 
+export async function planWeeklyTargets(weekKeyInput?: string) {
+  return createWeeklyTargetsPlan(weekKeyInput, false);
+}
+
 export async function buildWeeklyTargets(weekKeyInput?: string): Promise<BuildWeeklyTargetsResult> {
-  // Planning and snapshot validation finish before any existing targets are cleared.
-  const { targets, ...summary } = await planWeeklyTargets(weekKeyInput);
+  // Source validation finishes before any existing targets are cleared.
+  const { targets, ...summary } = await createWeeklyTargetsPlan(weekKeyInput, true);
   const upsertedCount = await replaceWeeklyTargets(summary.weekKey, targets);
   return { ...summary, upsertedCount };
 }

@@ -1,31 +1,42 @@
-# IAM：イマキテアイドル：ジャパンによる対象選定
+# IAM：非公開のイマキテ週間集計による対象選定
 
-2026-11-11。IHC週間ランキング集計の休止に合わせ、IAMのIHC由来対象を新プレイリストへ切り替える。
+2026-11-23。新プレイリスト由来の50組から、従来の週間ランキング上位20組へ戻す。
+
+## 定期実行と集計
+
+既存のGitHub Actions `IAM Weekly Targets`（月曜03:00 JST）を使用する。
+対象選定の直前に、継続保存されている `ihc.daily_rankings` をDB内で集計する。
+別の集計ジョブを待たず、IAMの実行時に必要な週を計算・保存する。
+
+- 旧Python集計 `imakite_supabase/scripts/ihc_weekly_ranking_job.py` のv1と同じく、7日間の `base_score` 合計。古い行は `score`、両方NULLなら0を使う。
+- 日次がv2でも、`conversion_momentum`は加算しない。同点はグループUUID昇順で決定する。
+- 集計期間は従来の火曜〜月曜。月曜に動くIAMが従来参照していたのは、監視週初日の月曜を終了日とするランキング。
+- 例：11/23（月）の実行は `week_key=2026-11-16`、出来事は11/16〜22日、週間ランキングは11/10〜16日を使用する。11/17〜23日を使わない。
+- 明示的な `week_key` でも同じ対応を使い、最新週への置き換えはしない。
+- 対象7日が揃わない、または20組に満たない場合は既存対象の削除前に停止する。
+
+`imd.compute_iam_weekly_ranking` は `security invoker` のRPC。
+通常実行は `p_persist=true` で `imd.iam_weekly_rankings` に1週1行の上位20組・期間・元データ件数を保存する。
+保存先はRLS有効、`service_role`専用。公開の `ihc.weekly_rankings`、旧Spotifyプレイリスト、
+「イマキテアイドル：ジャパン」は更新しない。旧公開ランキングの自動集計は休止を継続する。
 
 ## 対象と加点
 
-- 企画slugは`imakite-idol-japan`。
-- `ihc.release_playlist_runs`の`status=committed`の`target_tracks`を読む。Spotify APIから曲順を取り直さず、正常公開された更新時点の50曲を使う。
-- 先頭20曲への限定はしない。全50曲から`imd.groups.id`の重複を除き、NANDATTE直近上位20組と統合する。最大70組（重複があれば減る）。追加曲だけでなく継続曲のグループも対象。
-- 新しい選定理由は`imakite_idol_japan`。管理画面では「イマキテアイドル：ジャパン掲載」と表示する。
-- IAM候補の加点は掲載グループ10点、NANDATTE由来5点。両方なら15点。過去の`ihc_top20`も10点として読めるようにし、新旧理由が両方付いていても二重加点しない。
-- 優先度は従来どおり、両方の対象が1、プレイリストのみが2、NANDATTEのみが3。
-
-## 対象週の固定
-
-IAMの自動実行は従来の**月曜03:00 JST**、出来事の収集期間は月曜〜日曜のまま。
-
-`week_key`は月曜日の日付。参照するプレイリストの`cutoff`は、その週の土曜日（`week_key+5日`）に固定する。例えば2026-11-16（月）03:00の実行では、`week_key=2026-11-09`・`cutoff=2026-11-14`の更新を参照する。過去週の再実行でも、その週に対応する土曜履歴を読む。
-
-対象の土曜更新が未確定・未公開の場合、古い週や未来週のプレイリスト、旧IHC週間ランキングへ代替しない。対象の50曲・曲ID一意性・グループUUIDを検証し、異常なら既存の`weekly_targets`を変更する前に停止する。
-
-初期プレイリストの`cutoff=2026-11-10`は火曜の承認済みシミュレーションに基づく初期化であり、11/7や11/14の土曜更新の代わりには使わない。初回の定期利用は11/14更新の完了後、11/16（月）03:00を予定する。
+- 週間ランキング上位20組とNANDATTE直近上位20組を統合し、グループUUIDで重複を除く。最大40組。
+- 選定理由は `ihc_top20`（画面表示：イマキテ週間ランキング上位20）と `nandatte_recent_top20`。
+- 加点は週間ランキング10点、NANDATTE5点、両方なら15点。
+- 優先度は両方が1、週間ランキングのみが2、NANDATTEのみが3。
+- 過去の `imakite_idol_japan` は表示・加点互換を保持する。過去の対象履歴を一括変更しない。
+- YouTube収集・Spotify収集・イベント整理・候補生成の構成は従来のまま。
 
 ## 確認用API
 
-認証済みPOST `/api/cron/iam/weekly-targets?week_key=YYYY-MM-DD`は、選定だけを行いDBへの削除・保存を行わない確認用API。通常の実行と同じ土曜履歴の確認を行う。履歴がまだなければHTTP 409・`playlist_snapshot_not_ready`・`expectedCutoff`を返す。POSTに未対応の旧デプロイでは405になるため、切替確認で誤って更新用GETを実行することもない。
+認証済みPOST `/api/cron/iam/weekly-targets?week_key=YYYY-MM-DD` は読取専用。
+`p_persist=false` で集計し、週間集計の保存も `weekly_targets` の削除・保存も行わない。
+データ不足はHTTP 409・`weekly_ranking_not_ready`・`rankingWeekEndDate`を返す。
 
-成功時の結果には`playlistGroupCount`、`playlistTrackCount`、`playlistCutoff`、`playlistRunId`、`targets`が含まれる。旧`ihcCount`は既存のAPI利用者向けの互換aliasで、今後は`playlistGroupCount`を使う。通常実行の結果に対象一覧は追加せず、従来の集計件数と新しい出典メタデータを返す。
+成功時は `rankingWeekEndDate`、`rankingAlgorithmVersion`、`ihcCount`、`nandatteRecentCount`、
+`unionCount`、`targets` を返す。以前のプレイリスト由来フィールドは使用しない。
 
 ## 検証
 
@@ -34,8 +45,13 @@ node --experimental-strip-types --test tests/iam-weekly-targets.test.mjs
 node --import tsx --test tests/iam-weekly-targets-integration.test.mjs
 ```
 
-日付・全50曲・グループ重複除去・不正/未完了履歴・NANDATTE統合・最大70組・加点互換の8件と、実際のSupabaseクライアントを模擬HTTPへ接続した読み書き順序の4件を検証する。外部APIや本番データへの書き込みは行わない。
+DB検証は `tests/iam-weekly-ranking.sql` を使用する。読取専用プレビュー、保存、
+欠損日、過去の公開集計との上位20組一致、一般ロールへの非公開を確認してロールバックする。
 
-## 再実行
+## 障害復旧
 
-土曜更新が失敗した場合、先にプレイリストの未完了更新を復旧して`committed`を確認し、その後にIAM Weekly Targetsを手動実行する。IHC週間ランキングの再開や、既存の対象履歴の削除による回避は不要。
+まずPOSTで対象週の7日分と20組・統合件数を確認する。
+日次データ不足があれば日次処理を復旧してから、GitHub Actions `IAM Weekly Targets` を手動実行する。
+通常APIは前週を処理する。別週の復旧では各工程の週指定対応を確認して実行する。
+週間集計の保存が成功しても、ニュース候補の作成まで完了したかはActions結果と
+`imd.weekly_digest_candidates` で確認する。
